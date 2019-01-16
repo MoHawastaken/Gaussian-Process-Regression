@@ -48,11 +48,11 @@ GPR <- R6::R6Class("GPR",
   
 )
 
-GPR.linear <- R6::R6Class("GPR.linear",
+GPR.constant <- R6::R6Class("GPR.constant",
                           inherit = GPR,
                           public = list(
                             initialize = function(X, y, c, noise){
-                              k <- function(x) c
+                              k <- function(x, y) c
                               super$initialize(X, y, k, noise)
                             }
                           )
