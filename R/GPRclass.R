@@ -92,11 +92,12 @@ GPR <- R6::R6Class("GPR",
   
 )
 
-X <- matrix(1:12, nrow = 3)
-y <- c(1:4)
-kappa <- function(x,y) exp(-sum(x*y))
-noise <- 1
+X <- matrix((1:200)/10, nrow = 1)
+y <- c(10*X^2)
+kappa <- function(x,y) exp(-(x-y)^2)
+noise <- 0.1
 Gaussian <- GPR$new(X, y, kappa, noise)
+plot(Vectorize(function(x) Gaussian$predict(x)[1]), 0, 20)
 
 GPR.constant <- R6::R6Class("GPR.constant",
                           inherit = GPR,
