@@ -23,9 +23,27 @@ GPR <- R6::R6Class("GPR",
                            K[i, j] = k(X[, i], X[, j])
                          }
                        }
-                       private$.L <- chol(K + sigma * diag(n))
-                       private$.alpha <- solve(t(L), solve(L, y))
-                     }
+                       private$.L <- chol(K + noise * diag(n))
+                       private$.alpha <- solve(t(self$L), solve(self$L, y))
+                     },
+                      predict = function(Xs){
+                       
+                       #Calculate k* (ks)
+                       ks <- sapply(1:ncol(self$X), FUN = function(i) self$k(self$X[, i], Xs))
+                       #end
+                       
+                       #calculate all other variables directly
+                       
+                       fs <- ks %*% self$alpha
+                       
+                       v <- solve(self$L, ks)
+                       
+                       Vfs <- self$k(Xs, Xs) - v %*% v
+                       
+                       logp <- -0.5 * self$y %*% self$alpha - sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
+                       
+                       return(c(fs, Vfs, logp))
+                     }  
                    ),
                    active = list(
                      X = function(value){
@@ -73,6 +91,12 @@ GPR <- R6::R6Class("GPR",
                    )
   
 )
+
+X <- matrix(1:12, nrow = 3)
+y <- c(1:4)
+kappa <- function(x,y) exp(-sum(x*y))
+noise <- 1
+Gaussian <- GPR$new(X, y, kappa, noise)
 
 GPR.constant <- R6::R6Class("GPR.constant",
                           inherit = GPR,
