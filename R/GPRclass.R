@@ -18,7 +18,7 @@ GPR <- R6::R6Class("GPR",
                        private$.k <- k
                        private$.noise <- noise
                        #K <- outer(1:ncol(X), 1:ncol(X), function(i,j) k(X[, factor(i)], X[, factor(j)]))
-                       n = ncol(X)
+                       n <- ncol(X)
                        K <- matrix(0, nrow = n, ncol = n)
                        for (i in 1:n) {
                          for (j in 1:n) {
@@ -37,7 +37,8 @@ GPR <- R6::R6Class("GPR",
                        fs <- ks %*% self$alpha
                        v <- solve(self$L, ks)
                        Vfs <- self$k(Xs, Xs) - v %*% v
-                       logp <- -0.5 * self$y %*% self$alpha - sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
+                       logp <- -0.5 * self$y %*% self$alpha - 
+                                sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
                        return(c(fs, Vfs, logp))
                       },
                      plot = function(X){
