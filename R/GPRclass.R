@@ -43,7 +43,17 @@ GPR <- R6::R6Class("GPR",
                        logp <- -0.5 * self$y %*% self$alpha - sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
                        
                        return(c(fs, Vfs, logp))
-                     }  
+                      },
+                     plot = function(X){
+                       dat <- data.frame(x = X, 
+                                  y = t(sapply(X,function(x) self$predict(x)[1:2])))
+                       ggplot2::ggplot(dat, aes(x = x, y = y.1)) +
+                         geom_line() +
+                         geom_ribbon(aes(ymin = y.1 - y.2,
+                                         ymax = y.1 + y.2), alpha = 0.2) +
+                         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+                               panel.background = element_blank(), axis.line = element_line(colour = "black"))
+                     }
                    ),
                    active = list(
                      X = function(value){
@@ -93,11 +103,11 @@ GPR <- R6::R6Class("GPR",
 )
 
 X <- matrix((1:200)/10, nrow = 1)
-y <- c(10*X^2)
-kappa <- function(x,y) exp(-(x-y)^2)
-noise <- 0.1
+y <- c(X^2)
+kappa <- function(x,y) exp(-(x - y)^2)
+noise <- 100
 Gaussian <- GPR$new(X, y, kappa, noise)
-plot(Vectorize(function(x) Gaussian$predict(x)[1]), 0, 20)
+Gaussian.plot(seq(0,20, by = 0.5))
 
 GPR.constant <- R6::R6Class("GPR.constant",
                           inherit = GPR,
