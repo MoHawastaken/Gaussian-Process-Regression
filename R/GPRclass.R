@@ -11,6 +11,8 @@ GPR <- R6::R6Class("GPR",
                    ),
                    public = list(
                      initialize = function(X, y, k, noise){
+                       stopifnot(is.matrix(X), is.vector(y), is.numeric(y))
+                       stopifnot(is.numeric(noise), length(noise) == 1, is.function(k))
                        private$.X <-  X
                        private$.y <- y
                        private$.k <-  k
@@ -30,18 +32,12 @@ GPR <- R6::R6Class("GPR",
                        
                        #Calculate k* (ks)
                        ks <- sapply(1:ncol(self$X), FUN = function(i) self$k(self$X[, i], Xs))
-                       #end
                        
                        #calculate all other variables directly
-                       
                        fs <- ks %*% self$alpha
-                       
                        v <- solve(self$L, ks)
-                       
                        Vfs <- self$k(Xs, Xs) - v %*% v
-                       
                        logp <- -0.5 * self$y %*% self$alpha - sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
-                       
                        return(c(fs, Vfs, logp))
                       },
                      plot = function(X){
