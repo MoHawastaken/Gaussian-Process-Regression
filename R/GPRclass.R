@@ -44,11 +44,14 @@ GPR <- R6::R6Class("GPR",
                        dat <- data.frame(x = X, 
                                   y = t(sapply(X,function(x) self$predict(x)[1:2])))
                        ggplot2::ggplot(dat, aes(x = x, y = y.1)) +
+                         theme_classic() +
+                         scale_y_continuous("f(x)") +
                          geom_line() +
                          geom_ribbon(aes(ymin = y.1 - y.2,
                                          ymax = y.1 + y.2), alpha = 0.2) +
-                         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-                               panel.background = element_blank(), axis.line = element_line(colour = "black"))
+                         geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
+                                    mapping = aes(x = xpoints, y = ypoints, shape = 4)) +
+                         scale_shape_identity()
                      }
                    ),
                    active = list(
@@ -98,10 +101,10 @@ GPR <- R6::R6Class("GPR",
   
 )
 
-X <- matrix(seq(-5,5,by = 0.1), nrow = 1)
+X <- matrix(seq(-5,5,by = 1), nrow = 1)
 y <- c(X^3)
 kappa <- function(x,y) exp(-(x - y)^2)
-noise <- 100
+noise <- 0.1
 Gaussian <- GPR$new(X, y, kappa, noise)
 Gaussian$plot(seq(-5,5, by = 0.5))
 
