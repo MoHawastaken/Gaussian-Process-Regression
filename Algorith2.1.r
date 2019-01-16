@@ -25,7 +25,7 @@ regression <- function(X,y,k,sigma,Xs){
   
   v <- solve(L,ks)
   
-  Vfs <- k(Xs,Xs) - v^T %*% v
+  Vfs <- k(Xs,Xs) - t(v) %*% v
   
   logp <- -0.5*t(y) %*% alpha - sum(log(diag(L))) - length(X)/2*log(2*pi)
   
