@@ -9,10 +9,10 @@ GPR <- R6::R6Class("GPR",
                    ),
                    public = list(
                      initialize = function(X, k, y, noise){
-                       .X <-  X
-                       .k <-  k
-                       .y <- y
-                       .noise <- noise
+                       private$.X <-  X
+                       private$.k <-  k
+                       private$.y <- y
+                       private$.noise <- noise
                      }
                    ),
                    active = list(
@@ -48,4 +48,11 @@ GPR <- R6::R6Class("GPR",
   
 )
 
-GPR.linear <- R6::R6Class("GPR.linear")
+GPR.linear <- R6::R6Class("GPR.linear",
+                          inherit = GPR,
+                          public = list(
+                            initialize = function(){
+                              
+                            }
+                          )
+)                          
