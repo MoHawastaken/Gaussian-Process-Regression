@@ -13,9 +13,9 @@ GPR <- R6::R6Class("GPR",
                      initialize = function(X, y, k, noise){
                        stopifnot(is.matrix(X), is.vector(y), is.numeric(y))
                        stopifnot(is.numeric(noise), length(noise) == 1, is.function(k))
-                       private$.X <-  X
+                       private$.X <- X
                        private$.y <- y
-                       private$.k <-  k
+                       private$.k <- k
                        private$.noise <- noise
                        #K <- outer(1:ncol(X), 1:ncol(X), function(i,j) k(X[, factor(i)], X[, factor(j)]))
                        n = ncol(X)
@@ -98,12 +98,12 @@ GPR <- R6::R6Class("GPR",
   
 )
 
-X <- matrix((1:200)/10, nrow = 1)
-y <- c(X^2)
+X <- matrix(seq(-5,5,by = 0.1), nrow = 1)
+y <- c(X^3)
 kappa <- function(x,y) exp(-(x - y)^2)
 noise <- 100
 Gaussian <- GPR$new(X, y, kappa, noise)
-Gaussian.plot(seq(0,20, by = 0.5))
+Gaussian$plot(seq(-5,5, by = 0.5))
 
 GPR.constant <- R6::R6Class("GPR.constant",
                           inherit = GPR,
