@@ -1,4 +1,4 @@
-#Algorithm 2.1
+#' Regression Algorithm
 
 regression <- function(X, y, k, sigma, Xs){
   
