@@ -48,4 +48,4 @@ GPR <- R6::R6Class("GPR",
   
 )
 
-GPR.linear <- 
+GPR.linear <- R6::R6Class("GPR.linear")
