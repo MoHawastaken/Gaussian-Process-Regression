@@ -22,7 +22,7 @@ GPR <- R6::R6Class("GPR",
                        K <- matrix(0, nrow = n, ncol = n)
                        for (i in 1:n) {
                          for (j in 1:n) {
-                           K[i, j] = k(X[, i], X[, j])
+                           K[i, j] <-  k(X[, i], X[, j])
                          }
                        }
                        private$.L <- chol(K + noise * diag(n))
@@ -44,15 +44,15 @@ GPR <- R6::R6Class("GPR",
                      plot = function(X){
                        dat <- data.frame(x = X, 
                                   y = t(sapply(X,function(x) self$predict(x)[1:2])))
-                       ggplot2::ggplot(dat, aes(x = x, y = y.1)) +
-                         theme_classic() +
-                         scale_y_continuous("f(x)") +
-                         geom_line() +
-                         geom_ribbon(aes(ymin = y.1 - y.2,
-                                         ymax = y.1 + y.2), alpha = 0.2) +
-                         geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
-                                    mapping = aes(x = xpoints, y = ypoints, shape = 4)) +
-                         scale_shape_identity()
+                       ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y.1)) +
+                         ggplot2::theme_classic() +
+                         ggplot2::scale_y_continuous("f(x)") +
+                         ggplot2::geom_line() +
+                         ggplot2::geom_ribbon(ggplot2::aes(ymin = y.1 - 2*sqrt(max(y.2,0)),
+                                         ymax = y.1 + 2*sqrt(max(y.2,0))), alpha = 0.2) +
+                         ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
+                                    mapping = ggplot2::aes(x = xpoints, y = ypoints, shape = 4)) +
+                         ggplot2::scale_shape_identity()
                      }
                    ),
                    active = list(
@@ -102,12 +102,12 @@ GPR <- R6::R6Class("GPR",
   
 )
 
-X <- matrix(seq(-5,5,by = 1), nrow = 1)
-y <- c(X^3)
-kappa <- function(x,y) exp(-(x - y)^2)
+X <- matrix(seq(-1,1,by = 0.2), nrow = 1)
 noise <- 0.1
+y <- c(10*X^3 + rnorm(length(X),0,sqrt(noise)))
+kappa <- function(x,y) exp(-(x - y)^2)
 Gaussian <- GPR$new(X, y, kappa, noise)
-Gaussian$plot(seq(-5,5, by = 0.5))
+Gaussian$plot(seq(-1,1, by = 0.1))
 
 GPR.constant <- R6::R6Class("GPR.constant",
                           inherit = GPR,
