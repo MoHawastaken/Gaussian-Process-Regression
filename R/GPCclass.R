@@ -24,7 +24,7 @@ GPC <- R6::R6Class("GPR",
                        it <- 0
                        while (TRUE) {
                          it <- it + 1
-                         Pi <- 1/(1 + exp(-f*y))
+                         Pi <- 1/(1 + exp(-f))
                          print(Pi)
                          W <- (1 - Pi)*Pi
                          L <- t(chol(diag(n) + (sqrt(W) %o% sqrt(W)) * K))
@@ -49,7 +49,7 @@ GPC <- R6::R6Class("GPR",
                          last_objective <- objective
                        }
                        print(sprintf("Convergence after %s iterations", it))
-                       Pi <- 1/(1 + exp(-f*y))
+                       Pi <- 1/(1 + exp(-f))
                        W <- (1 - Pi)*Pi
                        private$.f_hat <- f
                        private$.L <- t(chol(diag(n) + (sqrt(W) %o% sqrt(W)) * K))
@@ -57,16 +57,16 @@ GPC <- R6::R6Class("GPR",
                        private$.y <- y
                        private$.k <- k
                      },
-                     predict = function(Xs){
-                       
-                       #Calculate k* (ks)
+                     predict_class = function(Xs){
+                       Pi <- 1/(1 + exp(-self$f_hat))
+                       W <- -Pi*(1 - Pi)
                        ks <- sapply(1:ncol(self$X), FUN = function(i) self$k(self$X[, i], Xs))
-                       
-                       #calculate all other variables directly
-                       fs <- ks %*% self$alpha
-                       v <- solve(self$L, ks)
+                       fs_bar <- ks%*%((self$y + 1)/2 - Pi)
+                       v <- self$L/(self$W^(1/2)%*%ks)
                        Vfs <- self$k(Xs, Xs) - v %*% v
-                       return(c(fs, Vfs))
+                       hilfs_func <- function(z) 1/(1+exp(-z))*(1/sqrt(2*pi*Vfs))*exp(-(z-fs_bar)^2/(2*Vfs))
+                       PIs_hat <- integrate(hilfs_func, -Inf, Inf)[1]
+                       return(PIs_hat)
                      },
                      plot = function(testpoints){
                        dat <- data.frame(x = testpoints, 
