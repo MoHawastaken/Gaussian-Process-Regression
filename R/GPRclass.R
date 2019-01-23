@@ -41,12 +41,12 @@ GPR <- R6::R6Class("GPR",
                                 sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
                        return(c(fs, Vfs, logp))
                       },
-                     plot = function(X){
-                       dat <- data.frame(x = X, 
-                                  y = t(sapply(X,function(x) self$predict(x)[1:2])))
+                     plot = function(testpoints){
+                       dat <- data.frame(x = testpoints, 
+                                  y = t(sapply(testpoints, function(x) self$predict(x)[1:2])))
                        ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y.1)) +
                          ggplot2::theme_classic() +
-                         ggplot2::scale_y_continuous("f(x)") +
+                         ggplot2::scale_y_continuous("output, f(x)") +
                          ggplot2::geom_line() +
                          ggplot2::geom_ribbon(ggplot2::aes(ymin = y.1 - 2*sqrt(max(y.2,0)),
                                          ymax = y.1 + 2*sqrt(max(y.2,0))), alpha = 0.2) +
@@ -123,6 +123,7 @@ GPR.constant <- R6::R6Class("GPR.constant",
 GPR.linear <- R6::R6Class("GPR.linear", inherit = GPR,
                           public = list(
                             initialize = function(X, y, sigma, noise){
+                              stopifnot(length(sigma) == nrow(X))
                               k <- function(x, y) sum(sigma * x * y)
                               super$initialize(X, y, k, noise)
                             }
@@ -132,6 +133,7 @@ GPR.linear <- R6::R6Class("GPR.linear", inherit = GPR,
 GPR.polynomial <- R6::R6Class("GPR.polynomial", inherit = GPR,
                               public = list(
                                 initialize = function(X, y, sigma, p, noise){
+                                  stopifnot(length(sigma) == 1, length(p) == 1)
                                   k <- function(x, y) (x %*% y + sigma)^p
                                   super$initialize(X, y, k, noise)
                                 }
@@ -141,6 +143,8 @@ GPR.polynomial <- R6::R6Class("GPR.polynomial", inherit = GPR,
 GPR.sqrexp <-  R6::R6Class("GPR.sqrexp", inherit = GPR,
                            public = list(
                              initialize = function(X, y, l, noise){
+                               stopifnot(length(l) == 1)
                                k <- function(x, y) exp(- dist(rbind(x, y))^2/(2 * l^2))
+                               super$initialize(X, y, k, noise)
                              }
                            ))
