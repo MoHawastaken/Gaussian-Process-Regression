@@ -28,8 +28,7 @@ GPR <- R6::R6Class("GPR",
                        }
                        private$.L <- t(chol(K + noise * diag(n)))
                        private$.alpha <- solve(t(self$L), solve(self$L, y))
-                       private$.logp <- -0.5 * self$y %*% self$alpha - 
-                         sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
+                       private$.logp <- -0.5 * self$y %*% self$alpha - sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
                      },
                       predict = function(Xs){
                        
