@@ -88,12 +88,11 @@ GPR <- R6::R6Class("GPR",
   
 )
 
-X <- matrix((1:200)/10, nrow = 1)
-y <- c(10*X^2)
-kappa <- function(x,y) exp(-(x-y)^2)
-noise <- 0.1
+X <- matrix(1:12, nrow = 3)
+y <- c(1:4)
+kappa <- function(x,y) exp(-sum(x*y))
+noise <- 1
 Gaussian <- GPR$new(X, y, kappa, noise)
-plot(Vectorize(function(x) Gaussian$predict(x)[1]), 0, 20)
 
 GPR.constant <- R6::R6Class("GPR.constant",
                           inherit = GPR,
@@ -103,4 +102,29 @@ GPR.constant <- R6::R6Class("GPR.constant",
                               super$initialize(X, y, k, noise)
                             }
                           )
-)                          
+)
+
+GPR.linear <- R6::R6Class("GPR.linear", inherit = GPR,
+                          public = list(
+                            initialize = function(X, y, sigma, noise){
+                              k <- function(x, y) sum(sigma * x * y)
+                              super$initialize(X, y, k, noise)
+                            }
+                          )
+)
+
+GPR.polynomial <- R6::R6Class("GPR.polynomial", inherit = GPR,
+                              public = list(
+                                initialize = function(X, y, sigma, p, noise){
+                                  k <- function(x, y) (x %*% y + sigma)^p
+                                  super$initialize(X, y, k, noise)
+                                }
+                              )
+)
+
+GPR.sqrexp <-  R6::R6Class("GPR.sqrexp", inherit = GPR,
+                           public = list(
+                             initialize = function(X, y, l, noise){
+                               k <- function(x, y) exp(- dist(rbind(x, y))^2/(2 * l^2))
+                             }
+                           ))
