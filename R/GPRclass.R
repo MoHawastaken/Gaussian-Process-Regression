@@ -162,8 +162,19 @@ GPR.gammaexp <- R6::R6Class("GPR.gammaexp", inherit = GPR,
                           public = list(
                             initialize = function(X, y, gamma, l, noise){
                               stopifnot(length(gamma) == 1, length(l) == 1)
-                              k <- function(x, y) exp(-(dist(rbind(x,y))/l)^gamma)
+                              k <- function(x, y) exp(-(dist(rbind(x, y)) / l) ^ gamma)
                               super$initialize(X, y, k, noise)
                             }
                           )
 )
+
+GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
+                            public = list(
+                              initialize = function(X, y, alpha, l, noise){
+                                stopifnot(length(alpha) == 1, length(l) == 1)
+                                k <- function(x, y) (1 + dist(rbind(x, y))^2 / (2 * alpha * l^2))^(-alpha)
+                                super$initialize(X, y, k, noise)
+                              }
+                            )
+)
+
