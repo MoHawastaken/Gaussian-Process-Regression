@@ -26,7 +26,7 @@ GPR <- R6::R6Class("GPR",
                            K[i, j] <-  k(X[, i], X[, j])
                          }
                        }
-                       private$.L <- chol(K + noise * diag(n))
+                       private$.L <- t(chol(K + noise * diag(n)))
                        private$.alpha <- solve(t(self$L), solve(self$L, y))
                        private$.logp <- -0.5 * self$y %*% self$alpha - 
                          sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
@@ -111,13 +111,6 @@ GPR <- R6::R6Class("GPR",
 )
 
 
-X <- matrix(seq(-1,1,by = 0.2), nrow = 1)
-noise <- 0.1
-y <- c(10*X^3 + rnorm(length(X),0,sqrt(noise)))
-kappa <- function(x,y) exp(-(x - y)^2)
-Gaussian <- GPR$new(X, y, kappa, noise)
-Gaussian$plot(seq(-1,1, by = 0.1))
-
 GPR.constant <- R6::R6Class("GPR.constant",
                           inherit = GPR,
                           public = list(
@@ -152,7 +145,7 @@ GPR.sqrexp <-  R6::R6Class("GPR.sqrexp", inherit = GPR,
                            public = list(
                              initialize = function(X, y, l, noise){
                                stopifnot(length(l) == 1)
-                               k <- function(x, y) exp(- dist(rbind(x, y))^2/(2 * l^2))
+                               k <- function(x, y) exp(-dist(rbind(x, y))^2/(2 * l^2))
                                super$initialize(X, y, k, noise)
                              }
                            )
@@ -178,3 +171,11 @@ GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
                             )
 )
 
+
+X <- matrix(seq(-1,1,by = 0.2), nrow = 1)
+noise <- 0.1
+y <- c(10*X^3 + rnorm(length(X),0,sqrt(noise)))
+kappa <- function(x,y) exp(-(x - y)^2)
+Gaussian <- GPR$new(X, y, kappa, noise)
+Gaussian$plot(seq(-1,1, by = 0.1))
+Gaussian$L
