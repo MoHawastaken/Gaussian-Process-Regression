@@ -7,7 +7,8 @@ GPR <- R6::R6Class("GPR",
                      .y = NA,
                      .L = NA,
                      .alpha = NA,
-                     .noise = NA
+                     .noise = NA,
+                     .logp = NA
                    ),
                    public = list(
                      initialize = function(X, y, k, noise){
@@ -27,6 +28,8 @@ GPR <- R6::R6Class("GPR",
                        }
                        private$.L <- chol(K + noise * diag(n))
                        private$.alpha <- solve(t(self$L), solve(self$L, y))
+                       private$.logp <- -0.5 * self$y %*% self$alpha - 
+                         sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
                      },
                       predict = function(Xs){
                        
@@ -37,9 +40,7 @@ GPR <- R6::R6Class("GPR",
                        fs <- ks %*% self$alpha
                        v <- solve(self$L, ks)
                        Vfs <- self$k(Xs, Xs) - v %*% v
-                       logp <- -0.5 * self$y %*% self$alpha - 
-                                sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
-                       return(c(fs, Vfs, logp))
+                       return(c(fs, Vfs))
                       },
                      plot = function(testpoints){
                        dat <- data.frame(x = testpoints, 
@@ -97,6 +98,13 @@ GPR <- R6::R6Class("GPR",
                        } else{
                          stop("`$alpha` is read only", call. = FALSE)
                        }
+                     },
+                     logp = function(value){
+                       if(missing(value)){
+                         private$.logp
+                       } else{
+                         stop("`$logp` is read only", call. = FALSE)
+                       }
                      }
                    )
   
@@ -147,4 +155,15 @@ GPR.sqrexp <-  R6::R6Class("GPR.sqrexp", inherit = GPR,
                                k <- function(x, y) exp(- dist(rbind(x, y))^2/(2 * l^2))
                                super$initialize(X, y, k, noise)
                              }
-                           ))
+                           )
+)
+
+GPR.gammaexp <- R6::R6Class("GPR.gammaexp", inherit = GPR,
+                          public = list(
+                            initialize = function(X, y, gamma, l, noise){
+                              stopifnot(length(gamma) == 1, length(l) == 1)
+                              k <- function(x, y) exp(-(dist(rbind(x,y))/l)^gamma)
+                              super$initialize(X, y, k, noise)
+                            }
+                          )
+)
