@@ -35,13 +35,13 @@ GPC <- R6::R6Class("GPR",
                          f <- c(K %*% a)
                          print(a)
                          print(f)
-                         objective <- -sum(a * f)/2 + sum(log(Pi))
+                         objective <- -sum(a * f)/2 + sum(log(1/(1 + exp(-y * f))))
                          print(objective)
                          if (it > 1) {
                            if (abs(objective - last_objective) < epsilon) {
                              break
                            } else if (least_objective + 10 < objective) {
-                             stop("Apperently does not converge.")
+                             stop("Apparently does not converge.")
                            }
                          } else {
                            least_objective <- objective
@@ -59,11 +59,11 @@ GPC <- R6::R6Class("GPR",
                      },
                      predict_class = function(Xs){
                        Pi <- 1/(1 + exp(-self$f_hat))
-                       W <- -Pi*(1 - Pi)
+                       W <- Pi*(1 - Pi)
                        ks <- sapply(1:ncol(self$X), FUN = function(i) self$k(self$X[, i], Xs))
-                       fs_bar <- ks%*%((self$y + 1)/2 - Pi)
-                       v <- self$L/(self$W^(1/2)%*%ks)
-                       Vfs <- self$k(Xs, Xs) - v %*% v
+                       fs_bar <- sum(ks * ((self$y + 1)/2 - Pi))
+                       v <- solve(self$L, (sqrt(W)*ks))
+                       Vfs <- self$k(Xs, Xs) - sum(v * v)
                        hilfs_func <- function(z) 1/(1+exp(-z))*(1/sqrt(2*pi*Vfs))*exp(-(z-fs_bar)^2/(2*Vfs))
                        PIs_hat <- integrate(hilfs_func, -Inf, Inf)[1]
                        return(PIs_hat)
