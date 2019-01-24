@@ -130,13 +130,13 @@ GPC <- R6::R6Class("GPR",
 )
 
 X <- matrix(seq(-1,1,by = 0.1), nrow = 1)
-y <- as.integer(X > 0)
+y <- 2*as.integer(X > 0) - 1
 kappa <- function(x,y) exp(-3*(x - y)^2)
 gaussian_classifier <- GPC$new(X, y, kappa, 1e-5)
 gaussian_classifier$plot(seq(-2,2, by = 0.1))
 
 X <- matrix(c(seq(-1, -0.1, by = 0.1), seq(0, 1, by = 0.2)), nrow = 1)
-y <- as.integer(X > 0)
+y <- 2*as.integer(X > 0) - 1
 kappa <- function(x,y) exp(-3*(x - y)^2)
 gaussian_classifier <- GPC$new(X, y, kappa, 1e-5)
 gaussian_classifier$plot(seq(-2,2, by = 0.1))
