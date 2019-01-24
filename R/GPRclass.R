@@ -48,8 +48,8 @@ GPR <- R6::R6Class("GPR",
                          ggplot2::theme_classic() +
                          ggplot2::scale_y_continuous("output, f(x)") +
                          ggplot2::geom_line() +
-                         ggplot2::geom_ribbon(ggplot2::aes(ymin = y.1 - 2*sqrt(max(y.2,0)),
-                                         ymax = y.1 + 2*sqrt(max(y.2,0))), alpha = 0.2) +
+                         ggplot2::geom_ribbon(ggplot2::aes(ymin = y.1 - 2*sqrt(pmax(y.2,0)),
+                                         ymax = y.1 + 2*sqrt(pmax(y.2,0))), alpha = 0.2) +
                          ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
                                     mapping = ggplot2::aes(x = xpoints, y = ypoints, shape = 4)) +
                          ggplot2::scale_shape_identity()
@@ -171,10 +171,10 @@ GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
 )
 
 
-X <- matrix(seq(-1,1,by = 0.2), nrow = 1)
-noise <- 0.1
-y <- c(10*X^3 + rnorm(length(X),0,sqrt(noise)))
-kappa <- function(x,y) exp(-(x - y)^2)
+X <- matrix(seq(-5,5,by = 0.5), nrow = 1)
+noise <- 0
+y <- c(0.1*X^3 + rnorm(length(X),0, 1))
+kappa <- function(x,y) exp(-10*(x - y)^2)
 Gaussian <- GPR$new(X, y, kappa, noise)
-Gaussian$plot(seq(-1,1, by = 0.1))
+Gaussian$plot(seq(-5,5, by = 0.1))
 Gaussian$L
