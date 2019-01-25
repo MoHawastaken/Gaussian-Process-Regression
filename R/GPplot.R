@@ -1,5 +1,7 @@
 library(shiny)
 
+seed <- runif(1,0,100)
+
 ui <- fluidPage(
   fluidRow(
     column(width = 6,
@@ -72,6 +74,7 @@ server <- function(input, output){
   })
   output$plot1 <- renderPlot({
     if (input$drawrand){
+      set.seed(seed) #Fix the randomly generated datapoints so changing other parameter doesn't change them
       X <- reactive(matrix(runif(input$n,input$xlim[1],input$xlim[2]), nrow = 1))
     }
     else{
@@ -81,7 +84,7 @@ server <- function(input, output){
     y <- reactive(c(sin(X()) + rnorm(length(X()),0,sqrt(input$gennoise))))
     Gaussian <- reactive(GPR.sqrexp$new(X(), y(), l = 1, noise = input$noise))
     if (input$cov == "Squared Exponential"){
-      if ((!is.null(input$sigma_1)) & (!is.null(input$sigma_2)) & (!is.null(input$l))){
+      if (!is.null(input$sigma_1) & !is.null(input$sigma_2) & !is.null(input$l)){
         kappa <- reactive(function(x,y){
         input$sigma_1 * exp(-(1/(2*input$l^2))*(x - y)^2) + input$sigma_2 * ifelse(isTRUE(all.equal(x,y)),1,0)
         })
@@ -112,4 +115,5 @@ server <- function(input, output){
 }
 
 shinyApp(ui, server)
+
 
