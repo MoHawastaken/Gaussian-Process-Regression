@@ -3,8 +3,8 @@ library(shiny)
 ui <- fluidPage(
   fluidRow(
     column(width = 6,
-      sliderInput("noise", "noise", min = 0, max = 1, value = 0.1),
-      sliderInput("gennoise", "generating noise", min = 0, max = 1, value = 0.1),
+      sliderInput("noise", "noise", min = 0, max = 1, value = 0),
+      sliderInput("gennoise", "generating noise", min = 0, max = 1, value = 0),
       numericInput("n", "number of training points", min = 1, value = 10),
       checkboxInput("drawrand", "Choose training points at random"),
       sliderInput("xlim", "xlim", min = -10, max = 10, value = c(-5,5))
@@ -24,67 +24,50 @@ ui <- fluidPage(
 )
 
 #Helper function to remove sliders
-switchUI <- function(i){
+switchrenderUI <- function(i,kdesc,...){
   n <- 6 #number of options
-  for (j in (1:n)[-i]) removeUI(selector = paste0("div#selectdiv",j))
+  for (j in (1:n)[-i]) removeUI(selector = paste0("div#selectdiv",j)) #remove other UIs
+  #return new UI
+  renderUI({
+    tags$div(id = paste0("selctdiv",i),withMathJax(paste("$$\\huge{",kdesc,"}$$")),...)
+  })
 }
 
 server <- function(input, output){
   observeEvent(input$cov, {
     if (input$cov == "Squared Exponential"){
-      switchUI(1)
-      output$selectors <- renderUI({
-        tags$div(id = "selctdiv1",
-                 withMathJax("$$\\huge{\\sigma_1 \\cdot \\text{exp} \\left( \\frac{|x_p-x_q|^2}{2 \\ell^2} \\right) + \\sigma_2 \\delta_{pq}}$$"),
-                 sliderInput("sigma_1", withMathJax("$$\\huge{\\sigma_1}$$"), min = 0.01, max = 3, value = 1),
-                 sliderInput("sigma_2", withMathJax("$$\\huge{\\sigma_2}$$"), min = 0.00001, max = 1, value = 0.00001),
-                 sliderInput("l", withMathJax("$$\\huge{\\ell}$$"), min = 0.1, max = 3, value = 1)
-                  
-        )
-      })
+      output$selectors <- switchrenderUI(1,
+          "\\sigma_1 \\cdot \\text{exp} \\left( \\frac{|x_p-x_q|^2}{2 \\ell^2} \\right) + \\sigma_2 \\delta_{pq}",
+          sliderInput("sigma_1", withMathJax("$$\\huge{\\sigma_1}$$"), min = 0.01, max = 3, value = 1),
+          sliderInput("sigma_2", withMathJax("$$\\huge{\\sigma_2}$$"), min = 0.00001, max = 1, value = 0.00001),
+          sliderInput("l", withMathJax("$$\\huge{\\ell}$$"), min = 0.1, max = 3, value = 1))
     }
     if (input$cov == "Constant"){
-      switchUI(2)
-      output$selectors <- renderUI({
-        tags$div(id = "selctdiv2", 
-                 withMathJax("c"),
-                 sliderInput("c", "c", min = 0, max = 10, value = 1))
-      })
+      output$selectors <- switchrenderUI(2,"c",
+                     sliderInput("c", "c", min = 0, max = 10, value = 1))
     }
     if (input$cov == "Linear"){
-      switchUI(3)
-      output$selectors <- renderUI({
-        tags$div(id = "selctdiv3", 
-                 withMathJax("$$\\huge{c \\cdot \\sum_{d=1}^D x_d x_d^\\top}$$"),
+      output$selectors <- switchrenderUI(3,
+                 "c \\cdot \\sum_{d=1}^D x_d x_d^\\top",
                  sliderInput("c", "c", min = 0, max = 10, value = 1))
-      })
     }
     if (input$cov == "Polynomial"){
-      switchUI(4)
-      output$selectors <- renderUI({
-        tags$div(id = "selctdiv4", 
-                 withMathJax("$$\\huge{(x \\cdot x'^\\top + \\sigma)^p}$$"),
+      output$selectors <- switchrenderUI(4, 
+                 "(x \\cdot x'^\\top + \\sigma)^p",
                  sliderInput("sigma_3", withMathJax("$$\\huge{\\sigma}$$"), min = 0, max = 10, value = 1),
-                 sliderInput("p", "p", min = 1, max = 10, value = 1))
-      })
+                 sliderInput("p", withMathJax("$$\\huge{p}$$"), min = 1, max = 10, value = 1))
     }
     if (input$cov == "Gamma Exponential"){
-      switchUI(5)
-      output$selectors <- renderUI({
-        tags$div(id = "selctdiv5", 
-                 withMathJax("$$\\huge{\\text{exp} (- \\frac{|x-x'|}{\\ell})^\\gamma}$$"),
+      output$selectors <- switchrenderUI(5, 
+                 "\\text{exp} \\left( - \\left(\\frac{|x-x'|}{\\ell}\\right)^\\gamma \\right)",
                  sliderInput("sigma_4", withMathJax("$$\\huge{\\gamma}$$"), min = 0, max = 10, value = 1),
                  sliderInput("l2", withMathJax("$$\\huge{\\ell}$$"), min = 1, max = 10, value = 1))
-      })
     }
     if (input$cov == "Rational Quadratic"){
-      switchUI(6)
-      output$selectors <- renderUI({
-        tags$div(id = "selctdiv6", 
-                 withMathJax("$$\\huge{\\left( 1 + \\frac{|x-x'|^2}{2 \\alpha \\ell^2}\\right)^{-\\alpha}}$$"),
+      output$selectors <- switchrenderUI(6, 
+                 "\\left( 1 + \\frac{|x-x'|^2}{2 \\alpha \\ell^2}\\right)^{-\\alpha}",
                  sliderInput("alpha", withMathJax("$$\\huge{\\alpha}$$"), min = 0, max = 10, value = 1),
                  sliderInput("l3", withMathJax("$$\\huge{\\ell}$$"), min = 1, max = 10, value = 1))
-      })
     }
   })
   output$plot1 <- renderPlot({
@@ -124,7 +107,7 @@ server <- function(input, output){
       Gaussian <- reactive(GPR.rationalquadratic$new(X(), y(), input$alpha, input$l3, input$noise))
     }
     }
-    Gaussian()$plot(seq(input$xlim[1] - 1, input$xlim[2] + 1, by = 0.1))
+    Gaussian()$plot(seq(input$xlim[1], input$xlim[2], by = 0.1))
   })
 }
 
