@@ -26,47 +26,50 @@ ui <- fluidPage(
 )
 
 #Helper function to remove sliders
-switchrenderUI <- function(i,kdesc,...){
+switchrenderUI <- function(i,session,min_noise,kdesc,...){
   n <- 6 #number of options
   for (j in (1:n)[-i]) removeUI(selector = paste0("div#selectdiv",j)) #remove other UIs
+  #change minimum value for noise
+  updateSliderInput(session, "noise", value = min_noise,
+                    min = min_noise)
   #return new UI
   renderUI({
     tags$div(id = paste0("selctdiv",i),withMathJax(paste("$$\\huge{",kdesc,"}$$")),...)
   })
 }
 
-server <- function(input, output){
+server <- function(input, output,session){
   observeEvent(input$cov, {
     if (input$cov == "Squared Exponential"){
-      output$selectors <- switchrenderUI(1,
+      output$selectors <- switchrenderUI(1,session,0,
           "\\sigma_1 \\cdot \\text{exp} \\left( \\frac{|x_p-x_q|^2}{2 \\ell^2} \\right) + \\sigma_2 \\delta_{pq}",
           sliderInput("sigma_1", withMathJax("$$\\huge{\\sigma_1}$$"), min = 0.01, max = 3, value = 1),
           sliderInput("sigma_2", withMathJax("$$\\huge{\\sigma_2}$$"), min = 0.00001, max = 1, value = 0.00001),
           sliderInput("l", withMathJax("$$\\huge{\\ell}$$"), min = 0.1, max = 3, value = 1))
     }
     if (input$cov == "Constant"){
-      output$selectors <- switchrenderUI(2,"c",
+      output$selectors <- switchrenderUI(2,session,0.1,"c",
                      sliderInput("c", "c", min = 0, max = 10, value = 1))
     }
     if (input$cov == "Linear"){
-      output$selectors <- switchrenderUI(3,
+      output$selectors <- switchrenderUI(3,session,0.1,
                  "c \\cdot \\sum_{d=1}^D x_d x_d^\\top",
                  sliderInput("c", "c", min = 0, max = 10, value = 1))
     }
     if (input$cov == "Polynomial"){
-      output$selectors <- switchrenderUI(4, 
+      output$selectors <- switchrenderUI(4,session,0.1, 
                  "(x \\cdot x'^\\top + \\sigma)^p",
                  sliderInput("sigma_3", withMathJax("$$\\huge{\\sigma}$$"), min = 0, max = 10, value = 1),
                  sliderInput("p", withMathJax("$$\\huge{p}$$"), min = 1, max = 10, value = 1))
     }
     if (input$cov == "Gamma Exponential"){
-      output$selectors <- switchrenderUI(5, 
+      output$selectors <- switchrenderUI(5,session,0, 
                  "\\text{exp} \\left( - \\left(\\frac{|x-x'|}{\\ell}\\right)^\\gamma \\right)",
                  sliderInput("sigma_4", withMathJax("$$\\huge{\\gamma}$$"), min = 0, max = 10, value = 1),
                  sliderInput("l2", withMathJax("$$\\huge{\\ell}$$"), min = 1, max = 10, value = 1))
     }
     if (input$cov == "Rational Quadratic"){
-      output$selectors <- switchrenderUI(6, 
+      output$selectors <- switchrenderUI(6,session,0, 
                  "\\left( 1 + \\frac{|x-x'|^2}{2 \\alpha \\ell^2}\\right)^{-\\alpha}",
                  sliderInput("alpha", withMathJax("$$\\huge{\\alpha}$$"), min = 0, max = 10, value = 1),
                  sliderInput("l3", withMathJax("$$\\huge{\\ell}$$"), min = 1, max = 10, value = 1))
