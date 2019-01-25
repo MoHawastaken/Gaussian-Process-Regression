@@ -3,8 +3,8 @@ library(shiny)
 ui <- fluidPage(
   fluidRow(
     column(width = 6,
-      sliderInput("noise", "noise", min = 0, max = 10, value = 0.1),
-      sliderInput("gennoise", "gennoise", min = 0, max = 1, value = 0.1),
+      sliderInput("noise", "noise", min = 0, max = 1, value = 0.1),
+      sliderInput("gennoise", "generating noise", min = 0, max = 1, value = 0.1),
       numericInput("n", "number of training points", min = 1, value = 10),
       checkboxInput("drawrand", "Choose training points at random"),
       sliderInput("xlim", "xlim", min = -10, max = 10, value = c(-5,5))
@@ -22,30 +22,29 @@ ui <- fluidPage(
     column(width = 12,  
       plotOutput("plot1")))
 )
+
+#Helper function to remove sliders
+switchUI <- function(i){
+  n <- 6 #number of options
+  for (j in (1:n)[-i]) removeUI(selector = paste0("div#selectdiv",j))
+}
+
 server <- function(input, output){
   observeEvent(input$cov, {
     if (input$cov == "Squared Exponential"){
-      removeUI(selector = "div#selctdiv5")
-      removeUI(selector = "div#selctdiv2")
-      removeUI(selector = "div#selctdiv3")
-      removeUI(selector = "div#selctdiv4")
-      removeUI(selector = "div#selctdiv6")
+      switchUI(1)
       output$selectors <- renderUI({
         tags$div(id = "selctdiv1",
                  withMathJax("$$\\huge{\\sigma_1 \\cdot \\text{exp} \\left( \\frac{|x_p-x_q|^2}{2 \\ell^2} \\right) + \\sigma_2 \\delta_{pq}}$$"),
                  sliderInput("sigma_1", withMathJax("$$\\huge{\\sigma_1}$$"), min = 0.01, max = 3, value = 1),
-                 sliderInput("sigma_2", withMathJax("$$\\huge{\\sigma_2}$$"), min = 0.00001, max = 1, value = 0.1),
+                 sliderInput("sigma_2", withMathJax("$$\\huge{\\sigma_2}$$"), min = 0.00001, max = 1, value = 0.00001),
                  sliderInput("l", withMathJax("$$\\huge{\\ell}$$"), min = 0.1, max = 3, value = 1)
                   
         )
       })
     }
     if (input$cov == "Constant"){
-      removeUI(selector = "div#selctdiv1")
-      removeUI(selector = "div#selctdiv5")
-      removeUI(selector = "div#selctdiv3")
-      removeUI(selector = "div#selctdiv4")
-      removeUI(selector = "div#selctdiv6")
+      switchUI(2)
       output$selectors <- renderUI({
         tags$div(id = "selctdiv2", 
                  withMathJax("c"),
@@ -53,11 +52,7 @@ server <- function(input, output){
       })
     }
     if (input$cov == "Linear"){
-      removeUI(selector = "div#selctdiv1")
-      removeUI(selector = "div#selctdiv2")
-      removeUI(selector = "div#selctdiv5")
-      removeUI(selector = "div#selctdiv4")
-      removeUI(selector = "div#selctdiv6")
+      switchUI(3)
       output$selectors <- renderUI({
         tags$div(id = "selctdiv3", 
                  withMathJax("$$\\huge{c \\cdot \\sum_{d=1}^D x_d x_d^\\top}$$"),
@@ -65,11 +60,7 @@ server <- function(input, output){
       })
     }
     if (input$cov == "Polynomial"){
-      removeUI(selector = "div#selctdiv1")
-      removeUI(selector = "div#selctdiv2")
-      removeUI(selector = "div#selctdiv3")
-      removeUI(selector = "div#selctdiv5")
-      removeUI(selector = "div#selctdiv6")
+      switchUI(4)
       output$selectors <- renderUI({
         tags$div(id = "selctdiv4", 
                  withMathJax("$$\\huge{(x \\cdot x'^\\top + \\sigma)^p}$$"),
@@ -78,11 +69,7 @@ server <- function(input, output){
       })
     }
     if (input$cov == "Gamma Exponential"){
-      removeUI(selector = "div#selctdiv1")
-      removeUI(selector = "div#selctdiv2")
-      removeUI(selector = "div#selctdiv3")
-      removeUI(selector = "div#selctdiv4")
-      removeUI(selector = "div#selctdiv6")
+      switchUI(5)
       output$selectors <- renderUI({
         tags$div(id = "selctdiv5", 
                  withMathJax("$$\\huge{\\text{exp} (- \\frac{|x-x'|}{\\ell})^\\gamma}$$"),
@@ -91,15 +78,12 @@ server <- function(input, output){
       })
     }
     if (input$cov == "Rational Quadratic"){
-      removeUI(selector = "div#selctdiv1")
-      removeUI(selector = "div#selctdiv2")
-      removeUI(selector = "div#selctdiv3")
-      removeUI(selector = "div#selctdiv4")
-      removeUI(selector = "div#selctdiv5")
+      switchUI(6)
       output$selectors <- renderUI({
         tags$div(id = "selctdiv6", 
-                 sliderInput("alpha", "alpha", min = 0, max = 10, value = 1),
-                 sliderInput("l3", "l", min = 1, max = 10, value = 1))
+                 withMathJax("$$\\huge{\\left( 1 + \\frac{|x-x'|^2}{2 \\alpha \\ell^2}\\right)^{-\\alpha}}$$"),
+                 sliderInput("alpha", withMathJax("$$\\huge{\\alpha}$$"), min = 0, max = 10, value = 1),
+                 sliderInput("l3", withMathJax("$$\\huge{\\ell}$$"), min = 1, max = 10, value = 1))
       })
     }
   })
@@ -112,9 +96,9 @@ server <- function(input, output){
                                by = (input$xlim[2] - input$xlim[1])/input$n), nrow = 1))
     }
     y <- reactive(c(sin(X()) + rnorm(length(X()),0,sqrt(input$gennoise))))
-    Gaussian <- reactive(GPR.sqrexp$new(X(), y(), l = 1, noise = 0.1))
+    Gaussian <- reactive(GPR.sqrexp$new(X(), y(), l = 1, noise = input$noise))
     if (input$cov == "Squared Exponential"){
-      if (!is.null(input$sigma_1) & is.null(input$sigma_2) & !is.null(input$l)){
+      if ((!is.null(input$sigma_1)) & (!is.null(input$sigma_2)) & (!is.null(input$l))){
         kappa <- reactive(function(x,y){
         input$sigma_1 * exp(-(1/(2*input$l^2))*(x - y)^2) + input$sigma_2 * ifelse(isTRUE(all.equal(x,y)),1,0)
         })
