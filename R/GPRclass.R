@@ -13,7 +13,8 @@ GPR <- R6::R6Class("GPR",
                    public = list(
                      initialize = function(X, y, k, noise){
                        stopifnot(is.matrix(X), is.vector(y), is.numeric(y))
-                       stopifnot(is.numeric(noise), length(noise) == 1, is.function(k))
+                       stopifnot(is.numeric(noise), length(noise) == 1, noise >= 0)
+                       stopifnot(is.function(k))
                        private$.X <- X
                        private$.y <- y
                        private$.k <- k
