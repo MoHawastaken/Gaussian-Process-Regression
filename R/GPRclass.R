@@ -53,6 +53,16 @@ GPR <- R6::R6Class("GPR",
                          ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
                                     mapping = ggplot2::aes(x = xpoints, y = ypoints, shape = 4)) +
                          ggplot2::scale_shape_identity()
+                     },
+                     fit = function(){
+                       K <- matrix(0, nrow = n, ncol = n)
+                       for (i in 1:n) {
+                         for (j in 1:n) {
+                           K[i, j] <-  k(X[, i], X[, j])
+                         }
+                       }
+                       private$.L <- t(chol(K + noise * diag(n)))
+                       -0.5 * self$y %*%  - sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
                      }
                    ),
                    active = list(
@@ -144,9 +154,10 @@ GPR.sqrexp <-  R6::R6Class("GPR.sqrexp", inherit = GPR,
                            public = list(
                              initialize = function(X, y, l, noise){
                                stopifnot(length(l) == 1)
-                               k <- function(x, y) exp(-dist(rbind(x, y))^2/(2 * l^2))
+                               k <- function(x, y,l=l) exp(-dist(rbind(x, y))^2/(2 * l^2))
                                super$initialize(X, y, k, noise)
                              }
+                             
                            )
 )
 
@@ -170,11 +181,60 @@ GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
                             )
 )
 
+cov_dict <- list(sqexp = list(func = function(x, y,l) exp(-dist(rbind(x, y))^2/(2 * l^2)), deri = function(x,y,l){
+  r <- dist(rbind(x - y))
+  r^2/l^3*exp(-r^2/(l^2*2))
+}, start = c(1)
+)
+)
 
-X <- matrix(seq(-5,5,by = 0.5), nrow = 1)
-noise <- 0
+fit <-  function(X,y,noise,cov_names){
+  param <- list()
+  score <- c()
+  for (cov in cov_names){
+    dens <- function(...){
+      n <- ncol(X)
+      K <- matrix(0, nrow = n, ncol = n)
+      for (i in 1:n) {
+        for (j in 1:n) {
+          K[i, j] <-  cov_dict[[cov]]$func(X[, i], X[, j],...)
+        }
+      }
+      
+      L <- t(chol(K + noise * diag(n)))
+      alpha <- solve(t(L), solve(L, y))
+      - 0.5 * y %*% alpha - sum(log(diag(L))) - ncol(X) / 2 * log(2 * pi)
+    }
+    dens_deri <- function(...){
+      n <- ncol(X)
+      K <- matrix(0, nrow = n, ncol = n)
+      K_deriv <- matrix(0, nrow = n, ncol = n)
+      for (i in 1:n) {
+        for (j in 1:n) {
+          K[i, j] <-  cov_dict[[cov]]$func(X[, i], X[, j],...)
+          K_deriv[i, j] <- cov_dict[[cov]]$deri(X[, i], X[, j],...)
+        }
+      }
+      
+      K_inv <- solve(K)
+      alpha <- K_inv %*% y
+      0.5 * sum(diag(alpha %*% t(alpha) - K_inv) %*% K_deriv)
+    }
+    p <- optim(cov_dict[[cov]]$start, dens, gr = dens_deri, control = list(fnscale = -1))
+    param <- append(param, p$par)
+    score <- c(score, p$value)
+  }
+  return(list(param[[which.max(score)]],cov_names[[which.max(score)]], score))
+}
+
+
+X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
+noise <- 1
 y <- c(0.1*X^3 + rnorm(length(X),0, 1))
 kappa <- function(x,y) exp(-10*(x - y)^2)
 Gaussian <- GPR$new(X, y, kappa, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
-Gaussian$L
+z <- fit(X,y,noise,list("sqexp"))
+print(z)
+Gaussian <- GPR$new(X, y, function(x, y) exp(-dist(rbind(x, y))^2/(2 * p$par^2)), noise)
+Gaussian$plot(seq(-5,5, by = 0.1))
