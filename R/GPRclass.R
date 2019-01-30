@@ -225,7 +225,7 @@ fit <-  function(X,y,noise,cov_names){
     param <- append(param, p$par)
     score <- c(score, p$value)
   }
-  return(list(param[[which.max(score)]],cov_names[[which.max(score)]], score))
+  return(list(par = param[[which.max(score)]],cov = cov_names[[which.max(score)]], score = score))
 }
 
 
@@ -237,5 +237,5 @@ Gaussian <- GPR$new(X, y, kappa, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 z <- fit(X,y,noise,list("sqexp"))
 print(z)
-Gaussian <- GPR$new(X, y, function(x, y) exp(-dist(rbind(x, y))^2/(2 * p$par^2)), noise)
+Gaussian <- GPR$new(X, y, function(x, y) exp(-dist(rbind(x, y))^2/(2 * z$par^2)), noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
