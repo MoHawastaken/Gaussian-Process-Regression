@@ -13,7 +13,8 @@ GPR <- R6::R6Class("GPR",
                    public = list(
                      initialize = function(X, y, k, noise){
                        stopifnot(is.matrix(X), is.vector(y), is.numeric(y))
-                       stopifnot(is.numeric(noise), length(noise) == 1, is.function(k))
+                       stopifnot(is.numeric(noise), length(noise) == 1, noise >= 0)
+                       stopifnot(is.function(k))
                        private$.X <- X
                        private$.y <- y
                        private$.k <- k
@@ -173,7 +174,7 @@ GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
 
 X <- matrix(seq(-5,5,by = 0.5), nrow = 1)
 noise <- 0
-y <- c(0.1*X^3 + rnorm(length(X),0, 1))
+y <- c(0.1*exp(X) + rnorm(length(X),0, 1))
 kappa <- function(x,y) exp(-10*(x - y)^2)
 Gaussian <- GPR$new(X, y, kappa, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
