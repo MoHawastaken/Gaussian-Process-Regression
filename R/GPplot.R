@@ -43,9 +43,8 @@ server <- function(input, output,session){
     #switch formula and sliders for parameters for each covariance function
     if (input$cov == "Squared Exponential"){
       output$selectors <- switchrenderUI(1,session,0,
-        "\\sigma_1 \\cdot \\text{exp} \\left( \\frac{|x_p-x_q|^2}{2 \\ell^2} \\right) + \\sigma_2 \\delta_{pq}",
+        "\\sigma_1 \\cdot \\text{exp} \\left( \\frac{|x_p-x_q|^2}{2 \\ell^2} \\right)",
         sliderInput("sigma_1", withMathJax("$$\\huge{\\sigma_1}$$"), min = 0.01, max = 3, value = 1),
-        sliderInput("sigma_2", withMathJax("$$\\huge{\\sigma_2}$$"), min = 0.00001, max = 1, value = 0.00001),
         sliderInput("l", withMathJax("$$\\huge{\\ell}$$"), min = 0.1, max = 3, value = 1))
     }
     if (input$cov == "Constant"){
@@ -90,10 +89,9 @@ server <- function(input, output,session){
     #standard plot if nothing is selected:
     Gaussian <- reactive(GPR.sqrexp$new(X(), y(), l = 1, noise = input$noise)) 
     if (input$cov == "Squared Exponential"){
-      if (!is.null(input$sigma_1) & !is.null(input$sigma_2) & !is.null(input$l)){
+      if (!is.null(input$sigma_1) & !is.null(input$l)){
         kappa <- reactive(function(x,y){
-        (input$sigma_1 * exp(-(1/(2*input$l^2))*(x - y)^2) 
-         + input$sigma_2 * ifelse(isTRUE(all.equal(x,y)),1,0))
+        input$sigma_1 * exp(-(1/(2*input$l^2))*(x - y)^2)
         })
         Gaussian <- reactive(GPR$new(X(), y(), kappa(), input$noise))
       }
