@@ -26,9 +26,9 @@ ui <- fluidPage(
 )
 
 #Helper function to remove sliders
-switchrenderUI <- function(i,session,min_noise,kdesc,...){
+switchrenderUI <- function(i, session, min_noise, kdesc, ...){
   n <- 6 #number of options
-  for (j in (1:n)[-i]) removeUI(selector = paste0("div#selectdiv",j)) #remove other UIs
+  for (j in (1:n)[-i]) removeUI(selector = paste0("div#selectdiv", j)) #remove other UIs
   #change minimum value for noise
   updateSliderInput(session, "noise", value = min_noise,
                     min = min_noise)

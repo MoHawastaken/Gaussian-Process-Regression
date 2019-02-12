@@ -182,7 +182,7 @@ GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
                             )
 )
 
-cov_dict <- list(sqexp = list(func = function(x, y,l) exp(-dist(rbind(x, y))^2/(2 * l^2)), deri = function(x,y,l){
+cov_dict <- list(sqexp = list(func = function(x, y,l) exp(-dist(rbind(x, y))^2/(2 * l^2)), deriv = function(x,y,l){
   r <- dist(rbind(x - y))
   r^2/l^3*exp(-r^2/(l^2*2))
 }, start = c(1)
@@ -192,36 +192,37 @@ cov_dict <- list(sqexp = list(func = function(x, y,l) exp(-dist(rbind(x, y))^2/(
 fit <-  function(X,y,noise,cov_names){
   param <- list()
   score <- c()
+  usedcov <- cov_dict[[cov]]
   for (cov in cov_names){
     dens <- function(...){
       n <- ncol(X)
       K <- matrix(0, nrow = n, ncol = n)
       for (i in 1:n) {
         for (j in 1:n) {
-          K[i, j] <-  cov_dict[[cov]]$func(X[, i], X[, j],...)
+          K[i, j] <-  usedcov$func(X[, i], X[, j],...)
         }
       }
       
       L <- t(chol(K + noise * diag(n)))
-      alpha <- solve(t(L), solve(L, y))
-      - 0.5 * y %*% alpha - sum(log(diag(L))) - ncol(X) / 2 * log(2 * pi)
+      alpha <- (solve(t(L), solve(L, y))
+               - 0.5 * y %*% alpha - sum(log(diag(L))) - ncol(X) / 2 * log(2 * pi))
     }
-    dens_deri <- function(...){
+    dens_deriv <- function(...){
       n <- ncol(X)
       K <- matrix(0, nrow = n, ncol = n)
-      K_deriv <- matrix(0, nrow = n, ncol = n)
+      K_deriv <- array(0, c(n, n, length(usedcov$start)))
       for (i in 1:n) {
         for (j in 1:n) {
-          K[i, j] <-  cov_dict[[cov]]$func(X[, i], X[, j],...)
-          K_deriv[i, j] <- cov_dict[[cov]]$deri(X[, i], X[, j],...)
+          K[i, j] <-  usedcov$func(X[, i], X[, j],...)
+          K_deriv[i, j,] <- usedcov$deriv(X[, i], X[, j],...)
         }
       }
       
       K_inv <- solve(K)
       alpha <- K_inv %*% y
-      0.5 * sum(diag(alpha %*% t(alpha) - K_inv) %*% K_deriv)
+      vapply(1:length(usedcov$start), function(i) 0.5 * sum(diag(alpha %*% t(alpha) - K_inv) %*% K_deriv[,,i]), numeric(1))
     }
-    p <- optim(cov_dict[[cov]]$start, dens, gr = dens_deri, control = list(fnscale = -1))
+    p <- optim(usedcov$start, dens, gr = dens_deriv, control = list(fnscale = -1))
     param <- append(param, p$par)
     score <- c(score, p$value)
   }
