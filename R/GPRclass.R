@@ -204,8 +204,8 @@ fit <-  function(X,y,noise,cov_names){
       }
       
       L <- t(chol(K + noise * diag(n)))
-      alpha <- (solve(t(L), solve(L, y))
-               - 0.5 * y %*% alpha - sum(log(diag(L))) - ncol(X) / 2 * log(2 * pi))
+      alpha <- solve(t(L), solve(L, y))
+      - 0.5 * y %*% alpha - sum(log(diag(L))) - ncol(X) / 2 * log(2 * pi)
     }
     dens_deriv <- function(...){
       n <- ncol(X)
