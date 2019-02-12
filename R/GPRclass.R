@@ -67,6 +67,7 @@ GPR <- R6::R6Class("GPR",
                        covariance <- self$posterior_covariance(testpoints)
                        plot(testpoints, multivariate_normal(len, mean, covariance), type = "l")
                        replicate(n-1, lines(testpoints, multivariate_normal(len, mean, covariance)))
+                       return()
                      }
                    ),
                    active = list(
@@ -311,8 +312,8 @@ Gaussian$plot(seq(-5,5, by = 0.1))
 
 
 X <- matrix(seq(-5,5,by = 0.5), nrow = 1)
-noise <- 0
+noise <- 0.5
 y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
 Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
-Gaussian$plot_posterior_draws(3, seq(-5,5, by = 0.1))
+Gaussian$plot_posterior_draws(10, matrix(seq(-5,5, by = 0.1), nrow = 1))
