@@ -211,12 +211,12 @@ fit <-  function(X,y,noise,cov_names){
   score <- c()
   for (cov in cov_names){
     usedcov <- cov_dict[[cov]]
-    dens <- function(...){
+    dens <- function(v){
       n <- ncol(X)
       K <- matrix(0, nrow = n, ncol = n)
       for (i in 1:n) {
         for (j in 1:n) {
-          K[i, j] <-  usedcov$func(X[, i], X[, j],...)
+          K[i, j] <-  do.call(usedcov$func, as.list(c(X[, i], X[, j],v)))
         }
       }
       
@@ -224,14 +224,14 @@ fit <-  function(X,y,noise,cov_names){
       alpha <- solve(t(L), solve(L, y))
       - 0.5 * y %*% alpha - sum(log(diag(L))) - ncol(X) / 2 * log(2 * pi)
     }
-    dens_deriv <- function(...){
+    dens_deriv <- function(v){
       n <- ncol(X)
       K <- matrix(0, nrow = n, ncol = n)
       K_deriv <- array(0, c(n, n, length(usedcov$start)))
       for (i in 1:n) {
         for (j in 1:n) {
           K[i, j] <-  usedcov$func(X[, i], X[, j],...)
-          K_deriv[i, j,] <- usedcov$deriv(X[, i], X[, j],...)
+          K_deriv[i, j,] <- do.call(usedcov$deriv, as.list(c(X[, i], X[, j],v)))
         }
       }
       
@@ -241,6 +241,7 @@ fit <-  function(X,y,noise,cov_names){
     }
     p <- optim(usedcov$start, dens, gr = dens_deriv, control = list(fnscale = -1))
     param <- append(param, p$par)
+    print(param)
     score <- c(score, p$value)
   }
   return(list(par = param[[which.max(score)]],cov = cov_names[[which.max(score)]], score = score))
@@ -253,7 +254,7 @@ y <- c(0.1*X^3 + rnorm(length(X),0, 1))
 kappa <- function(x,y) exp(-10*(x - y)^2)
 Gaussian <- GPR$new(X, y, kappa, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
-z <- fit(X,y,noise,list("sqrexp"))
+z <- fit(X,y,noise,list("gammaexp"))
 print(z)
 Gaussian <- GPR$new(X, y, function(x, y) exp(-dist(rbind(x, y))^2/(2 * z$par^2)), noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
