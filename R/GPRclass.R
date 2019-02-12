@@ -209,8 +209,8 @@ polynomial = list(
 fit <-  function(X,y,noise,cov_names){
   param <- list()
   score <- c()
-  usedcov <- cov_dict[[cov]]
   for (cov in cov_names){
+    usedcov <- cov_dict[[cov]]
     dens <- function(...){
       n <- ncol(X)
       K <- matrix(0, nrow = n, ncol = n)
