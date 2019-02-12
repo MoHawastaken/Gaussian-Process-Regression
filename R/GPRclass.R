@@ -125,7 +125,8 @@ GPR.constant <- R6::R6Class("GPR.constant",
                           inherit = GPR,
                           public = list(
                             initialize = function(X, y, c, noise){
-                              k <- function(x, y) c
+                              stopifnot(is.numeric(c), c > 0)
+                              k <- function(x, y) constant(x, y, c)
                               super$initialize(X, y, k, noise)
                             }
                           )
@@ -135,7 +136,7 @@ GPR.linear <- R6::R6Class("GPR.linear", inherit = GPR,
                           public = list(
                             initialize = function(X, y, sigma, noise){
                               stopifnot(length(sigma) == nrow(X))
-                              k <- function(x, y) sum(sigma * x * y)
+                              k <- function(x, y) linear(x, y, sigma)
                               super$initialize(X, y, k, noise)
                             }
                           )
@@ -145,7 +146,7 @@ GPR.polynomial <- R6::R6Class("GPR.polynomial", inherit = GPR,
                               public = list(
                                 initialize = function(X, y, sigma, p, noise){
                                   stopifnot(length(sigma) == 1, length(p) == 1)
-                                  k <- function(x, y) (x %*% y + sigma)^p
+                                  k <- function(x, y) polynomial(x, y, sigma, p)
                                   super$initialize(X, y, k, noise)
                                 }
                               )
@@ -155,7 +156,7 @@ GPR.sqrexp <-  R6::R6Class("GPR.sqrexp", inherit = GPR,
                            public = list(
                              initialize = function(X, y, l, noise){
                                stopifnot(length(l) == 1)
-                               k <- function(x, y,l=l) exp(-dist(rbind(x, y))^2/(2 * l^2))
+                               k <- function(x, y) squared_exp(x, y, l)
                                super$initialize(X, y, k, noise)
                              }
                              
@@ -166,7 +167,7 @@ GPR.gammaexp <- R6::R6Class("GPR.gammaexp", inherit = GPR,
                           public = list(
                             initialize = function(X, y, gamma, l, noise){
                               stopifnot(length(gamma) == 1, length(l) == 1)
-                              k <- function(x, y) exp(-(dist(rbind(x, y)) / l) ^ gamma)
+                              k <- function(x, y) gamma_exp(x, y, l, gamma)
                               super$initialize(X, y, k, noise)
                             }
                           )
@@ -176,11 +177,39 @@ GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
                             public = list(
                               initialize = function(X, y, alpha, l, noise){
                                 stopifnot(length(alpha) == 1, length(l) == 1)
-                                k <- function(x, y) (1 + dist(rbind(x, y))^2 / (2 * alpha * l^2))^(-alpha)
+                                k <- function(x, y) rational_quadratic(x, y, l, alpha)
                                 super$initialize(X, y, k, noise)
                               }
                             )
 )
+
+# Implementation von Matrixversionen der Kovarianzfunktionen, um Effizienz zu erhöhen
+# Bei Eingabe zweier Matrizen gleicher Dimension, soll die Funktion auf die jeweils i-ten Spalten
+# für i = 1,...,ncol angewendet werden.
+# stopifnots für Dimension einfügen ?!
+constant <- function(x, y, c) UseMethod("constant")
+constant.matrix <- function(x, y, c) rep(c, ncol(x))
+constant.numeric <- function(x, y, c) c
+
+linear <- function(x, y, sigma) UseMethod("linear")
+linear.matrix <- function(x, y, sigma) colSums(sigma * x * y)
+linear.numeric <- function(x, y, sigma) sum(sigma * x * y)
+
+polynomial <- function(x, y, sigma, p) UseMethod("polynomial")
+polynomial.matrix <- function(x, y, sigma, p) (t(x) %*% y + sigma)^p
+polynomial.numeric <- function(x, y, sigma, p) (x %*% y + sigma)^p
+
+squared_exp <- function(x, y, l) UseMethod("squared_exp")
+squared_exp.matrix <- function(x, y, l) exp(-colSums((x - y)^2)/(2 * l^2))
+squared_exp.numeric <- function(x, y, l) exp(-sum((x - y)^2)/(2 * l^2))
+
+gamma_exp <- function(x, y, l, gamma) UseMethod("gamma_exp")
+gamma_exp.matrix <- function(x, y, l, gamma) exp(-(sqrt(colSums((x - y)^2))/l)^gamma)
+gamma_exp.numeric <- function(x, y, l, gamma) exp(-(sqrt(sum((x - y)^2))/l)^gamma)
+
+rational_quadratic <- function(x, y, l, alpha) UseMethod("rational_quadratic")
+rational_quadratic.matrix <- function(x, y, l, alpha) (1 + sqrt(colSums((x-y)^2)) / (2 * alpha * l^2))^(-alpha)
+rational_quadratic.numeric <- function(x, y, l, alpha) (1 + sqrt(sum((x-y)^2)) / (2 * alpha * l^2))^(-alpha)
 
 cov_dict <- list(sqrexp = list(func = function(x, y,l) exp(-dist(rbind(x, y))^2/(2 * l^2)), deriv = function(x,y,l){
   r <- dist(rbind(x - y))
@@ -251,8 +280,19 @@ X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
 noise <- 1
 y <- c(0.1*X^3 + rnorm(length(X),0, 1))
 kappa <- function(x,y) exp(-10*(x - y)^2)
-Gaussian <- GPR$new(X, y, kappa, noise)
+Gaussian <- GPR.sqrexp$new(X, y, 1, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
+Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise)
+Gaussian$plot(seq(-5,5, by = 0.1))
+Gaussian <- GPR.constant$new(X, y, 1, noise)
+Gaussian$plot(seq(-5,5, by = 0.1))
+Gaussian <- GPR.linear$new(X, y, 1, noise)
+Gaussian$plot(seq(-5,5, by = 0.1))
+Gaussian <- GPR.polynomial$new(X, y, 1, 3, noise)
+Gaussian$plot(seq(-5,5, by = 0.1))
+Gaussian <- GPR.rationalquadratic$new(X, y, 1, 1.5, noise)
+Gaussian$plot(seq(-5,5, by = 0.1))
+
 z <- fit(X,y,noise,list("sqexp"))
 print(z)
 Gaussian <- GPR$new(X, y, function(x, y) exp(-dist(rbind(x, y))^2/(2 * z$par^2)), noise)
