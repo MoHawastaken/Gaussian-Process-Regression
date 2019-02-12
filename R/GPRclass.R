@@ -187,12 +187,23 @@ cov_dict <- list(sqrexp = list(func = function(x, y,l) exp(-dist(rbind(x, y))^2/
   r^2/l^3*exp(-r^2/(l^2*2))
 }, start = c(1)
 ),
-gammaexp = list(func = function(x, y, gamma, l) exp(-(dist(rbind(x, y)) / l) ^ gamma), deriv = function(x, y, gamma, l){
+gammaexp = list(
+  func = function(x, y, gamma, l) exp(-(dist(rbind(x, y)) / l) ^ gamma), deriv = function(x, y, gamma, l){
   r <- dist(rbind(x-y))
   c(-exp(-(r/l)^gamma) * (r/l)^gamma * log(r/l), exp(-(r/l)^gamma) * gamma * r^gamma / (l^(gamma+1)))
 }, start = c(1)
 ),
-constant = 
+constant = list(
+  func = function(x, y, c) c, deriv = function(x, y, c) 0, start = c(1)
+),
+linear = list(
+  func = function(x, y, sigma) sum(sigma * x * y), deriv = function(x, y, sigma) sigma, start = c(1)
+),
+polynomial = list(
+  func = function(x, y, sigma, p) (x %*% y + sigma)^p, deriv = function(x, y, sigma, p){
+    c(p * (x %*% y + sigma)^(p - 1), (x %*% y + sigma)^p * log((x %*% y + sigma)))
+  }, start = c(1)
+)
 )
 
 fit <-  function(X,y,noise,cov_names){
