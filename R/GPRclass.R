@@ -199,7 +199,7 @@ linear.matrix <- function(x, y, sigma) colSums(sigma * x * y)
 linear.numeric <- function(x, y, sigma) sum(sigma * x * y)
 
 polynomial <- function(x, y, sigma, p) UseMethod("polynomial")
-polynomial.matrix <- function(x, y, sigma, p) (t(x) %*% y + sigma)^p
+polynomial.matrix <- function(x, y, sigma, p) (sum(x * y) + sigma)^p
 polynomial.numeric <- function(x, y, sigma, p) (x %*% y + sigma)^p
 
 squared_exp <- function(x, y, l) UseMethod("squared_exp")
@@ -289,11 +289,7 @@ fit <-  function(X, y, noise, cov_names){
 X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
 noise <- 0.1
 y <- c(0.1*X^3 + rnorm(length(X),0, 1))
-Gaussian <- GPR.sqrexp$new(X, y, 1, noise)
-Gaussian$plot(seq(-5,5, by = 0.1))
 
-Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise)
-Gaussian$plot(seq(-5,5, by = 0.1))
 Gaussian <- GPR.constant$new(X, y, 1, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 Gaussian <- GPR.linear$new(X, y, 1, noise)
@@ -301,6 +297,10 @@ Gaussian$plot(seq(-5,5, by = 0.1))
 Gaussian <- GPR.polynomial$new(X, y, 1, 3, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 Gaussian <- GPR.rationalquadratic$new(X, y, 1, 1.5, noise)
+Gaussian$plot(seq(-5,5, by = 0.1))
+Gaussian <- GPR.sqrexp$new(X, y, 1, noise)
+Gaussian$plot(seq(-5,5, by = 0.1))
+Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 
 
