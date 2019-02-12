@@ -199,7 +199,7 @@ linear.matrix <- function(x, y, sigma) colSums(sigma * x * y)
 linear.numeric <- function(x, y, sigma) sum(sigma * x * y)
 
 polynomial <- function(x, y, sigma, p) UseMethod("polynomial")
-polynomial.matrix <- function(x, y, sigma, p) (sum(x * y) + sigma)^p
+polynomial.matrix <- function(x, y, sigma, p) (colSums(x * y) + sigma)^p
 polynomial.numeric <- function(x, y, sigma, p) (x %*% y + sigma)^p
 
 squared_exp <- function(x, y, l) UseMethod("squared_exp")
