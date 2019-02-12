@@ -191,7 +191,7 @@ gammaexp = list(
   func = function(x, y, gamma, l) exp(-(dist(rbind(x, y)) / l) ^ gamma), deriv = function(x, y, gamma, l){
   r <- dist(rbind(x-y))
   c(-exp(-(r/l)^gamma) * (r/l)^gamma * log(r/l), exp(-(r/l)^gamma) * gamma * r^gamma / (l^(gamma+1)))
-}, start = c(1)
+}, start = c(1,1)
 ),
 constant = list(
   func = function(x, y, c) c, deriv = function(x, y, c) 0, start = c(1)
@@ -253,7 +253,7 @@ y <- c(0.1*X^3 + rnorm(length(X),0, 1))
 kappa <- function(x,y) exp(-10*(x - y)^2)
 Gaussian <- GPR$new(X, y, kappa, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
-z <- fit(X,y,noise,list("sqexp"))
+z <- fit(X,y,noise,list("sqrexp"))
 print(z)
 Gaussian <- GPR$new(X, y, function(x, y) exp(-dist(rbind(x, y))^2/(2 * z$par^2)), noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
