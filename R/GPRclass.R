@@ -182,11 +182,17 @@ GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
                             )
 )
 
-cov_dict <- list(sqexp = list(func = function(x, y,l) exp(-dist(rbind(x, y))^2/(2 * l^2)), deriv = function(x,y,l){
+cov_dict <- list(sqrexp = list(func = function(x, y,l) exp(-dist(rbind(x, y))^2/(2 * l^2)), deriv = function(x,y,l){
   r <- dist(rbind(x - y))
   r^2/l^3*exp(-r^2/(l^2*2))
 }, start = c(1)
-)
+),
+gammaexp = list(func = function(x, y, gamma, l) exp(-(dist(rbind(x, y)) / l) ^ gamma), deriv = function(x, y, gamma, l){
+  r <- dist(rbind(x-y))
+  c(-exp(-(r/l)^gamma) * (r/l)^gamma * log(r/l), exp(-(r/l)^gamma) * gamma * r^gamma / (l^(gamma+1)))
+}, start = c(1)
+),
+constant = 
 )
 
 fit <-  function(X,y,noise,cov_names){
