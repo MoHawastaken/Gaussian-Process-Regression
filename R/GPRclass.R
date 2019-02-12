@@ -19,14 +19,8 @@ GPR <- R6::R6Class("GPR",
                        private$.y <- y
                        private$.k <- k
                        private$.noise <- noise
-                       #K <- outer(1:ncol(X), 1:ncol(X), function(i,j) k(X[, factor(i)], X[, factor(j)]))
                        n <- ncol(X)
-                       K <- matrix(0, nrow = n, ncol = n)
-                       for (i in 1:n) {
-                         for (j in 1:n) {
-                           K[i, j] <-  k(X[, i], X[, j])
-                         }
-                       }
+                       K <- outer(1:n, 1:n, function(i,j) k(X[, i, drop = FALSE], X[, j, drop = FALSE]))
                        private$.L <- t(chol(K + noise * diag(n)))
                        private$.alpha <- solve(t(self$L), solve(self$L, y))
                        private$.logp <- -0.5 * self$y %*% self$alpha - sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
@@ -42,6 +36,17 @@ GPR <- R6::R6Class("GPR",
                        Vfs <- self$k(Xs, Xs) - v %*% v
                        return(c(fs, Vfs))
                       },
+                     posterior_mean = function(testpoints) {
+                       outer(1:ncol(testpoints), 1:ncol(self$X), 
+                             function(i,j) self$k(testpoints[, i, drop = F], self$X[, j, drop = F])) %*% self$alpha
+                     },
+                     posterior_covariance = function(testpoints) {
+                       len <- ncol(testpoints)
+                       cov_test <- outer(1:len, 1:len, 
+                              function(i,j) self$k(testpoints[, i, drop = F], testpoints[, j, drop = F]))
+                       cov_mixed <- outer(1:len, 1:ncol(self$X), function(i,j) self$k(testpoints[, i, drop = F], self$X[, j, drop = F]))
+                       cov_test - cov_mixed %*% sapply(1:len, function(i) solve(t(self$L), solve(self$L, cov_mixed[i, ])))
+                     },
                      plot = function(testpoints){
                        dat <- data.frame(x = testpoints, 
                                   y = t(sapply(testpoints, function(x) self$predict(x)[1:2])))
@@ -54,6 +59,14 @@ GPR <- R6::R6Class("GPR",
                          ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
                                     mapping = ggplot2::aes(x = xpoints, y = ypoints, shape = 4)) +
                          ggplot2::scale_shape_identity()
+                     },
+                     plot_posterior_draws = function(n, testpoints) {
+                       stopifnot(is.matrix(testpoints))
+                       len <- ncol(testpoints)
+                       mean <- self$posterior_mean(testpoints)
+                       covariance <- self$posterior_covariance(testpoints)
+                       plot(testpoints, multivariate_normal(len, mean, covariance), type = "l")
+                       replicate(n-1, lines(testpoints, multivariate_normal(len, mean, covariance)))
                      },
                      fit = function(){
                        K <- matrix(0, nrow = n, ncol = n)
@@ -117,7 +130,6 @@ GPR <- R6::R6Class("GPR",
                        }
                      }
                    )
-  
 )
 
 
@@ -307,3 +319,11 @@ z <- fit(X,y,noise,list("sqrexp", "gammaexp", "polynomial"))
 print(z)
 Gaussian <- GPR$new(X, y, function(x, y) exp(-dist(rbind(x, y))^2/(2 * z$par^2)), noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
+
+
+X <- matrix(seq(-5,5,by = 0.5), nrow = 1)
+noise <- 0
+y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
+Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise)
+Gaussian$plot(seq(-5,5, by = 0.1))
+Gaussian$plot_posterior_draws(3, seq(-5,5, by = 0.1))
