@@ -182,41 +182,42 @@ GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
                             )
 )
 
-cov_dict <- list(sqrexp = list(func = function(x, y,l) exp(-dist(rbind(x, y))^2/(2 * l^2)), deriv = function(x,y,l){
-  r <- dist(rbind(x - y))
-  r^2/l^3*exp(-r^2/(l^2*2))
-}, start = c(1)
-),
-gammaexp = list(
-  func = function(x, y, gamma, l) exp(-(dist(rbind(x, y)) / l) ^ gamma), deriv = function(x, y, gamma, l){
-  r <- dist(rbind(x-y))
-  c(-exp(-(r/l)^gamma) * (r/l)^gamma * log(r/l), exp(-(r/l)^gamma) * gamma * r^gamma / (l^(gamma+1)))
-}, start = c(1,1)
-),
-constant = list(
-  func = function(x, y, c) c, deriv = function(x, y, c) 0, start = c(1)
-),
-linear = list(
-  func = function(x, y, sigma) sum(sigma * x * y), deriv = function(x, y, sigma) sigma, start = c(1)
-),
-polynomial = list(
-  func = function(x, y, sigma, p) (x %*% y + sigma)^p, deriv = function(x, y, sigma, p){
-    c(p * (x %*% y + sigma)^(p - 1), (x %*% y + sigma)^p * log((x %*% y + sigma)))
-  }, start = c(1)
-)
+cov_dict <- list(
+  sqrexp = list(func = function(x, y,l) exp(-dist(rbind(x, y))^2/(2 * l^2)), 
+                deriv = function(x,y,l){
+                  r <- dist(rbind(x - y))
+                  r^2/l^3*exp(-r^2/(l^2*2))
+                }, start = c(1)
+          ),
+  gammaexp = list(func = function(x, y, gamma, l) exp(-(dist(rbind(x, y)) / l) ^ gamma), 
+                  deriv = function(x, y, gamma, l){
+                    r <- dist(rbind(x - y))
+                    c(-exp(-(r/l)^gamma) * (r/l)^gamma * log(r/l), exp(-(r/l)^gamma) * gamma * r^gamma / (l^(gamma + 1)))
+                  }, start = c(1, 1)
+          ),
+  constant = list(func = function(x, y, c) c, deriv = function(x, y, c) 0, start = c(1)
+          ),
+  linear = list(func = function(x, y, sigma) sum(sigma * x * y), deriv = function(x, y, sigma) sigma, start = c(1)
+          ),
+  polynomial = list(func = function(x, y, sigma, p) (x %*% y + sigma)^p, 
+                  deriv = function(x, y, sigma, p){
+                    c(p * (x %*% y + sigma)^(p - 1), (x %*% y + sigma)^p * log((x %*% y + sigma)))
+                }, start = c(1, 2)
+          )
 )
 
-fit <-  function(X,y,noise,cov_names){
+fit <-  function(X, y, noise, cov_names){
   param <- list()
   score <- c()
   for (cov in cov_names){
     usedcov <- cov_dict[[cov]]
+    nparam <- length(usedcov$start)
     dens <- function(v){
       n <- ncol(X)
       K <- matrix(0, nrow = n, ncol = n)
       for (i in 1:n) {
         for (j in 1:n) {
-          K[i, j] <-  do.call(usedcov$func, as.list(c(X[, i], X[, j],v)))
+          K[i, j] <-  do.call(usedcov$func, as.list(c(X[, i], X[, j], v)))
         }
       }
       
@@ -227,24 +228,28 @@ fit <-  function(X,y,noise,cov_names){
     dens_deriv <- function(v){
       n <- ncol(X)
       K <- matrix(0, nrow = n, ncol = n)
-      K_deriv <- array(0, c(n, n, length(usedcov$start)))
+      K_deriv <- array(0, c(n, n, nparam))
       for (i in 1:n) {
         for (j in 1:n) {
-          K[i, j] <-  usedcov$func(X[, i], X[, j],...)
-          K_deriv[i, j,] <- do.call(usedcov$deriv, as.list(c(X[, i], X[, j],v)))
+          K[i, j] <-  do.call(usedcov$func, as.list(c(X[, i], X[, j], v)))
+          K_deriv[i, j,] <- do.call(usedcov$deriv, as.list(c(X[, i], X[, j], v)))
         }
       }
       
       K_inv <- solve(K)
       alpha <- K_inv %*% y
-      vapply(1:length(usedcov$start), function(i) 0.5 * sum(diag(alpha %*% t(alpha) - K_inv) %*% K_deriv[,,i]), numeric(1))
+      vapply(1:nparam, function(i) 0.5 * sum(diag(alpha %*% t(alpha) - K_inv) %*% K_deriv[,,i]), numeric(1))
     }
-    p <- optim(usedcov$start, dens, gr = dens_deriv, control = list(fnscale = -1))
-    param <- append(param, p$par)
-    print(param)
+    #Switch optim method if parameter is one dimensional
+    if (nparam == 1) p <- optim(usedcov$start, dens, gr = dens_deriv, method = "Brent", 
+                                upper = 10, lower = -10, control = list(fnscale = -1))
+    else p <- optim(usedcov$start, dens, gr = dens_deriv, method = "Nelder-Mead", 
+                   control = list(fnscale = -1))
+    
+    param <- append(param, list(p$par))
     score <- c(score, p$value)
   }
-  return(list(par = param[[which.max(score)]],cov = cov_names[[which.max(score)]], score = score))
+  return(list(par = param[[which.max(score)]], cov = cov_names[[which.max(score)]], score = score))
 }
 
 
@@ -254,7 +259,7 @@ y <- c(0.1*X^3 + rnorm(length(X),0, 1))
 kappa <- function(x,y) exp(-10*(x - y)^2)
 Gaussian <- GPR$new(X, y, kappa, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
-z <- fit(X,y,noise,list("gammaexp"))
+z <- fit(X,y,noise,list("sqrexp", "gammaexp", "polynomial"))
 print(z)
 Gaussian <- GPR$new(X, y, function(x, y) exp(-dist(rbind(x, y))^2/(2 * z$par^2)), noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
