@@ -25,7 +25,6 @@ GPC <- R6::R6Class("GPR",
                        while (TRUE) {
                          it <- it + 1
                          Pi <- 1/(1 + exp(-f))
-                         print(Pi)
                          W <- (1 - Pi)*Pi
                          L <- t(chol(diag(n) + (sqrt(W) %o% sqrt(W)) * K))
                          b <- W*f + (y + 1)/2 - Pi
@@ -33,10 +32,7 @@ GPC <- R6::R6Class("GPR",
                          intermediate <- solve(t(L), intermediate)
                          a <- b - sqrt(W)*intermediate
                          f <- c(K %*% a)
-                         print(a)
-                         print(f)
                          objective <- -sum(a * f)/2 - sum(log(1 + exp(-y * f)))
-                         print(objective)
                          if (it > 1) {
                            if (abs(objective - last_objective) < epsilon) {
                              break

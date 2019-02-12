@@ -17,7 +17,8 @@ ui <- fluidPage(
       selectInput("cov", "Covariance Function", choices = list("Squared Exponential", "Gamma Exponential", 
                                                                     "Constant", "Linear", "Polynomial", 
                                                                     "Rational Quadratic")),
-      uiOutput("selectors")
+      uiOutput("selectors"),
+      actionButton("opthyp","Optimize Hyperparameters")
       )
   ),
   fluidRow(
@@ -74,6 +75,10 @@ server <- function(input, output,session){
                  sliderInput("alpha", withMathJax("$$\\huge{\\alpha}$$"), min = 0.5, max = 10, value = 1),
                  sliderInput("l3", withMathJax("$$\\huge{\\ell}$$"), min = 0.01, max = 3, value = 1))
     }
+  })
+  observeEvent(input$opthyp,{
+    z <- fit(X,y,input$noise,list("sqrexp"))
+    print(z$par)
   })
   output$plot1 <- renderPlot({
     if (input$drawrand){

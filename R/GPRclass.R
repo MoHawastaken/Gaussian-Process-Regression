@@ -67,16 +67,6 @@ GPR <- R6::R6Class("GPR",
                        covariance <- self$posterior_covariance(testpoints)
                        plot(testpoints, multivariate_normal(len, mean, covariance), type = "l")
                        replicate(n-1, lines(testpoints, multivariate_normal(len, mean, covariance)))
-                     },
-                     fit = function(){
-                       K <- matrix(0, nrow = n, ncol = n)
-                       for (i in 1:n) {
-                         for (j in 1:n) {
-                           K[i, j] <-  k(X[, i], X[, j])
-                         }
-                       }
-                       private$.L <- t(chol(K + noise * diag(n)))
-                       -0.5 * self$y %*%  - sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
                      }
                    ),
                    active = list(
@@ -285,7 +275,7 @@ fit <-  function(X, y, noise, cov_names){
     #Switch optim method if parameter is one dimensional
     if (nparam == 1) p <- optim(usedcov$start, dens, gr = dens_deriv, method = "Brent", 
                                 upper = 10, lower = -10, control = list(fnscale = -1))
-    else p <- optim(usedcov$start, dens, gr = dens_deriv, method = "Nelder-Mead", 
+    else p <- optim(usedcov$start, dens, gr = dens_deriv, method = "BFGS", 
                    control = list(fnscale = -1))
     
     param <- append(param, list(p$par))
@@ -296,9 +286,8 @@ fit <-  function(X, y, noise, cov_names){
 
 
 X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
-noise <- 1
+noise <- 0.1
 y <- c(0.1*X^3 + rnorm(length(X),0, 1))
-kappa <- function(x,y) exp(-10*(x - y)^2)
 Gaussian <- GPR.sqrexp$new(X, y, 1, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 
@@ -314,10 +303,10 @@ Gaussian <- GPR.rationalquadratic$new(X, y, 1, 1.5, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 
 
-z <- fit(X,y,noise,list("sqrexp", "gammaexp", "polynomial"))
+z <- fit(X,y,noise,list("sqrexp", "gammaexp"))
 
 print(z)
-Gaussian <- GPR$new(X, y, function(x, y) exp(-dist(rbind(x, y))^2/(2 * z$par^2)), noise)
+Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_dict[[z$cov]]$func, as.list(c(x,y,z$par))), noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 
 
