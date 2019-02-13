@@ -61,125 +61,133 @@
 #' @export
 
 GPR <- R6::R6Class("GPR",
-                   private = list(
-                     .X = NA,
-                     .k = NA,
-                     .y = NA,
-                     .L = NA,
-                     .alpha = NA,
-                     .noise = NA,
-                     .logp = NA
-                   ),
-                   public = list(
-                     initialize = function(X, y, k, noise){
-                       stopifnot(is.matrix(X), is.vector(y), is.numeric(y))
-                       stopifnot(is.numeric(noise), length(noise) == 1, noise >= 0)
-                       stopifnot(is.function(k))
-                       private$.X <- X
-                       private$.y <- y
-                       private$.k <- k
-                       private$.noise <- noise
-                       n <- ncol(X)
-                       K <- outer(1:n, 1:n, function(i,j) k(X[, i, drop = FALSE], X[, j, drop = FALSE]))
-                       private$.L <- t(chol(K + noise * diag(n)))
-                       private$.alpha <- solve(t(self$L), solve(self$L, y))
-                       private$.logp <- -0.5 * self$y %*% self$alpha - sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
-                     },
-                      predict = function(Xs){
-                       
-                       #Calculate k* (ks)
-                       ks <- sapply(1:ncol(self$X), FUN = function(i) self$k(self$X[, i], Xs))
-                       
-                       #calculate all other variables directly
-                       fs <- ks %*% self$alpha
-                       v <- solve(self$L, ks)
-                       Vfs <- self$k(Xs, Xs) - v %*% v
-                       return(c(fs, Vfs))
-                      },
-                     posterior_mean = function(testpoints) {
-                       outer(1:ncol(testpoints), 1:ncol(self$X), 
-                             function(i,j) self$k(testpoints[, i, drop = F], self$X[, j, drop = F])) %*% self$alpha
-                     },
-                     posterior_covariance = function(testpoints) {
-                       len <- ncol(testpoints)
-                       cov_test <- outer(1:len, 1:len, 
-                              function(i,j) self$k(testpoints[, i, drop = F], testpoints[, j, drop = F]))
-                       cov_mixed <- outer(1:len, 1:ncol(self$X), function(i,j) self$k(testpoints[, i, drop = F], self$X[, j, drop = F]))
-                       cov_test - cov_mixed %*% sapply(1:len, function(i) solve(t(self$L), solve(self$L, cov_mixed[i, ])))
-                     },
-                     plot = function(testpoints){
-                       dat <- data.frame(x = testpoints, 
-                                  y = t(sapply(testpoints, function(x) self$predict(x)[1:2])))
-                       ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y.1)) +
-                         ggplot2::theme_classic() +
-                         ggplot2::scale_y_continuous("output, f(x)") +
-                         ggplot2::geom_line() +
-                         ggplot2::geom_ribbon(ggplot2::aes(ymin = y.1 - 2*sqrt(pmax(y.2,0)),
-                                         ymax = y.1 + 2*sqrt(pmax(y.2,0))), alpha = 0.2) +
-                         ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
-                                    mapping = ggplot2::aes(x = xpoints, y = ypoints, shape = 4)) +
-                         ggplot2::scale_shape_identity()
-                     },
-                     plot_posterior_draws = function(n, testpoints) {
-                       stopifnot(is.matrix(testpoints))
-                       len <- ncol(testpoints)
-                       mean <- self$posterior_mean(testpoints)
-                       covariance <- self$posterior_covariance(testpoints)
-                       plot(testpoints, multivariate_normal(len, mean, covariance), type = "l")
-                       replicate(n - 1, lines(testpoints, multivariate_normal(len, mean, covariance)))
-                     }
-                   ),
-                   active = list(
-                     X = function(value){
-                       if(missing(value)){
-                         private$.X
-                       } else{
-                         stop("`$X` is read only", call. = FALSE)
-                       }
-                     },
-                     k = function(value){
-                       if(missing(value)){
-                         private$.k
-                       } else{
-                         stop("`$k` is read only", call. = FALSE)
-                       }
-                     },
-                     y = function(value){
-                       if(missing(value)){
-                         private$.y
-                       } else{
-                         stop("`$y` is read only", call. = FALSE)
-                       }
-                     },
-                     noise = function(value){
-                       if(missing(value)){
-                         private$.noise
-                       } else{
-                         stop("`$noise` is read only", call. = FALSE)
-                       }
-                     },
-                     L = function(value){
-                       if(missing(value)){
-                         private$.L
-                       } else{
-                         stop("`$L` is read only", call. = FALSE)
-                       }
-                     },
-                     alpha = function(value){
-                       if(missing(value)){
-                         private$.alpha
-                       } else{
-                         stop("`$alpha` is read only", call. = FALSE)
-                       }
-                     },
-                     logp = function(value){
-                       if(missing(value)){
-                         private$.logp
-                       } else{
-                         stop("`$logp` is read only", call. = FALSE)
-                       }
-                     }
-                   )
+             private = list(
+               .X = NA,
+               .k = NA,
+               .y = NA,
+               .L = NA,
+               .alpha = NA,
+               .noise = NA,
+               .logp = NA
+             ),
+             public = list(
+               initialize = function(X, y, k, noise){
+                 stopifnot(is.matrix(X), is.vector(y), is.numeric(y))
+                 stopifnot(is.numeric(noise), length(noise) == 1, noise >= 0)
+                 stopifnot(is.function(k))
+                 private$.X <- X
+                 private$.y <- y
+                 private$.k <- k
+                 private$.noise <- noise
+                 n <- ncol(X)
+                 #K <- outer(1:n, 1:n, function(i,j) k(X[, i, drop = FALSE], X[, j, drop = FALSE]))
+                 K <- covariance_matrix(X, X, k)
+                 #Pruefe, ob alle Hauptminoren positiv sind.
+                 if (min(sapply(1:n, function(i) det((K + noise * diag(n))[1:i, 1:i, drop = F]))) <= 0) {
+                   stop("Inputs lead to non positive definite covariance matrix. Try using a larger noise or a smaller lengthscale.")
+                 }
+                 private$.L <- t(chol(K + noise * diag(n)))
+                 private$.alpha <- solve(t(self$L), solve(self$L, y))
+                 private$.logp <- -0.5 * self$y %*% self$alpha - sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
+               },
+                predict = function(X_star){
+                  stopifnot(is.numeric(X_star), length(X_star) %% nrow(self$X) == 0)
+                  if (is.null(dim(X_star))) {
+                    dim(X_star) <- c(length(X_star), 1)
+                  }
+                  #k_star <- sapply(1:ncol(self$X), FUN = function(i) self$k(self$X[, i], Xs))
+                  K_star <- covariance_matrix(self$X, X_star, self$k)
+                  posterior_mean <- t(K_star) %*% self$alpha
+                  v <- solve(self$L, K_star)
+                  #Vfs <- self$k(Xs, Xs) - v %*% v
+                  posterior_variance <- covariance_matrix(X_star, X_star, self$k) - t(v) %*% v
+                  return(c(posterior_mean, posterior_variance))
+                },
+               predict2 = function(X_star){
+                 stopifnot(is.numeric(X_star), length(X_star) %% nrow(self$X) == 0)
+                 if (is.null(dim(X_star))) {
+                   dim(X_star) <- c(nrow(self$X), length(X_star)/nrow(self$X))
+                 }
+                 K_star <- covariance_matrix(self$X, X_star, self$k)
+                 posterior_mean <- t(K_star) %*% self$alpha
+                 v <- solve(self$L, K_star)
+                 posterior_variance <- covariance_matrix(X_star, X_star, self$k) - t(v) %*% v
+                 return(list(posterior_mean, posterior_variance))
+               },
+               plot = function(testpoints){
+                 #dat <- data.frame(x = testpoints, 
+                 #           y = t(sapply(testpoints, function(x) self$predict(x)[1:2])))
+                 predictions <- self$predict2(testpoints)
+                 y <- cbind(predictions[[1]], diag(predictions[[2]]))
+                 dat <- data.frame(x = testpoints, y = y)
+                 ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y.1)) +
+                   ggplot2::theme_classic() +
+                   ggplot2::scale_y_continuous("output, f(x)") +
+                   ggplot2::geom_line() +
+                   ggplot2::geom_ribbon(ggplot2::aes(ymin = y.1 - 2*sqrt(pmax(y.2,0)),
+                                   ymax = y.1 + 2*sqrt(pmax(y.2,0))), alpha = 0.2) +
+                   ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
+                              mapping = ggplot2::aes(x = xpoints, y = ypoints, shape = 4)) +
+                   ggplot2::scale_shape_identity()
+               },
+               plot_posterior_draws = function(n, testpoints) {
+                 post_distr <- self$predict2(testpoints)
+                 len <- length(post_distr[[1]])
+                 plot(testpoints, multivariate_normal(len, post_distr[[1]], post_distr[[2]]), type = "l")
+                 replicate(n - 1, lines(testpoints, multivariate_normal(len, post_distr[[1]], post_distr[[2]])))
+               }
+             ),
+             active = list(
+               X = function(value){
+                 if(missing(value)){
+                   private$.X
+                 } else{
+                   stop("`$X` is read only", call. = FALSE)
+                 }
+               },
+               k = function(value){
+                 if(missing(value)){
+                   private$.k
+                 } else{
+                   stop("`$k` is read only", call. = FALSE)
+                 }
+               },
+               y = function(value){
+                 if(missing(value)){
+                   private$.y
+                 } else{
+                   stop("`$y` is read only", call. = FALSE)
+                 }
+               },
+               noise = function(value){
+                 if(missing(value)){
+                   private$.noise
+                 } else{
+                   stop("`$noise` is read only", call. = FALSE)
+                 }
+               },
+               L = function(value){
+                 if(missing(value)){
+                   private$.L
+                 } else{
+                   stop("`$L` is read only", call. = FALSE)
+                 }
+               },
+               alpha = function(value){
+                 if(missing(value)){
+                   private$.alpha
+                 } else{
+                   stop("`$alpha` is read only", call. = FALSE)
+                 }
+               },
+               logp = function(value){
+                 if(missing(value)){
+                   private$.logp
+                 } else{
+                   stop("`$logp` is read only", call. = FALSE)
+                 }
+               }
+             )
 )
 
 #' @export
@@ -247,6 +255,14 @@ GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
                               }
                             )
 )
+
+# Funktion, um Kovarianzmatrix zu berechnen. Die verwendete Kovarianzfunktion muss bei Eingabe zweier Matrizen 
+# gleicher Dimension die Werte bei Anwendung auf die jeweils i-ten Spalten für i = 1,...,ncol zurueckgeben.
+covariance_matrix <- function(A, B, covariance_function) {
+  outer(1:ncol(A), 1:ncol(B), function(i, j) covariance_function(A[, i, drop = F], B[, j, drop = F]))
+}
+
+
 
 # Implementation von Matrixversionen der Kovarianzfunktionen, um Effizienz zu erhöhen
 # Bei Eingabe zweier Matrizen gleicher Dimension, soll die Funktion auf die jeweils i-ten Spalten
@@ -353,7 +369,7 @@ fit <-  function(X, y, noise, cov_names){
 
 
 X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
-noise <- 0.5
+noise <- 1
 y <- c(0.1*X^3 + rnorm(length(X),0, 1))
 
 Gaussian <- GPR.constant$new(X, y, 1, noise)
@@ -364,7 +380,7 @@ Gaussian <- GPR.polynomial$new(X, y, 1, 3, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 Gaussian <- GPR.rationalquadratic$new(X, y, 1, 1.5, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
-Gaussian <- GPR.sqrexp$new(X, y, 1, noise)
+Gaussian <- GPR.sqrexp$new(X, y, 0.1, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
