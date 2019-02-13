@@ -344,7 +344,7 @@ fit <-  function(X, y, noise, cov_names){
     if (nparam == 1) l <- append(l, list(method = "Brent", lower = -10, upper = 10))
     else l <- append(l, list(method = "BFGS"))
     l <- append(l, list(control = list(fnscale = -1)))
-    p <- do.call(function(...) optim(usedcov$start, dens, ...), l)
+    p <- do.call(optim, append(list(usedcov$start, dens), l))
     param <- append(param, list(p$par))
     score <- c(score, p$value)
   }
