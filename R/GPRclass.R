@@ -267,28 +267,28 @@ gammaexp.matrix <- function(x, y, l, gamma) exp(-(sqrt(colSums((x - y)^2))/l)^ga
 gammaexp.numeric <- function(x, y, l, gamma) exp(-(sqrt(sum((x - y)^2))/l)^gamma)
 
 rationalquadratic <- function(x, y, l, alpha) UseMethod("rationalquadratic")
-rationalquadratic.matrix <- function(x, y, l, alpha) (1 + sqrt(colSums((x-y)^2)) / (2 * alpha * l^2))^(-alpha)
-rationalquadratic.numeric <- function(x, y, l, alpha) (1 + sqrt(sum((x-y)^2)) / (2 * alpha * l^2))^(-alpha)
+rationalquadratic.matrix <- function(x, y, l, alpha) (1 + sqrt(colSums((x - y)^2)) / (2 * alpha * l^2))^(-alpha)
+rationalquadratic.numeric <- function(x, y, l, alpha) (1 + sqrt(sum((x - y)^2)) / (2 * alpha * l^2))^(-alpha)
 
-
+#Save derivatives of covariance functions for the optimization of their hyperparameters
 cov_dict <- list(
-  sqrexp = list(func = function(x, y,l) exp(-sum((x - y)^2)/(2 * l^2)), 
+  sqrexp = list(func = sqrexp, 
                 deriv = function(x, y, l){
                   r <- sqrt(sum((x - y)^2))
                   r^2/l^3*exp(-r^2/(l^2*2))
                 }, start = c(1)
           ),
-  gammaexp = list(func = function(x, y, gamma, l) exp(-(sqrt(sum((x - y)^2)) / l) ^ gamma), 
+  gammaexp = list(func = gammaexp, 
                   deriv = function(x, y, gamma, l){
                     r <- sqrt(sum((x - y)^2))
                     c(-exp(-(r/l)^gamma) * (r/l)^gamma * log(r/l), exp(-(r/l)^gamma) * gamma * r^gamma / (l^(gamma + 1)))
                   }, start = c(1, 1)
           ),
-  constant = list(func = function(x, y, c) c, deriv = function(x, y, c) 0, start = c(1)
+  constant = list(func = constant, deriv = function(x, y, c) 0, start = c(1)
           ),
-  linear = list(func = function(x, y, sigma) sum(sigma * x * y), deriv = function(x, y, sigma) sigma, start = c(1)
+  linear = list(func = linear, deriv = function(x, y, sigma) sigma, start = c(1)
           ),
-  polynomial = list(func = function(x, y, sigma, p) (x %*% y + sigma)^p, 
+  polynomial = list(func = polynomial, 
                   deriv = function(x, y, sigma, p){
                     c(p * (x %*% y + sigma)^(p - 1), (x %*% y + sigma)^p * log((x %*% y + sigma)))
                 }, start = c(1, 2)
@@ -364,9 +364,7 @@ z <- fit(X,y,noise,list("sqrexp", "gammaexp"))
 
 print(z)
 Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_dict[[z$cov]]$func, append(list(x,y),z$par)), noise)
-#Gaussian <- GPR$new(X, y, function(a,b) cov_dict[[z$cov]]$func(a,b,z$par), noise)
-#Gaussian$plot(seq(-5,5, by = 0.1))
-
+Gaussian$plot(seq(-5,5, by = 0.1))
 
 X <- matrix(seq(-5,5,by = 0.5), nrow = 1)
 noise <- 0.5
