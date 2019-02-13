@@ -303,6 +303,7 @@ fit <-  function(X, y, noise, cov_names){
   for (cov in cov_names){
     usedcov <- cov_dict[[cov]]
     nparam <- length(usedcov$start)
+    l <- list()
     dens <- function(v){
       n <- ncol(X)
       K <- matrix(0, nrow = n, ncol = n)
@@ -316,27 +317,29 @@ fit <-  function(X, y, noise, cov_names){
       alpha <- solve(t(L), solve(L, y))
       - 0.5 * y %*% alpha - sum(log(diag(L))) - ncol(X) / 2 * log(2 * pi)
     }
-    dens_deriv <- function(v){
-      n <- ncol(X)
-      K <- matrix(0, nrow = n, ncol = n)
-      K_deriv <- array(0, c(n, n, nparam))
-      for (i in 1:n) {
-        for (j in 1:n) {
-          K[i, j] <-  do.call(usedcov$func, as.list(c(X[, i], X[, j], v)))
-          K_deriv[i, j,] <- do.call(usedcov$deriv, as.list(c(X[, i], X[, j], v)))
+    if (cov %in% c("sqrexp", "gammaexp")){
+      dens_deriv <- function(v){
+        n <- ncol(X)
+        K <- matrix(0, nrow = n, ncol = n)
+        K_deriv <- array(0, c(n, n, nparam))
+        for (i in 1:n) {
+          for (j in 1:n) {
+            K[i, j] <-  do.call(usedcov$func, as.list(c(X[, i], X[, j], v)))
+            K_deriv[i, j,] <- do.call(usedcov$deriv, as.list(c(X[, i], X[, j], v)))
+          }
         }
-      }
       
-      K_inv <- solve(K)
-      alpha <- K_inv %*% y
-      vapply(1:nparam, function(i) 0.5 * sum(diag(alpha %*% t(alpha) - K_inv) %*% K_deriv[,,i]), numeric(1))
+        K_inv <- solve(K)
+        alpha <- K_inv %*% y
+        vapply(1:nparam, function(i) 0.5 * sum(diag(alpha %*% t(alpha) - K_inv) %*% K_deriv[,,i]), numeric(1))
+      }
+      l <- append(l, list(gr = dens_deriv))
     }
     #Switch optim method if parameter is one dimensional
-    if (nparam == 1) p <- optim(usedcov$start, dens, gr = dens_deriv, method = "Brent", 
-                                upper = 10, lower = -10, control = list(fnscale = -1))
-    else p <- optim(usedcov$start, dens, gr = dens_deriv, method = "BFGS", 
-                   control = list(fnscale = -1))
-    
+    if (nparam == 1) l <- append(l, list(method = "Brent", lower = -10, upper = 10))
+    else l <- append(l, list(method = "BFGS"))
+    l <- append(l, list(control = list(fnscale = -1)))
+    p <- do.call(function(...) optim(usedcov$start, dens, ...), l)
     param <- append(param, list(p$par))
     score <- c(score, p$value)
   }
@@ -362,7 +365,7 @@ Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 
 
-z <- fit(X,y,noise,list("sqrexp", "gammaexp"))
+z <- fit(X,y,noise,list("sqrexp", "constant"))
 
 print(z)
 Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_dict[[z$cov]]$func, append(list(x,y),z$par)), noise)
