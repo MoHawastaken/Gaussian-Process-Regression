@@ -4,6 +4,7 @@
 #' 
 #'
 #' @section Usage: 
+#' 
 #' \preformatted{GPR <- GPR$new(X, y, cov_Fun, noise)
 #'
 #'
@@ -24,21 +25,22 @@
 #' 
 #'   \code{testpoints} a matrix of testpoints
 #'   
-#'
 #' @section Methods:
+#' 
 #' \code{$predict()} returns a numeric vector of the expected value of the underlying function f and their variance for the test input
 #' 
 #' \code{$plot()} displays the results of the predict function for all testpoints in a nice plot
 #' 
+#'
+#' @section Subclasses:
 #' 
-#' @section Methods:
-#' GPR has several subclasses where a covarianz function k(x,y) is given. The following subclasses are implemented:
+#' GPR has several subclasses where a covarianz function k(x,y) is given. The following subclasses are implemented
 #' 
 #' \code{GPR <- GPR.constant$new(X, y, c, noise)} with \code{k(x,y) = c}
 #' 
 #' \code{GPR <- GPR.linear$new(X, y, cov_Fun, noise)} with \code{k(x,y) = sum(sigma * x * y)}
 #' 
-#' \code{GPR <- GPR.polynomial$new(X, y, sigma, p, noise)} with \code{k(x,y) = (x %*% y + sigma)^p}
+#' \code{GPR <- GPR.polynomial$new(X, y, sigma, p, noise)} with \code{k(x,y) = (x \%*\% y + sigma)^p}
 #'
 #' \code{GPR <- GPR.sqrexp$new(X, y, l, noise)} with \code{k(x,y) = exp(-dist(rbind(x, y))^2/(2 * l^2))}
 #'
@@ -46,15 +48,15 @@
 #'
 #' \code{GPR <- GPR.rationalquadratic$new(X, y, alpha, l, noise)} with \code{k(x,y) = (1 + dist(rbind(x, y))^2 / (2 * alpha * l^2))^(-alpha)}
 #' 
+#'
 #' 
-#' @importFrom R6 R6Class
-#' @name GPR
 #' 
 #' @examples
 #' Hier Beispiele einfügen
 #'
 #'
-
+#' @importFrom R6 R6Class
+#' @name GPR
 
 
 GPR <- R6::R6Class("GPR",
