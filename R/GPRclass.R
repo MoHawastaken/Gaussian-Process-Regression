@@ -1,11 +1,10 @@
-#'  Predictions and Plots for Gaussian process regression
+#'  Predictions and Plots for Gaussian Process Regression
 #'
-#'  Implements a gaussian process and gives tools to predict and plot its values for given testpoints
+#'  Implements gaussian processes and gives tools for gaussian process regression and classification problems for given testpoints including clear plots of the results.
 #' 
 #'
 #' @section Usage: 
-#' 
-#' \preformatted{GPR <- GPR$new(X, y, cov_Fun, noise)
+#' \preformatted{GPR <- GPR$new(X, y, cov_fun, noise)
 #'
 #'
 #' GPR$predict(X*)
@@ -17,24 +16,24 @@
 #'
 #'   \code{y} numeric vector of targets
 #' 
-#'   \code{cov_Fun} the predicted covarianz function of the gaussian process
+#'   \code{cov_fun} the chosen covariance function of the gaussian process
 #' 
-#'   \code{noise} the predicted noise of the observations
+#'   \code{noise} the inflicted noise of the observations
 #' 
 #'   \code{X*} a numeric vector as the test input
 #' 
 #'   \code{testpoints} a matrix of testpoints
 #'   
 #' @section Methods:
+#' \code{$predict()} returns a numeric vector of the expected value of the underlying function f and its variance for the test input
 #' 
-#' \code{$predict()} returns a numeric vector of the expected value of the underlying function f and their variance for the test input
-#' 
-#' \code{$plot()} displays the results of the predict function for all testpoints in a nice plot
+#' \code{$plot()} displays the results of the \code{predict} function for all testpoints and confidence regions of two standard deviations in a transparent plot
 #' 
 #'
 #' @section Subclasses:
 #' 
-#' GPR has several subclasses where a covarianz function k(x,y) is given. The following subclasses are implemented
+#' @section Methods:
+#' GPR has several subclasses where a covariance function k(x,y) is given. The following subclasses are implemented:
 #' 
 #' \code{GPR <- GPR.constant$new(X, y, c, noise)} with \code{k(x,y) = c}
 #' 
@@ -50,14 +49,16 @@
 #' 
 #'
 #' 
+#' @importFrom R6 R6Class
+#' @name GPR
+#' @section Details:
+#' If own covariance functions are used with GPR, they need to be vectorized.
 #' 
 #' @examples
 #' Hier Beispiele einfügen
 #'
 #'
-#' @importFrom R6 R6Class
-#' @name GPR
-
+#' @export
 
 GPR <- R6::R6Class("GPR",
                    private = list(
@@ -181,7 +182,7 @@ GPR <- R6::R6Class("GPR",
                    )
 )
 
-
+#' @export
 GPR.constant <- R6::R6Class("GPR.constant",
                           inherit = GPR,
                           public = list(
@@ -193,6 +194,7 @@ GPR.constant <- R6::R6Class("GPR.constant",
                           )
 )
 
+#' @export
 GPR.linear <- R6::R6Class("GPR.linear", inherit = GPR,
                           public = list(
                             initialize = function(X, y, sigma, noise){
@@ -203,6 +205,7 @@ GPR.linear <- R6::R6Class("GPR.linear", inherit = GPR,
                           )
 )
 
+#' @export
 GPR.polynomial <- R6::R6Class("GPR.polynomial", inherit = GPR,
                               public = list(
                                 initialize = function(X, y, sigma, p, noise){
@@ -213,6 +216,7 @@ GPR.polynomial <- R6::R6Class("GPR.polynomial", inherit = GPR,
                               )
 )
 
+#' @export
 GPR.sqrexp <-  R6::R6Class("GPR.sqrexp", inherit = GPR,
                            public = list(
                              initialize = function(X, y, l, noise){
@@ -273,6 +277,7 @@ rationalquadratic.matrix <- function(x, y, l, alpha) (1 + sqrt(colSums((x - y)^2
 rationalquadratic.numeric <- function(x, y, l, alpha) (1 + sqrt(sum((x - y)^2)) / (2 * alpha * l^2))^(-alpha)
 
 #Save derivatives of covariance functions for the optimization of their hyperparameters
+# rationalquadratic?, #' @export in front of every function?
 cov_dict <- list(
   sqrexp = list(func = sqrexp, 
                 deriv = function(x, y, l){
@@ -366,6 +371,7 @@ Gaussian$plot(seq(-5,5, by = 0.1))
 
 
 z <- fit(X,y,noise,list("sqrexp", "constant"))
+
 
 print(z)
 Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_dict[[z$cov]]$func, append(list(x,y),z$par)), noise)
