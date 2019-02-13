@@ -2,6 +2,9 @@ library(shiny)
 
 seed <- runif(1,0,100)
 f <- sin #function used to create datapoints
+cov_names <- list("Squared Exponential" = "sqrexp", "Gamma Exponential" = "gammaexp", 
+                  "Constant" = "constant", "Linear" = "linear", "Polynomial" = "polynomial", 
+                  "Rational Quadratic" = "rationalquadratic")
 
 ui <- fluidPage(
   fluidRow(
@@ -14,9 +17,7 @@ ui <- fluidPage(
       ),
       
     column(width = 6,
-      selectInput("cov", "Covariance Function", choices = list("Squared Exponential", "Gamma Exponential", 
-                                                                    "Constant", "Linear", "Polynomial", 
-                                                                    "Rational Quadratic")),
+      selectInput("cov", "Covariance Function", choices = names(cov_names)),
       uiOutput("selectors"),
       actionButton("opthyp","Optimize Hyperparameters")
       )
@@ -42,42 +43,46 @@ switchrenderUI <- function(i, session, min_noise, kdesc, ...){
 server <- function(input, output,session){
   observeEvent(input$cov, {
     #switch formula and sliders for parameters for each covariance function
-    if (input$cov == "Squared Exponential"){
+    switch(input$cov, 
+    "Squared Exponential" = {
       output$selectors <- switchrenderUI(1,session,0,
         "\\sigma_1 \\cdot \\text{exp} \\left( \\frac{|x_p-x_q|^2}{2 \\ell^2} \\right)",
-        sliderInput("sigma_1", withMathJax("$$\\huge{\\sigma_1}$$"), min = 0.01, max = 3, value = 1),
-        sliderInput("l", withMathJax("$$\\huge{\\ell}$$"), min = 0.1, max = 3, value = 1))
-    }
-    if (input$cov == "Constant"){
+        sliderInput("par1", withMathJax("$$\\huge{\\sigma_1}$$"), min = 0.01, max = 3, value = 1),
+        sliderInput("par2", withMathJax("$$\\huge{\\ell}$$"), min = 0.1, max = 3, value = 1))
+    },
+    "Constant" = {
       output$selectors <- switchrenderUI(2,session,0.1,"c",
-                     sliderInput("c", "c", min = 0, max = 10, value = 1))
-    }
-    if (input$cov == "Linear"){
+                     sliderInput("par1", "c", min = 0, max = 10, value = 1))
+    },
+    "Linear" = {
       output$selectors <- switchrenderUI(3,session,0.1,
                  "c \\cdot \\sum_{d=1}^D x_d x_d^\\top",
-                 sliderInput("c", "c", min = 0, max = 10, value = 1))
-    }
-    if (input$cov == "Polynomial"){
+                 sliderInput("par1", "c", min = 0, max = 10, value = 1))
+    },
+    "Polynomial" = {
       output$selectors <- switchrenderUI(4,session,0.1, 
                  "(x \\cdot x'^\\top + \\sigma)^p",
-                 sliderInput("sigma_3", withMathJax("$$\\huge{\\sigma}$$"), min = 0, max = 10, value = 1),
-                 sliderInput("p", withMathJax("$$\\huge{p}$$"), min = 1, max = 10, value = 5))
-    }
-    if (input$cov == "Gamma Exponential"){
+                 sliderInput("par1", withMathJax("$$\\huge{\\sigma}$$"), min = 0, max = 10, value = 1),
+                 sliderInput("par2", withMathJax("$$\\huge{p}$$"), min = 1, max = 10, value = 5))
+    },
+    "Gamma Exponential" = {
       output$selectors <- switchrenderUI(5,session,0, 
                  "\\text{exp} \\left( - \\left(\\frac{|x-x'|}{\\ell}\\right)^\\gamma \\right)",
-                 sliderInput("sigma_4", withMathJax("$$\\huge{\\gamma}$$"), min = 0, max = 10, value = 1),
-                 sliderInput("l2", withMathJax("$$\\huge{\\ell}$$"), min = 0.01, max = 3, value = 1))
-    }
-    if (input$cov == "Rational Quadratic"){
+                 sliderInput("par1", withMathJax("$$\\huge{\\gamma}$$"), min = 0, max = 10, value = 1),
+                 sliderInput("par2", withMathJax("$$\\huge{\\ell}$$"), min = 0.01, max = 3, value = 1))
+    },
+    "Rational Quadratic" = {
       output$selectors <- switchrenderUI(6,session,0, 
                  "\\left( 1 + \\frac{|x-x'|^2}{2 \\alpha \\ell^2}\\right)^{-\\alpha}",
-                 sliderInput("alpha", withMathJax("$$\\huge{\\alpha}$$"), min = 0.5, max = 10, value = 1),
-                 sliderInput("l3", withMathJax("$$\\huge{\\ell}$$"), min = 0.01, max = 3, value = 1))
+                 sliderInput("par1", withMathJax("$$\\huge{\\alpha}$$"), min = 0.5, max = 10, value = 1),
+                 sliderInput("par2", withMathJax("$$\\huge{\\ell}$$"), min = 0.01, max = 3, value = 1))
     }
+    )
   })
   observeEvent(input$opthyp,{
-    z <- fit(X,y,input$noise,list("sqrexp"))
+    print(cov_names[[input$cov]])
+    z <- fit(X,y,input$noise+0.1,list(cov_names[[input$cov]]))
+    for (i in seq_along(z$par)) updateSliderInput(session, sprintf("par%s",i), value = z$par[i])
     print(z$par)
   })
   output$plot1 <- renderPlot({
@@ -93,32 +98,33 @@ server <- function(input, output,session){
     y <- reactive(c(f(X()) + rnorm(length(X()),0,sqrt(input$gennoise))))
     #standard plot if nothing is selected:
     Gaussian <- reactive(GPR.sqrexp$new(X(), y(), l = 1, noise = input$noise)) 
-    if (input$cov == "Squared Exponential"){
-      if (!is.null(input$sigma_1) & !is.null(input$l)){
-        kappa <- reactive(function(x,y){
-        input$sigma_1 * exp(-(1/(2*input$l^2))*(x - y)^2)
+    switch(input$cov, 
+      "Squared Exponential" = {
+        if (!is.null(input$par1) & !is.null(input$par2)){
+          kappa <- reactive(function(x,y){
+          input$par1 * exp(-(1/(2*input$par2^2))*(x - y)^2)
         })
         Gaussian <- reactive(GPR$new(X(), y(), kappa(), input$noise))
-      }
-    }
-    if (input$cov == "Constant"){
-      if (!is.null(input$c)) Gaussian <- reactive(GPR.constant$new(X(), y(), input$c, input$noise))
-    }
-    if (input$cov == "Linear"){
-      if (!is.null(input$c)) Gaussian <- reactive(GPR.linear$new(X(), y(), input$c, input$noise))
-    }
-    if (input$cov == "Polynomial"){
-      if (!is.null(input$sigma_3) & !is.null(input$p)){
-        Gaussian <- reactive(GPR.polynomial$new(X(), y(), input$sigma_3, input$p, input$noise))}
-    }
-    if (input$cov == "Gamma Exponential"){
-      if (!is.null(input$sigma_4) & !is.null(input$l2)){
-        Gaussian <- reactive(GPR.gammaexp$new(X(), y(), input$sigma_4, input$l2, input$noise))}
-    }
-    if (input$cov == "Rational Quadratic"){
-      if (!is.null(input$alpha) & !is.null(input$l3)){
-        Gaussian <- reactive(GPR.rationalquadratic$new(X(), y(), input$alpha, input$l3, input$noise))}
-    }
+        }
+      },
+     "Constant" = {
+        if (!is.null(input$par1)) Gaussian <- reactive(GPR.constant$new(X(), y(), input$par1, input$noise))
+      },
+      "Linear" = {
+        if (!is.null(input$par1)) Gaussian <- reactive(GPR.linear$new(X(), y(), input$par1, input$noise))
+      },
+      "Polynomial" = {
+        if (!is.null(input$par1) & !is.null(input$par2)){
+        Gaussian <- reactive(GPR.polynomial$new(X(), y(), input$par1, input$par2, input$noise))}
+      },
+      "Gamma Exponential" = {
+        if (!is.null(input$par1) & !is.null(input$par2)){
+        Gaussian <- reactive(GPR.gammaexp$new(X(), y(), input$par1, input$par2, input$noise))}
+      },
+      "Rational Quadratic" = {
+      if (!is.null(input$par1) & !is.null(input$par2)){
+        Gaussian <- reactive(GPR.rationalquadratic$new(X(), y(), input$par1, input$par2, input$noise))}
+      })
     Gaussian()$plot(seq(input$xlim[1], input$xlim[2], by = 0.1))
   })
 }
