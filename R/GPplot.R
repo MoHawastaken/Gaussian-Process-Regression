@@ -46,9 +46,9 @@ server <- function(input, output,session){
     switch(input$cov, 
     "Squared Exponential" = {
       output$selectors <- switchrenderUI(1,session,0,
-        "\\sigma_1 \\cdot \\text{exp} \\left( \\frac{|x_p-x_q|^2}{2 \\ell^2} \\right)",
-        sliderInput("par1", withMathJax("$$\\huge{\\sigma_1}$$"), min = 0.01, max = 3, value = 1),
-        sliderInput("par2", withMathJax("$$\\huge{\\ell}$$"), min = 0.1, max = 3, value = 1))
+        "\\sigma \\cdot \\text{exp} \\left( \\frac{|x_p-x_q|^2}{2 \\ell^2} \\right)",
+        sliderInput("par1", withMathJax("$$\\huge{\\ell}$$"), min = 0.01, max = 3, value = 1),
+        sliderInput("par2", withMathJax("$$\\huge{\\sigma}$$"), min = 0.1, max = 3, value = 1))
     },
     "Constant" = {
       output$selectors <- switchrenderUI(2,session,0.1,"c",
@@ -102,7 +102,7 @@ server <- function(input, output,session){
       "Squared Exponential" = {
         if (!is.null(input$par1) & !is.null(input$par2)){
           kappa <- reactive(function(x,y){
-          input$par1 * exp(-(1/(2*input$par2^2))*(x - y)^2)
+          input$par2 * exp(-(1/(2*input$par1^2))*(x - y)^2)
         })
         Gaussian <- reactive(GPR$new(X(), y(), kappa(), input$noise))
         }
