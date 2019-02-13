@@ -123,8 +123,7 @@ GPR <- R6::R6Class("GPR",
                        mean <- self$posterior_mean(testpoints)
                        covariance <- self$posterior_covariance(testpoints)
                        plot(testpoints, multivariate_normal(len, mean, covariance), type = "l")
-                       replicate(n-1, lines(testpoints, multivariate_normal(len, mean, covariance)))
-                       return()
+                       replicate(n - 1, lines(testpoints, multivariate_normal(len, mean, covariance)))
                      }
                    ),
                    active = list(
@@ -216,7 +215,7 @@ GPR.sqrexp <-  R6::R6Class("GPR.sqrexp", inherit = GPR,
                            public = list(
                              initialize = function(X, y, l, noise){
                                stopifnot(length(l) == 1)
-                               k <- function(x, y) squared_exp(x, y, l)
+                               k <- function(x, y) sqrexp(x, y, l)
                                super$initialize(X, y, k, noise)
                              }
                              
@@ -227,7 +226,7 @@ GPR.gammaexp <- R6::R6Class("GPR.gammaexp", inherit = GPR,
                           public = list(
                             initialize = function(X, y, gamma, l, noise){
                               stopifnot(length(gamma) == 1, length(l) == 1)
-                              k <- function(x, y) gamma_exp(x, y, l, gamma)
+                              k <- function(x, y) gammaexp(x, y, l, gamma)
                               super$initialize(X, y, k, noise)
                             }
                           )
@@ -237,7 +236,7 @@ GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
                             public = list(
                               initialize = function(X, y, alpha, l, noise){
                                 stopifnot(length(alpha) == 1, length(l) == 1)
-                                k <- function(x, y) rational_quadratic(x, y, l, alpha)
+                                k <- function(x, y) rationalquadratic(x, y, l, alpha)
                                 super$initialize(X, y, k, noise)
                               }
                             )
@@ -259,29 +258,29 @@ polynomial <- function(x, y, sigma, p) UseMethod("polynomial")
 polynomial.matrix <- function(x, y, sigma, p) (colSums(x * y) + sigma)^p
 polynomial.numeric <- function(x, y, sigma, p) (x %*% y + sigma)^p
 
-squared_exp <- function(x, y, l) UseMethod("squared_exp")
-squared_exp.matrix <- function(x, y, l) exp(-colSums((x - y)^2)/(2 * l^2))
-squared_exp.numeric <- function(x, y, l) exp(-sum((x - y)^2)/(2 * l^2))
+sqrexp <- function(x, y, l) UseMethod("sqrexp")
+sqrexp.matrix <- function(x, y, l) exp(-colSums((x - y)^2)/(2 * l^2))
+sqrexp.numeric <- function(x, y, l) exp(-sum((x - y)^2)/(2 * l^2))
 
-gamma_exp <- function(x, y, l, gamma) UseMethod("gamma_exp")
-gamma_exp.matrix <- function(x, y, l, gamma) exp(-(sqrt(colSums((x - y)^2))/l)^gamma)
-gamma_exp.numeric <- function(x, y, l, gamma) exp(-(sqrt(sum((x - y)^2))/l)^gamma)
+gammaexp <- function(x, y, l, gamma) UseMethod("gammaexp")
+gammaexp.matrix <- function(x, y, l, gamma) exp(-(sqrt(colSums((x - y)^2))/l)^gamma)
+gammaexp.numeric <- function(x, y, l, gamma) exp(-(sqrt(sum((x - y)^2))/l)^gamma)
 
-rational_quadratic <- function(x, y, l, alpha) UseMethod("rational_quadratic")
-rational_quadratic.matrix <- function(x, y, l, alpha) (1 + sqrt(colSums((x-y)^2)) / (2 * alpha * l^2))^(-alpha)
-rational_quadratic.numeric <- function(x, y, l, alpha) (1 + sqrt(sum((x-y)^2)) / (2 * alpha * l^2))^(-alpha)
+rationalquadratic <- function(x, y, l, alpha) UseMethod("rationalquadratic")
+rationalquadratic.matrix <- function(x, y, l, alpha) (1 + sqrt(colSums((x-y)^2)) / (2 * alpha * l^2))^(-alpha)
+rationalquadratic.numeric <- function(x, y, l, alpha) (1 + sqrt(sum((x-y)^2)) / (2 * alpha * l^2))^(-alpha)
 
 
 cov_dict <- list(
-  sqrexp = list(func = function(x, y,l) exp(-dist(rbind(x, y))^2/(2 * l^2)), 
+  sqrexp = list(func = function(x, y,l) exp(-sum((x - y)^2)/(2 * l^2)), 
                 deriv = function(x, y, l){
-                  r <- dist(rbind(x - y))
+                  r <- sqrt(sum((x - y)^2))
                   r^2/l^3*exp(-r^2/(l^2*2))
                 }, start = c(1)
           ),
-  gammaexp = list(func = function(x, y, gamma, l) exp(-(dist(rbind(x, y)) / l) ^ gamma), 
+  gammaexp = list(func = function(x, y, gamma, l) exp(-(sqrt(sum((x - y)^2)) / l) ^ gamma), 
                   deriv = function(x, y, gamma, l){
-                    r <- dist(rbind(x - y))
+                    r <- sqrt(sum((x - y)^2))
                     c(-exp(-(r/l)^gamma) * (r/l)^gamma * log(r/l), exp(-(r/l)^gamma) * gamma * r^gamma / (l^(gamma + 1)))
                   }, start = c(1, 1)
           ),
@@ -344,7 +343,7 @@ fit <-  function(X, y, noise, cov_names){
 
 
 X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
-noise <- 0.1
+noise <- 0.5
 y <- c(0.1*X^3 + rnorm(length(X),0, 1))
 
 Gaussian <- GPR.constant$new(X, y, 1, noise)
@@ -361,10 +360,11 @@ Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 
 
-#z <- fit(X,y,noise,list("sqrexp", "gammaexp"))
+z <- fit(X,y,noise,list("sqrexp", "gammaexp"))
 
-#print(z)
-#Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_dict[[z$cov]]$func, as.list(c(x,y,z$par))), noise)
+print(z)
+Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_dict[[z$cov]]$func, append(list(x,y),z$par)), noise)
+#Gaussian <- GPR$new(X, y, function(a,b) cov_dict[[z$cov]]$func(a,b,z$par), noise)
 #Gaussian$plot(seq(-5,5, by = 0.1))
 
 
