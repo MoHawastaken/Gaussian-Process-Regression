@@ -370,7 +370,7 @@ Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 
 
-z <- fit(X,y,noise,list("sqrexp", "constant"))
+z <- fit(X,y,noise,list("sqrexp", "gammaexp"))
 
 
 print(z)
