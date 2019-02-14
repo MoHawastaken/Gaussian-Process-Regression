@@ -2,14 +2,8 @@
 #'
 #'  Implements gaussian processes and gives tools for gaussian process regression and classification problems for given testpoints including clear plots of the results.
 #' 
-<<<<<<< HEAD
-#'
 #' @usage 
 #' \preformatted{GPR <- GPR$new(X, y, cov_fun, noise)
-=======
-#' @format 
-#' @usage \preformatted{GPR <- GPR$new(X, y, cov_fun, noise)
->>>>>>> a4b5febb2be895f8e902d89d52dafc56c3f44608
 #'
 #'
 #' GPR$predict(X*)
@@ -37,10 +31,7 @@
 #' 
 #'
 #' @section Subclasses:
-<<<<<<< HEAD
-#' 
-=======
->>>>>>> a4b5febb2be895f8e902d89d52dafc56c3f44608
+#'
 #' GPR has several subclasses where a covariance function k(x,y) is given. The following subclasses are implemented:
 #' 
 #' \code{GPR <- GPR.constant$new(X, y, c, noise)} with \code{k(x,y) = c}
@@ -68,10 +59,7 @@
 #' @references Rasmussen, Carl E. W.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
 #'
 NULL
-<<<<<<< HEAD
 
-=======
->>>>>>> a4b5febb2be895f8e902d89d52dafc56c3f44608
 #' @export
 GPR <- R6::R6Class("GPR",
              private = list(
