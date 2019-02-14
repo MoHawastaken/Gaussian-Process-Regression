@@ -90,20 +90,7 @@ GPR <- R6::R6Class("GPR",
                  private$.alpha <- solve(t(self$L), solve(self$L, y))
                  private$.logp <- -0.5 * self$y %*% self$alpha - sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
                },
-                predict = function(X_star){
-                  stopifnot(is.numeric(X_star), length(X_star) %% nrow(self$X) == 0)
-                  if (is.null(dim(X_star))) {
-                    dim(X_star) <- c(length(X_star), 1)
-                  }
-                  #k_star <- sapply(1:ncol(self$X), FUN = function(i) self$k(self$X[, i], Xs))
-                  K_star <- covariance_matrix(self$X, X_star, self$k)
-                  posterior_mean <- t(K_star) %*% self$alpha
-                  v <- solve(self$L, K_star)
-                  #Vfs <- self$k(Xs, Xs) - v %*% v
-                  posterior_variance <- covariance_matrix(X_star, X_star, self$k) - t(v) %*% v
-                  return(c(posterior_mean, posterior_variance))
-                },
-               predict2 = function(X_star, pointwise_var = FALSE){
+               predict = function(X_star, pointwise_var = FALSE){
                  stopifnot(is.numeric(X_star), length(X_star) %% nrow(self$X) == 0)
                  if (is.null(dim(X_star))) {
                    dim(X_star) <- c(nrow(self$X), length(X_star)/nrow(self$X))
@@ -113,17 +100,14 @@ GPR <- R6::R6Class("GPR",
                  v <- solve(self$L, K_star)
                  if (pointwise_var) {
                    posterior_variance <- self$k(X_star, X_star) - colSums(v * v)
-                   return(c(posterior_mean, posterior_variance))
+                   return(cbind(posterior_mean, posterior_variance))
                  } else {
                    posterior_variance <- covariance_matrix(X_star, X_star, self$k) - t(v) %*% v
                    return(list(posterior_mean, posterior_variance))
                  }
                },
                plot = function(testpoints){
-                 #dat <- data.frame(x = testpoints, 
-                 #           y = t(sapply(testpoints, function(x) self$predict(x)[1:2])))
-                 predictions <- self$predict2(testpoints)
-                 y <- cbind(predictions[[1]], diag(predictions[[2]]))
+                 y <- unname(self$predict(testpoints, pointwise_var = TRUE))
                  dat <- data.frame(x = testpoints, y = y)
                  ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y.1)) +
                    ggplot2::theme_classic() +
@@ -136,7 +120,7 @@ GPR <- R6::R6Class("GPR",
                    ggplot2::scale_shape_identity()
                },
                plot_posterior_draws = function(n, testpoints) {
-                 predictions <- self$predict2(testpoints)
+                 predictions <- self$predict(testpoints)
                  y <- cbind(predictions[[1]], diag(predictions[[2]]))
                  z <- multivariate_normal(n, predictions[[1]], predictions[[2]])
                  dat <- data.frame(x = testpoints, y = y, z = z)
@@ -148,10 +132,7 @@ GPR <- R6::R6Class("GPR",
                    ggplot2::geom_ribbon(ggplot2::aes(ymin = y.1 - 2*sqrt(pmax(y.2,0)),
                                                      ymax = y.1 + 2*sqrt(pmax(y.2,0))), alpha = 0.2) 
                    #ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
-                    #                 mapping = ggplot2::aes(x = xpoints, y = ypoints))
-                 # jetzt ggplot y.1 und alle z in unterschiedlichen Farben ueber x...
-                 #plot(testpoints, multivariate_normal(len, predictions[[1]], predictions[[2]]), type = "l")
-                 #replicate(n - 1, lines(testpoints, multivariate_normal(len, post_distr[[1]], post_distr[[2]])))
+                    #              mapping = ggplot2::aes(x = xpoints, y = ypoints))
               }
              ),
              active = list(
