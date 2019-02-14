@@ -1,4 +1,63 @@
-#needs package R6
+#'  Predictions and Plots for Gaussian process regression
+#'
+#'  Implements a gaussian process and gives tools to predict and plot its values for given testpoints
+#' 
+#'
+#' @section Usage: 
+#' 
+#' \preformatted{GPR <- GPR$new(X, y, cov_Fun, noise)
+#'
+#'
+#' GPR$predict(X*)
+#' GPR$plot(testpoints)
+#'}
+#' @section Arguments:
+#' 
+#'   \code{X} matrix of inputs
+#'
+#'   \code{y} numeric vector of targets
+#' 
+#'   \code{cov_Fun} the predicted covarianz function of the gaussian process
+#' 
+#'   \code{noise} the predicted noise of the observations
+#' 
+#'   \code{X*} a numeric vector as the test input
+#' 
+#'   \code{testpoints} a matrix of testpoints
+#'   
+#' @section Methods:
+#' 
+#' \code{$predict()} returns a numeric vector of the expected value of the underlying function f and their variance for the test input
+#' 
+#' \code{$plot()} displays the results of the predict function for all testpoints in a nice plot
+#' 
+#'
+#' @section Subclasses:
+#' 
+#' GPR has several subclasses where a covarianz function k(x,y) is given. The following subclasses are implemented
+#' 
+#' \code{GPR <- GPR.constant$new(X, y, c, noise)} with \code{k(x,y) = c}
+#' 
+#' \code{GPR <- GPR.linear$new(X, y, sigma, noise)} with \code{k(x,y) = sum(sigma * x * y)}
+#' 
+#' \code{GPR <- GPR.polynomial$new(X, y, sigma, p, noise)} with \code{k(x,y) = (x \%*\% y + sigma)^p}
+#'
+#' \code{GPR <- GPR.sqrexp$new(X, y, l, noise)} with \code{k(x,y) = exp(-dist(rbind(x, y))^2/(2 * l^2))}
+#'
+#' \code{GPR <- GPR.gammaexp$new(X, y, gamma, l, noise)} with \code{k(x,y) = exp(-(dist(rbind(x, y)) / l) ^ gamma)}
+#'
+#' \code{GPR <- GPR.rationalquadratic$new(X, y, alpha, l, noise)} with \code{k(x,y) = (1 + dist(rbind(x, y))^2 / (2 * alpha * l^2))^(-alpha)}
+#' 
+#'
+#' 
+#' 
+#' @examples
+#' Hier Beispiele einfügen
+#'
+#'
+#' @importFrom R6 R6Class
+#' @name GPR
+
 
 GPC <- R6::R6Class("GPR",
                    private = list(
