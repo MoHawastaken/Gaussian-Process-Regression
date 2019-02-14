@@ -1,5 +1,45 @@
-#needs package R6
+#'  Predictions and Plots for Gaussian process regression
+#'
+#'  Implements a gaussian process and gives tools to predict and plot its values for given testpoints
+#' 
+#'
+#' @usage \preformatted{GPC <- GPC$new(X, y, cov_Fun, noise)
+#'
+#'
+#' GPR$predict(X*)
+#' GPR$plot(testpoints)
+#'}
+#' @section Arguments:
+#' 
+#'   \code{X} matrix of inputs
+#'
+#'   \code{y} numeric vector of targets
+#' 
+#'   \code{cov_Fun} the predicted covarianz function of the gaussian process
+#' 
+#'   \code{noise} the predicted noise of the observations
+#' 
+#'   \code{X*} a numeric vector as the test input
+#' 
+#'   \code{testpoints} a matrix of testpoints
+#'   
+#' @section Methods:
+#' 
+#' \code{$predict()} returns a numeric vector of the expected value of the underlying function f and their variance for the test input
+#' 
+#' \code{$plot()} displays the results of the predict function for all testpoints in a nice plot
+#'
+#' 
+#' 
+#' @examples
+#' Hier Beispiele einfügen
+#'
+#'
+#' @importFrom R6 R6Class
+#' @name GPC
+NULL
 
+#' @export
 GPC <- R6::R6Class("GPR",
                    private = list(
                      .X = NA,
