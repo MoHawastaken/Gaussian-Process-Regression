@@ -57,6 +57,7 @@
 #' @examples
 #' Hier Beispiele einfügen
 #'
+#' @references Rasmussen, Carl E. W.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
 #'
 #' @export
 
@@ -254,6 +255,7 @@ GPR.sqrexp <-  R6::R6Class("GPR.sqrexp", inherit = GPR,
                            )
 )
 
+#' @export
 GPR.gammaexp <- R6::R6Class("GPR.gammaexp", inherit = GPR,
                           public = list(
                             initialize = function(X, y, gamma, l, noise){
@@ -264,6 +266,7 @@ GPR.gammaexp <- R6::R6Class("GPR.gammaexp", inherit = GPR,
                           )
 )
 
+#' @export
 GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
                             public = list(
                               initialize = function(X, y, alpha, l, noise){
@@ -279,8 +282,11 @@ GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
 covariance_matrix <- function(A, B, covariance_function) {
   outer(1:ncol(A), 1:ncol(B), function(i, j) covariance_function(A[, i, drop = F], B[, j, drop = F]))
 }
-
-
+multivariate_normal <- function(n, mean, covariance) {
+  stopifnot(is.numeric(mean), is.numeric(covariance), length(mean) == nrow(covariance))
+  L <- t(chol(covariance))
+  mean + L%*%rnorm(n, 0, 1)
+}
 
 # Implementation von Matrixversionen der Kovarianzfunktionen, um Effizienz zu erhöhen
 # Bei Eingabe zweier Matrizen gleicher Dimension, soll die Funktion auf die jeweils i-ten Spalten
@@ -310,86 +316,9 @@ rationalquadratic <- function(x, y, l, alpha) UseMethod("rationalquadratic")
 rationalquadratic.matrix <- function(x, y, l, alpha) (1 + sqrt(colSums((x - y)^2)) / (2 * alpha * l^2))^(-alpha)
 rationalquadratic.numeric <- function(x, y, l, alpha) (1 + sqrt(sum((x - y)^2)) / (2 * alpha * l^2))^(-alpha)
 
-#Save derivatives of covariance functions for the optimization of their hyperparameters
-# rationalquadratic?, #' @export in front of every function?
-cov_dict <- list(
-  sqrexp = list(func = sqrexp, 
-                deriv = function(x, y, l){
-                  r <- sqrt(sum((x - y)^2))
-                  r^2/l^3*exp(-r^2/(l^2*2))
-                }, start = c(1)
-          ),
-  gammaexp = list(func = gammaexp, 
-                  deriv = function(x, y, gamma, l){
-                    r <- sqrt(sum((x - y)^2))
-                    c(-exp(-(r/l)^gamma) * (r/l)^gamma * log(r/l), exp(-(r/l)^gamma) * gamma * r^gamma / (l^(gamma + 1)))
-                  }, start = c(1, 1)
-          ),
-  constant = list(func = constant, deriv = function(x, y, c) 0, start = c(1)
-          ),
-  linear = list(func = linear, deriv = function(x, y, sigma) sigma, start = c(1)
-          ),
-  polynomial = list(func = polynomial, 
-                  deriv = function(x, y, sigma, p){
-                    c(p * (x %*% y + sigma)^(p - 1), (x %*% y + sigma)^p * log((x %*% y + sigma)))
-                }, start = c(1, 2)
-          )
-)
-
-fit <-  function(X, y, noise, cov_names){
-  param <- list()
-  score <- c()
-  for (cov in cov_names){
-    usedcov <- cov_dict[[cov]]
-    nparam <- length(usedcov$start)
-    l <- list()
-    dens <- function(v){
-      n <- ncol(X)
-      K <- matrix(0, nrow = n, ncol = n)
-      for (i in 1:n) {
-        for (j in 1:n) {
-          K[i, j] <-  do.call(usedcov$func, as.list(c(X[, i], X[, j], v)))
-        }
-      }
-      
-      L <- t(chol(K + noise * diag(n)))
-      alpha <- solve(t(L), solve(L, y))
-      - 0.5 * y %*% alpha - sum(log(diag(L))) - ncol(X) / 2 * log(2 * pi)
-    }
-    if (cov %in% c("sqrexp", "gammaexp")){
-      dens_deriv <- function(v){
-        n <- ncol(X)
-        K <- matrix(0, nrow = n, ncol = n)
-        K_deriv <- array(0, c(n, n, nparam))
-        for (i in 1:n) {
-          for (j in 1:n) {
-            K[i, j] <-  do.call(usedcov$func, as.list(c(X[, i], X[, j], v)))
-            K_deriv[i, j,] <- do.call(usedcov$deriv, as.list(c(X[, i], X[, j], v)))
-          }
-        }
-      
-        K_inv <- solve(K)
-        alpha <- K_inv %*% y
-        vapply(1:nparam, function(i) 0.5 * sum(diag(alpha %*% t(alpha) - K_inv) %*% K_deriv[,,i]), numeric(1))
-      }
-      l <- append(l, list(gr = dens_deriv))
-    }
-    #Switch optim method if parameter is one dimensional
-    if (nparam == 1) l <- append(l, list(method = "Brent", lower = -10, upper = 10))
-    else l <- append(l, list(method = "BFGS"))
-    l <- append(l, list(control = list(fnscale = -1)))
-    p <- do.call(optim, append(list(usedcov$start, dens), l))
-    param <- append(param, list(p$par))
-    score <- c(score, p$value)
-  }
-  return(list(par = param[[which.max(score)]], cov = cov_names[[which.max(score)]], score = score))
-}
-
-
-X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
-noise <- 1
-y <- c(0.1*X^3 + rnorm(length(X),0, 1))
-
+X <- matrix(seq(-5,5,by = 0.5), nrow = 1)
+noise <- 0.5
+y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
 Gaussian <- GPR.constant$new(X, y, 1, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 Gaussian <- GPR.linear$new(X, y, 1, noise)
@@ -403,17 +332,6 @@ Gaussian$plot(seq(-5,5, by = 0.1))
 Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 
-
-z <- fit(X,y,noise,list("sqrexp", "gammaexp"))
-
-
-print(z)
-Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_dict[[z$cov]]$func, append(list(x,y),z$par)), noise)
-Gaussian$plot(seq(-5,5, by = 0.1))
-
-X <- matrix(seq(-5,5,by = 0.5), nrow = 1)
-noise <- 0.5
-y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
 Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 Gaussian$plot_posterior_draws(10, matrix(seq(-5,5, by = 0.1), nrow = 1))
