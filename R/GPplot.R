@@ -52,7 +52,7 @@ server <- function(input, output,session){
     },
     "Constant" = {
       output$selectors <- switchrenderUI(2,session,0.1,"c",
-                     sliderInput("par1", "c", min = 0, max = 10, value = 1))
+                     sliderInput("par1", "c", min = 0.1, max = 10, value = 1))
     },
     "Linear" = {
       output$selectors <- switchrenderUI(3,session,0.1,

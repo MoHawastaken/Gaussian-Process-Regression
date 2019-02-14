@@ -1,9 +1,24 @@
 #' Optimization of hyperparameters
 #' 
-#' Applies optimization methods to find optimal parameters for the covariance function for a given set of datapoints
+#' Applies optimization methods to find optimal parameters of the covariance function for a given set of datapoints
+#' 
+#' @section Usage: 
+#' \preformatted{fit(X, y, noise, cov_list)}
+#'
+#'
+#' @section Arguments:
+#' 
+#'   \code{X} matrix of inputs
+#'
+#'   \code{y} numeric vector of targets
+#' 
+#'   \code{noise} the inflicted noise of the observations
+#' 
+#'   \code{cov_list} a list of names of covariance functions
+#' @name fit
+#' @references Rasmussen, Carl E. W., Christopher K. I. (2006).	Gaussian processes for machine learning
 
 #Save derivatives of covariance functions for the optimization of their hyperparameters
-# rationalquadratic?
 cov_dict <- list(
   sqrexp = list(func = sqrexp, 
                 deriv = function(x, y, l){
@@ -25,9 +40,17 @@ cov_dict <- list(
                     deriv = function(x, y, sigma, p){
                       c(p * (x %*% y + sigma)^(p - 1), (x %*% y + sigma)^p * log((x %*% y + sigma)))
                     }, start = c(1, 2)
+  ),
+  rationalquadratic = list(func = rationalquadratic,
+                           deriv = function(x, y, alpha, l){
+                              r <- sum((x - y)^2)
+                              c(((r/(2*l^2*alpha) + 1)^(-alpha) * (r - (2*l^2*alpha + r) * log(r/(2 * l^2*alpha) 
+                                                                                               + 1)))/(2*l^2*alpha + r),
+                                (r*(r/(2*l^2*alpha) + 1)^(-alpha - 1))/(l^3))
+                           }, start = c(1,1)
   )
 )
-
+#' @export
 fit <-  function(X, y, noise, cov_names){
   param <- list()
   score <- c()
@@ -42,7 +65,7 @@ fit <-  function(X, y, noise, cov_names){
       alpha <- solve(t(L), solve(L, y))
       - 0.5 * y %*% alpha - sum(log(diag(L))) - ncol(X) / 2 * log(2 * pi)
     }
-    if (cov %in% c("sqrexp", "gammaexp")){
+    if (cov %in% c("sqrexp", "gammaexp","rationalquadratic")){
       dens_deriv <- function(v){
         n <- ncol(X)
         K <- matrix(0, nrow = n, ncol = n)
@@ -76,7 +99,7 @@ X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
 noise <- 1
 y <- c(0.1*X^3 + rnorm(length(X),0, 1))
 
-z <- fit(X,y,noise,list("sqrexp", "gammaexp","constant", "linear"))
+z <- fit(X,y,noise,list("rationalquadratic"))
 
 print(z)
 Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_dict[[z$cov]]$func, append(list(x,y),z$par)), noise)
