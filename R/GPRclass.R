@@ -133,6 +133,18 @@ GPR <- R6::R6Class("GPR",
                                                      ymax = y.1 + 2*sqrt(pmax(y.2,0))), alpha = 0.2) 
                    #ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
                     #              mapping = ggplot2::aes(x = xpoints, y = ypoints))
+              },
+              plot_posterior_variance = function(where, limits = c(min(self$X), max(self$X)), subdivisions = 100L) {
+                x <- seq(limits[1], limits[2], length.out = subdivisions)
+                len <- length(where)
+                y <- self$predict(c(where, x))[[2]][(len + 1):(len + subdivisions), 1:len]
+                dat <- data.frame(x = x, y = y)
+                names(dat) <- c("x", as.character(where))
+                dat <- tidyr::gather(dat, -x, key = "z", value = "value")
+                ggplot2::ggplot(dat, ggplot2::aes(x = x, y = value, colour = z)) +
+                  ggplot2::theme_classic() +
+                  ggplot2::scale_y_continuous("Posterior covariance of f(x) with f(z)") +
+                  ggplot2::geom_line()
               }
              ),
              active = list(
