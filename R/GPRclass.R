@@ -57,7 +57,7 @@
 #' @examples
 #' Hier Beispiele einfügen
 #'
-#' @references Rasmussen, Carl E. W., Christopher K. I. (2006).	Gaussian processes for machine learning
+#' @references Rasmussen, Carl E. W.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
 #'
 #' @export
 
@@ -237,6 +237,7 @@ GPR.sqrexp <-  R6::R6Class("GPR.sqrexp", inherit = GPR,
                            )
 )
 
+#' @export
 GPR.gammaexp <- R6::R6Class("GPR.gammaexp", inherit = GPR,
                           public = list(
                             initialize = function(X, y, gamma, l, noise){
@@ -247,6 +248,7 @@ GPR.gammaexp <- R6::R6Class("GPR.gammaexp", inherit = GPR,
                           )
 )
 
+#' @export
 GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
                             public = list(
                               initialize = function(X, y, alpha, l, noise){
@@ -262,8 +264,11 @@ GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
 covariance_matrix <- function(A, B, covariance_function) {
   outer(1:ncol(A), 1:ncol(B), function(i, j) covariance_function(A[, i, drop = F], B[, j, drop = F]))
 }
-
-
+multivariate_normal <- function(n, mean, covariance) {
+  stopifnot(is.numeric(mean), is.numeric(covariance), length(mean) == nrow(covariance))
+  L <- t(chol(covariance))
+  mean + L%*%rnorm(n, 0, 1)
+}
 
 # Implementation von Matrixversionen der Kovarianzfunktionen, um Effizienz zu erhöhen
 # Bei Eingabe zweier Matrizen gleicher Dimension, soll die Funktion auf die jeweils i-ten Spalten
@@ -293,7 +298,9 @@ rationalquadratic <- function(x, y, l, alpha) UseMethod("rationalquadratic")
 rationalquadratic.matrix <- function(x, y, l, alpha) (1 + sqrt(colSums((x - y)^2)) / (2 * alpha * l^2))^(-alpha)
 rationalquadratic.numeric <- function(x, y, l, alpha) (1 + sqrt(sum((x - y)^2)) / (2 * alpha * l^2))^(-alpha)
 
-
+X <- matrix(seq(-5,5,by = 0.5), nrow = 1)
+noise <- 0.5
+y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
 Gaussian <- GPR.constant$new(X, y, 1, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 Gaussian <- GPR.linear$new(X, y, 1, noise)
@@ -307,12 +314,6 @@ Gaussian$plot(seq(-5,5, by = 0.1))
 Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 
-
-
-
-X <- matrix(seq(-5,5,by = 0.5), nrow = 1)
-noise <- 0.5
-y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
 Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 Gaussian$plot_posterior_draws(10, matrix(seq(-5,5, by = 0.1), nrow = 1))

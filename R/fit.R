@@ -3,7 +3,7 @@
 #' Applies optimization methods to find optimal parameters of the covariance function for a given set of datapoints
 #' 
 #' @section Usage: 
-#' \preformatted{fit(X, y, noise, cov_list)}
+#' \preformatted{fit(X, y, noise, cov_names)}
 #'
 #'
 #' @section Arguments:
@@ -14,11 +14,11 @@
 #' 
 #'   \code{noise} the inflicted noise of the observations
 #' 
-#'   \code{cov_list} a list of names of covariance functions
+#'   \code{cov_names} a list of names of covariance functions
 #' @name fit
-#' @references Rasmussen, Carl E. W., Christopher K. I. (2006).	Gaussian processes for machine learning
+#' @references Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
 
-#Save derivatives of covariance functions for the optimization of their hyperparameters
+#Save derivatives of covariance functions
 cov_dict <- list(
   sqrexp = list(func = sqrexp, 
                 deriv = function(x, y, l){
@@ -57,9 +57,9 @@ fit <-  function(X, y, noise, cov_names){
   for (cov in cov_names){
     usedcov <- cov_dict[[cov]]
     nparam <- length(usedcov$start)
-    l <- list() #parameters for optimization
+    l <- list() #parameters for optim()
     dens <- function(v){
-      K <- covariance_matrix(X, X, function(x,y) do.call(usedcov$func, append(list(x, y), v)))
+      K <- covariance_matrix(X, X, function(x, y) do.call(usedcov$func, append(list(x, y), v)))
       
       L <- t(chol(K + noise * diag(ncol(X))))
       alpha <- solve(t(L), solve(L, y))
@@ -94,13 +94,13 @@ fit <-  function(X, y, noise, cov_names){
   return(list(par = param[[which.max(score)]], cov = cov_names[[which.max(score)]], score = score))
 }
 
+#section for testing:
 
 X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
-noise <- 1
-y <- c(0.1*X^3 + rnorm(length(X),0, 1))
+y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
 
-z <- fit(X,y,noise,list("rationalquadratic"))
+z <- fit(X, y, noise = 1, cov_names = list("rationalquadratic"))
 
 print(z)
-Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_dict[[z$cov]]$func, append(list(x,y),z$par)), noise)
-Gaussian$plot(seq(-5,5, by = 0.1))
+Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_dict[[z$cov]]$func, append(list(x, y), z$par)), noise)
+Gaussian$plot(seq(-5, 5, by = 0.1))
