@@ -141,20 +141,19 @@ GPR <- R6::R6Class("GPR",
                  y <- cbind(predictions[[1]], diag(predictions[[2]]))
                  z <- multivariate_normal(n, predictions[[1]], predictions[[2]])
                  dat <- data.frame(x = testpoints, y = y, z = z)
-                 dat <- tidyr::gather(dat, y, z)
-                 ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y.1)) +
+                 dat <- tidyr::gather(dat, -(x:y.2), key = "variable", value = "value")
+                 ggplot2::ggplot(dat, ggplot2::aes(x = x, y = value, colour = variable)) +
                    ggplot2::theme_classic() +
-                   ggplot2::scale_y_continuous("output, f(x)") +
+                   ggplot2::scale_y_continuous("Random functions drawn from posterior") +
                    ggplot2::geom_line() +
                    ggplot2::geom_ribbon(ggplot2::aes(ymin = y.1 - 2*sqrt(pmax(y.2,0)),
-                                                     ymax = y.1 + 2*sqrt(pmax(y.2,0))), alpha = 0.2) +
-                   ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
-                                       mapping = ggplot2::aes(x = xpoints, y = ypoints, shape = 4)) +
-                   ggplot2::scale_shape_identity()
+                                                     ymax = y.1 + 2*sqrt(pmax(y.2,0))), alpha = 0.2) 
+                   #ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
+                    #                 mapping = ggplot2::aes(x = xpoints, y = ypoints))
                  # jetzt ggplot y.1 und alle z in unterschiedlichen Farben ueber x...
                  #plot(testpoints, multivariate_normal(len, predictions[[1]], predictions[[2]]), type = "l")
                  #replicate(n - 1, lines(testpoints, multivariate_normal(len, post_distr[[1]], post_distr[[2]])))
-               }
+              }
              ),
              active = list(
                X = function(value){
@@ -284,8 +283,11 @@ covariance_matrix <- function(A, B, covariance_function) {
 }
 multivariate_normal <- function(n, mean, covariance) {
   stopifnot(is.numeric(mean), is.numeric(covariance), length(mean) == nrow(covariance))
-  L <- t(chol(covariance))
-  c(mean) + L%*%matrix(rnorm(n*length(mean), 0, 1), nrow = length(mean))
+  degenerate <- diag(covariance) < 0.05
+  L <- t(chol(covariance[!degenerate, !degenerate]))
+  out <- matrix(0, nrow = nrow(covariance), ncol = n)
+  out[!degenerate] <- L%*%matrix(rnorm(n*nrow(L), 0, 1), nrow = nrow(L))
+  out + c(mean) 
 }
 
 # Implementation von Matrixversionen der Kovarianzfunktionen, um Effizienz zu erhöhen
@@ -334,4 +336,11 @@ Gaussian$plot(seq(-5,5, by = 0.1))
 
 Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
-Gaussian$plot_posterior_draws(10, matrix(seq(-5,5, by = 0.1), nrow = 1))
+Gaussian$plot_posterior_draws(10, seq(-5,5, by = 0.1))
+
+X <- matrix(seq(-5,5, by = 3), nrow = 1)
+noise <- 0
+y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
+Gaussian <- GPR.sqrexp$new(X, y, 0.5, 0)
+Gaussian$plot(seq(-6,6, by = 0.1))
+Gaussian$plot_posterior_draws(3, seq(-6,6, by = 0.2))
