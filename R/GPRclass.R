@@ -54,10 +54,9 @@
 #' If own covariance functions are used with GPR, they need to be vectorized.
 #' 
 #' @examples
-#' Hier Beispiele einfügen
+#' Hier Beispiele einfuegen
 #'
 #' @references Rasmussen, Carl E. W.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
-#'
 NULL
 
 #' @export

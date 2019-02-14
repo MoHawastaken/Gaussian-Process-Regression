@@ -18,6 +18,7 @@
 #' @name fit
 #' @references Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
 NULL
+
 #Save derivatives of covariance functions
 cov_dict <- list(
   sqrexp = list(func = sqrexp, 
