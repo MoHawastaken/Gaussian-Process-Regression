@@ -17,6 +17,7 @@
 #'   \code{cov_names} a list of names of covariance functions
 #' @name fit
 #' @references Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
+NULL
 
 #Save derivatives of covariance functions
 cov_dict <- list(

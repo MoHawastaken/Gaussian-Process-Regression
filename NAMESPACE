@@ -2,8 +2,12 @@
 
 export(GPR)
 export(GPR.constant)
+export(GPR.gammaexp)
 export(GPR.linear)
 export(GPR.polynomial)
+export(GPR.rationalquadratic)
 export(GPR.sqrexp)
+export(Normal)
 export(fit)
+export(helper_complicated)
 importFrom(R6,R6Class)
