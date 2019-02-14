@@ -324,17 +324,11 @@ fit <-  function(X, y, noise, cov_names){
   for (cov in cov_names){
     usedcov <- cov_dict[[cov]]
     nparam <- length(usedcov$start)
-    l <- list()
+    l <- list() #parameters for optimization
     dens <- function(v){
-      n <- ncol(X)
-      K <- matrix(0, nrow = n, ncol = n)
-      for (i in 1:n) {
-        for (j in 1:n) {
-          K[i, j] <-  do.call(usedcov$func, as.list(c(X[, i], X[, j], v)))
-        }
-      }
+      K <- covariance_matrix(X, X, function(x,y) do.call(usedcov$func, append(list(x, y), v)))
       
-      L <- t(chol(K + noise * diag(n)))
+      L <- t(chol(K + noise * diag(ncol(X))))
       alpha <- solve(t(L), solve(L, y))
       - 0.5 * y %*% alpha - sum(log(diag(L))) - ncol(X) / 2 * log(2 * pi)
     }
@@ -357,7 +351,7 @@ fit <-  function(X, y, noise, cov_names){
       l <- append(l, list(gr = dens_deriv))
     }
     #Switch optim method if parameter is one dimensional
-    if (nparam == 1) l <- append(l, list(method = "Brent", lower = -10, upper = 10))
+    if (nparam == 1) l <- append(l, list(method = "Brent", lower = 0, upper = 10))
     else l <- append(l, list(method = "BFGS"))
     l <- append(l, list(control = list(fnscale = -1)))
     p <- do.call(optim, append(list(usedcov$start, dens), l))
@@ -371,6 +365,12 @@ fit <-  function(X, y, noise, cov_names){
 X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
 noise <- 1
 y <- c(0.1*X^3 + rnorm(length(X),0, 1))
+
+z <- fit(X,y,noise,list("sqrexp", "gammaexp","constant", "linear"))
+
+print(z)
+Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_dict[[z$cov]]$func, append(list(x,y),z$par)), noise)
+Gaussian$plot(seq(-5,5, by = 0.1))
 
 Gaussian <- GPR.constant$new(X, y, 1, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
@@ -386,12 +386,7 @@ Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 
 
-z <- fit(X,y,noise,list("sqrexp", "gammaexp"))
 
-
-print(z)
-Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_dict[[z$cov]]$func, append(list(x,y),z$par)), noise)
-Gaussian$plot(seq(-5,5, by = 0.1))
 
 X <- matrix(seq(-5,5,by = 0.5), nrow = 1)
 noise <- 0.5
