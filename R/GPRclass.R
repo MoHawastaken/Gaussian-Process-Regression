@@ -114,7 +114,7 @@ GPR <- R6::R6Class("GPR",
                    ggplot2::scale_y_continuous("output, f(x)") +
                    ggplot2::geom_line() +
                    ggplot2::geom_ribbon(ggplot2::aes(ymin = y.1 - 2*sqrt(pmax(y.2,0)),
-                                   ymax = y.1 + 2*sqrt(pmax(y.2,0))), alpha = 0.2) +
+                                   ymax = y.1 + 2 * sqrt(pmax(y.2,0))), alpha = 0.2) +
                    ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
                               mapping = ggplot2::aes(x = xpoints, y = ypoints, shape = 4)) +
                    ggplot2::scale_shape_identity()
@@ -278,7 +278,7 @@ multivariate_normal <- function(n, mean, covariance) {
   degenerate <- diag(covariance) < 0.05
   L <- t(chol(covariance[!degenerate, !degenerate]))
   out <- matrix(0, nrow = nrow(covariance), ncol = n)
-  out[!degenerate] <- L%*%matrix(rnorm(n*nrow(L), 0, 1), nrow = nrow(L))
+  out[!degenerate] <- L %*% matrix(rnorm(n*nrow(L), 0, 1), nrow = nrow(L))
   out + c(mean) 
 }
 
@@ -310,7 +310,9 @@ rationalquadratic <- function(x, y, l, alpha) UseMethod("rationalquadratic")
 rationalquadratic.matrix <- function(x, y, l, alpha) (1 + sqrt(colSums((x - y)^2)) / (2 * alpha * l^2))^(-alpha)
 rationalquadratic.numeric <- function(x, y, l, alpha) (1 + sqrt(sum((x - y)^2)) / (2 * alpha * l^2))^(-alpha)
 
-X <- matrix(seq(-5,5,by = 0.5), nrow = 1)
+#section for testing:
+
+X <- matrix(seq(-5,5,by = 1), nrow = 1)
 noise <- 0.5
 y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
 Gaussian <- GPR.constant$new(X, y, 1, noise)
@@ -326,9 +328,10 @@ Gaussian$plot(seq(-5,5, by = 0.1))
 Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise)
 Gaussian$plot(seq(-5,5, by = 0.1))
 
-Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise)
+Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise = 0.1)
 Gaussian$plot(seq(-5,5, by = 0.1))
 Gaussian$plot_posterior_draws(10, seq(-5,5, by = 0.1))
+Gaussian$plot_posterior_variance(seq(-5,5, by = 3))
 
 X <- matrix(seq(-5,5, by = 3), nrow = 1)
 noise <- 0
