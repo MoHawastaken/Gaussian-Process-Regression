@@ -124,13 +124,13 @@ GPR <- R6::R6Class("GPR",
                  y <- cbind(predictions[[1]], diag(predictions[[2]]))
                  z <- multivariate_normal(n, predictions[[1]], predictions[[2]])
                  dat <- data.frame(x = testpoints, y = y, z = z)
-                 dat <- tidyr::gather(dat, -(x:y.2), key = "variable", value = "value")
-                 ggplot2::ggplot(dat, ggplot2::aes(x = x, y = value, colour = variable)) +
+                 dat1 <- tidyr::gather(dat, -(x:y.2), key = "variable", value = "value")
+                 ggplot2::ggplot(dat1, ggplot2::aes(x = x, y = value, colour = variable)) +
                    ggplot2::theme_classic() +
                    ggplot2::scale_y_continuous("Random functions drawn from posterior") +
                    ggplot2::geom_line() +
-                   ggplot2::geom_ribbon(ggplot2::aes(ymin = y.1 - 2*sqrt(pmax(y.2,0)),
-                                                     ymax = y.1 + 2*sqrt(pmax(y.2,0))), alpha = 0.2) 
+                   ggplot2::geom_ribbon(inherit.aes = F,mapping = ggplot2::aes(x = testpoints, ymin = y.1 - 2*sqrt(pmax(y.2,0)),
+                                                     ymax = y.1 + 2*sqrt(pmax(y.2,0))), data = dat, alpha = 0.3) 
                    #ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
                     #              mapping = ggplot2::aes(x = xpoints, y = ypoints))
               },
