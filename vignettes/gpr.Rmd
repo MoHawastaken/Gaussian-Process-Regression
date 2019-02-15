@@ -32,6 +32,17 @@ Some covariance functions have already been implemented, they can be used by sel
 ```{r, eval=FALSE}
 Gaussian <- GPR.sqrexp$new(X, y, l = 1, noise = 0.5)
 ```
+The class provides two methods, the first one is for the prediction of points
+
+> “Prediction is very difficult, especially about the future. – Niels Bohr" - Hadley Wickham
+[via](https://www.quora.com/profile/Hadley-Wickham)
+
+```{r, eval=FALSE}
+Gaussian$predict(x, pointwise_var = FALSE)
+```
+
+> "Visualization can surprise you, but it doesn’t scale well. Modelling scales well, but it can’t surprise you." --Hadley Wickham
+[via](https://www.johndcook.com/blog/2013/02/07/visualization-modeling-and-surprises/)
 
 ```{r, eval=FALSE}
 Gaussian$plot(seq(-10, 10, by = 0.05))
@@ -47,4 +58,6 @@ Gaussian$plot(seq(-10,10, by = 0.05))
 
 ## Classification
 
+> "Dear past-Hadley: PLEASE COMMENT YOUR CODE BETTER. Love present-Hadley" — @hadleywickham
+[via](https://twitter.com/hadleywickham/status/718203628528349184)
 
