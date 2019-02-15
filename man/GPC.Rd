@@ -7,8 +7,8 @@
 \preformatted{GPC <- GPC$new(X, y, cov_Fun, noise)
 
 
-GPR$predict(X*)
-GPR$plot(testpoints)
+GPC$predict(X*)
+GPC$plot(testpoints)
 }
 }
 \description{
@@ -21,9 +21,9 @@ Implements a gaussian process and gives tools to predict and plot its values for
 
   \code{y} numeric vector of targets
 
-  \code{cov_Fun} the predicted covarianz function of the gaussian process
+  \code{cov_fun} the chosen covariance function of the gaussian process
 
-  \code{noise} the predicted noise of the observations
+  \code{noise} the inflicted noise of the observations
 
   \code{X*} a numeric vector as the test input
 
@@ -33,7 +33,8 @@ Implements a gaussian process and gives tools to predict and plot its values for
 \section{Methods}{
 
 
-\code{$predict()} returns a numeric vector of the expected value of the underlying function f and their variance for the test input
+\code{$predict()} returns a numeric vector of the expected value of the underlying 
+function f and their variance for the test input
 
 \code{$plot()} displays the results of the predict function for all testpoints in a nice plot
 }

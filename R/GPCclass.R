@@ -6,8 +6,8 @@
 #' @usage \preformatted{GPC <- GPC$new(X, y, cov_Fun, noise)
 #'
 #'
-#' GPR$predict(X*)
-#' GPR$plot(testpoints)
+#' GPC$predict(X*)
+#' GPC$plot(testpoints)
 #'}
 #' @section Arguments:
 #' 
@@ -15,9 +15,9 @@
 #'
 #'   \code{y} numeric vector of targets
 #' 
-#'   \code{cov_Fun} the predicted covarianz function of the gaussian process
+#'   \code{cov_fun} the chosen covariance function of the gaussian process
 #' 
-#'   \code{noise} the predicted noise of the observations
+#'   \code{noise} the inflicted noise of the observations
 #' 
 #'   \code{X*} a numeric vector as the test input
 #' 
@@ -25,7 +25,8 @@
 #'   
 #' @section Methods:
 #' 
-#' \code{$predict()} returns a numeric vector of the expected value of the underlying function f and their variance for the test input
+#' \code{$predict()} returns a numeric vector of the expected value of the underlying 
+#' function f and their variance for the test input
 #' 
 #' \code{$plot()} displays the results of the predict function for all testpoints in a nice plot
 #'
@@ -47,7 +48,8 @@ GPC <- R6::R6Class("GPC",
                      .y = NA,
                      .f_hat = NA,
                      .L = NA,
-                     .logq = NA
+                     .logq = NA,
+                     .sigmoid = function(x) 1/(1 + exp(-x)) #used sigmoid function
                    ),
                    public = list(
                      initialize = function(X, y, k, epsilon){
@@ -59,7 +61,7 @@ GPC <- R6::R6Class("GPC",
                        it <- 0
                        while (TRUE) {
                          it <- it + 1
-                         P <- 1/(1 + exp(-f))
+                         P <- private$.sigmoid(f)
                          W <- (1 - P) * P
                          L <- t(chol(diag(n) + (sqrt(W) %o% sqrt(W)) * K))
                          b <- W * f + (y + 1)/2 - P
@@ -80,7 +82,7 @@ GPC <- R6::R6Class("GPC",
                          last_objective <- objective
                        }
                        print(sprintf("Convergence after %s iterations", it))
-                       P <- 1/(1 + exp(-f))
+                       P <- private$.sigmoid(f)
                        W <- (1 - P) * P
                        private$.f_hat <- f
                        private$.L <- t(chol(diag(n) + (sqrt(W) %o% sqrt(W)) * K))
@@ -90,13 +92,13 @@ GPC <- R6::R6Class("GPC",
                        private$.k <- k
                      },
                      predict_class = function(Xs){
-                       P <- 1/(1 + exp(-self$f_hat))
+                       P <- private$.sigmoid(self$f_hat)
                        W <- P * (1 - P)
                        ks <- sapply(1:ncol(self$X), FUN = function(i) self$k(self$X[, i], Xs))
                        fs_bar <- sum(ks * ((self$y + 1)/2 - P))
                        v <- solve(self$L, (sqrt(W) * ks))
                        Vfs <- self$k(Xs, Xs) - sum(v * v)
-                       hilfs_func <- function(z) 1/(1 + exp(-z))  * (1/sqrt(2 * pi * Vfs)) * exp(-(z - fs_bar)^2/(2 * Vfs))
+                       hilfs_func <- function(z) private$.sigmoid(z) * dnorm(z, mean = fs_bar, sd = Vfs)
                        P_hat <- integrate(hilfs_func, -Inf, Inf)[1]
                        return(P_hat$value)
                      },
