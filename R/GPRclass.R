@@ -56,7 +56,7 @@
 #' @examples
 #' Hier Beispiele einfuegen
 #'
-#' @references Rasmussen, Carl E. W.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
+#' @references Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
 NULL
 
 #' @export

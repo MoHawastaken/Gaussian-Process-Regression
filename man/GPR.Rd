@@ -65,5 +65,5 @@ Hier Beispiele einfuegen
 
 }
 \references{
-Rasmussen, Carl E. W.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
+Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
 }
