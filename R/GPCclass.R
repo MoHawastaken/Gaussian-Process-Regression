@@ -40,7 +40,7 @@
 NULL
 
 #' @export
-GPC <- R6::R6Class("GPR",
+GPC <- R6::R6Class("GPC",
                    private = list(
                      .X = NA,
                      .k = NA,
@@ -54,23 +54,18 @@ GPC <- R6::R6Class("GPR",
                        stopifnot(is.matrix(X), is.vector(y), is.numeric(y), length(y) == ncol(X))
                        stopifnot(is.numeric(epsilon), epsilon > 0, is.function(k))
                        n <- length(y)
-                       K <- matrix(0, nrow = n, ncol = n)
-                       for (i in 1:n) {
-                         for (j in 1:n) {
-                           K[i, j] <-  k(X[, i], X[, j])
-                         }
-                       }
+                       K <- covariance_matrix(X,X,k)
                        f <- rep(0, n)
                        it <- 0
                        while (TRUE) {
                          it <- it + 1
-                         Pi <- 1/(1 + exp(-f))
-                         W <- (1 - Pi)*Pi
+                         P <- 1/(1 + exp(-f))
+                         W <- (1 - P) * P
                          L <- t(chol(diag(n) + (sqrt(W) %o% sqrt(W)) * K))
-                         b <- W*f + (y + 1)/2 - Pi
-                         intermediate <- solve(L, sqrt(W)*(K %*% b))
+                         b <- W * f + (y + 1)/2 - P
+                         intermediate <- solve(L, sqrt(W) * (K %*% b))
                          intermediate <- solve(t(L), intermediate)
-                         a <- b - sqrt(W)*intermediate
+                         a <- b - sqrt(W) * intermediate
                          f <- c(K %*% a)
                          objective <- -sum(a * f)/2 - sum(log(1 + exp(-y * f)))
                          if (it > 1) {
@@ -85,8 +80,8 @@ GPC <- R6::R6Class("GPR",
                          last_objective <- objective
                        }
                        print(sprintf("Convergence after %s iterations", it))
-                       Pi <- 1/(1 + exp(-f))
-                       W <- (1 - Pi)*Pi
+                       P <- 1/(1 + exp(-f))
+                       W <- (1 - P) * P
                        private$.f_hat <- f
                        private$.L <- t(chol(diag(n) + (sqrt(W) %o% sqrt(W)) * K))
                        private$.logq <- objective - sum(diag(self$L))
@@ -95,15 +90,15 @@ GPC <- R6::R6Class("GPR",
                        private$.k <- k
                      },
                      predict_class = function(Xs){
-                       Pi <- 1/(1 + exp(-self$f_hat))
-                       W <- Pi*(1 - Pi)
+                       P <- 1/(1 + exp(-self$f_hat))
+                       W <- P * (1 - P)
                        ks <- sapply(1:ncol(self$X), FUN = function(i) self$k(self$X[, i], Xs))
-                       fs_bar <- sum(ks * ((self$y + 1)/2 - Pi))
+                       fs_bar <- sum(ks * ((self$y + 1)/2 - P))
                        v <- solve(self$L, (sqrt(W) * ks))
                        Vfs <- self$k(Xs, Xs) - sum(v * v)
-                       hilfs_func <- function(z) 1/(1 + exp(-z))  * (1/sqrt(2*pi*Vfs)) * exp(-(z-fs_bar)^2/(2*Vfs))
-                       PIs_hat <- integrate(hilfs_func, -Inf, Inf)[1]
-                       return(PIs_hat$value)
+                       hilfs_func <- function(z) 1/(1 + exp(-z))  * (1/sqrt(2 * pi * Vfs)) * exp(-(z - fs_bar)^2/(2 * Vfs))
+                       P_hat <- integrate(hilfs_func, -Inf, Inf)[1]
+                       return(P_hat$value)
                      },
                      plot = function(testpoints){
                        dat <- data.frame(x = testpoints, 
@@ -112,9 +107,9 @@ GPC <- R6::R6Class("GPR",
                          ggplot2::theme_classic() +
                          ggplot2::scale_y_continuous("output, p(y = 1| x)") +
                          ggplot2::geom_line() +
-                         #ggplot2::geom_ribbon(ggplot2::aes(ymin = y.1 - 2*sqrt(max(y.2,0)),
-                         #                                  ymax = y.1 + 2*sqrt(max(y.2,0))), alpha = 0.2) +
-                         ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
+                         #ggplot2::geom_ribbon(ggplot2::aes(ymin = y.1 - 2*sqrt(pmax(y.2,0)),
+                         #                                  ymax = y.1 + 2*sqrt(pmax(y.2,0))), alpha = 0.2) +
+                         ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = pmax(0,self$y)), 
                                              mapping = ggplot2::aes(x = xpoints, y = ypoints, shape = 4)) +
                          ggplot2::scale_shape_identity()
                      }
@@ -164,6 +159,8 @@ GPC <- R6::R6Class("GPR",
                      }
                    )
 )
+
+#section for testing:
 
 X <- matrix(seq(-1,1,by = 0.1), nrow = 1)
 y <- 2*as.integer(X > 0) - 1

@@ -113,7 +113,7 @@ fit <-  function(X, y, noise, cov_names){
 X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
 y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
 
-z <- fit(X, y, noise = 1, cov_names = list("sqrexp","gammaexp"))
+z <- fit(X, y, noise = 1, cov_names = list("sqrexp","rationalquadratic"))
 
 print(z)
 Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_df[z$cov, ]$func[[1]], append(list(x, y), z$par)), noise = 1)
