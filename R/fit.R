@@ -21,28 +21,28 @@ NULL
 
 #Save derivatives of covariance functions
 cov_dict <- list(
-  sqrexp = list(func = sqrexp, 
+  sqrexp = list(func = sqrexp, display = "Squared Exponential",
                 deriv = function(x, y, l){
                   r <- sqrt(sum((x - y)^2))
                   r^2/l^3*exp(-r^2/(l^2*2))
                 }, start = c(1)
   ),
-  gammaexp = list(func = gammaexp, 
+  gammaexp = list(func = gammaexp, display = "Gamma Exponential",
                   deriv = function(x, y, gamma, l){
                     r <- sqrt(sum((x - y)^2))
                     c(-exp(-(r/l)^gamma) * (r/l)^gamma * log(r/l), exp(-(r/l)^gamma) * gamma * r^gamma / (l^(gamma + 1)))
                   }, start = c(1, 1)
   ),
-  constant = list(func = constant, deriv = function(x, y, c) 0, start = c(1)
+  constant = list(func = constant, display = "Constant", deriv = function(x, y, c) 0, start = c(1)
   ),
-  linear = list(func = linear, deriv = function(x, y, sigma) sigma, start = c(1)
+  linear = list(func = linear, display = "Linear", deriv = function(x, y, sigma) sigma, start = c(1)
   ),
-  polynomial = list(func = polynomial, 
+  polynomial = list(func = polynomial, display = "Polynomial",
                     deriv = function(x, y, sigma, p){
                       c(p * (x %*% y + sigma)^(p - 1), (x %*% y + sigma)^p * log((x %*% y + sigma)))
                     }, start = c(1, 2)
   ),
-  rationalquadratic = list(func = rationalquadratic,
+  rationalquadratic = list(func = rationalquadratic, display = "Rational Quadratic",
                            deriv = function(x, y, alpha, l){
                               r <- sum((x - y)^2)
                               c(((r/(2*l^2*alpha) + 1)^(-alpha) * (r - (2*l^2*alpha + r) * log(r/(2 * l^2*alpha) 
@@ -51,16 +51,29 @@ cov_dict <- list(
                            }, start = c(1,1)
   )
 )
+cov_df <- data.frame(list(name = "sqrexp", display = "Squared Exponential", start = I(list(1)), 
+                          func = I(list(cov_dict[["sqrexp"]]$func)), deriv = I(list(cov_dict[["sqrexp"]]$deriv)))
+                     , stringsAsFactors = FALSE )
+
+for (name in names(cov_dict)[-1]){
+  d1 <- list(name = name, display = cov_dict[[name]]$display, 
+                        start = I(list(cov_dict[[name]]$start)),
+             func =  I(list(cov_dict[[name]]$func)), 
+             deriv = I(list(cov_dict[[name]]$deriv)))
+  cov_df[nrow(cov_df) + 1,] <-  I(d1)
+}
+row.names(cov_df) <- cov_df$name
+
 #' @export
 fit <-  function(X, y, noise, cov_names){
   param <- list()
   score <- c()
   for (cov in cov_names){
-    usedcov <- cov_dict[[cov]]
-    nparam <- length(usedcov$start)
+    usedcov <- cov_df[cov,]
+    nparam <- length(usedcov$start[[1]])
     l <- list() #parameters for optim()
     dens <- function(v){
-      K <- covariance_matrix(X, X, function(x, y) do.call(usedcov$func, append(list(x, y), v)))
+      K <- covariance_matrix(X, X, function(x, y) do.call(usedcov$func[[1]], append(list(x, y), v)))
       
       L <- t(chol(K + noise * diag(ncol(X))))
       alpha <- solve(t(L), solve(L, y))
@@ -73,8 +86,8 @@ fit <-  function(X, y, noise, cov_names){
         K_deriv <- array(0, c(n, n, nparam))
         for (i in 1:n) {
           for (j in 1:n) {
-            K[i, j] <-  do.call(usedcov$func, as.list(c(X[, i], X[, j], v)))
-            K_deriv[i, j,] <- do.call(usedcov$deriv, as.list(c(X[, i], X[, j], v)))
+            K[i, j] <-  do.call(usedcov$func[[1]], as.list(c(X[, i], X[, j], v)))
+            K_deriv[i, j,] <- do.call(usedcov$deriv[[1]], as.list(c(X[, i], X[, j], v)))
           }
         }
         
@@ -88,7 +101,7 @@ fit <-  function(X, y, noise, cov_names){
     if (nparam == 1) l <- append(l, list(method = "Brent", lower = 0, upper = 10))
     else l <- append(l, list(method = "BFGS"))
     l <- append(l, list(control = list(fnscale = -1)))
-    p <- do.call(optim, append(list(usedcov$start, dens), l))
+    p <- do.call(optim, append(list(usedcov$start[[1]], dens), l))
     param <- append(param, list(p$par))
     score <- c(score, p$value)
   }
@@ -100,8 +113,8 @@ fit <-  function(X, y, noise, cov_names){
 X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
 y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
 
-z <- fit(X, y, noise = 1, cov_names = list("rationalquadratic"))
+z <- fit(X, y, noise = 1, cov_names = list("sqrexp","gammaexp"))
 
 print(z)
-Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_dict[[z$cov]]$func, append(list(x, y), z$par)), noise)
+Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_df[z$cov, ]$func[[1]], append(list(x, y), z$par)), noise = 1)
 Gaussian$plot(seq(-5, 5, by = 0.1))

@@ -4,7 +4,7 @@
 \alias{GPC}
 \title{Predictions and Plots for Gaussian process regression}
 \usage{
-\preformatted{GPR <- GPR$new(X, y, cov_Fun, noise)
+\preformatted{GPC <- GPC$new(X, y, cov_Fun, noise)
 
 
 GPR$predict(X*)

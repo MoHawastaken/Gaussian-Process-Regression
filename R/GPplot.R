@@ -9,18 +9,21 @@ cov_names <- list("Squared Exponential" = "sqrexp", "Gamma Exponential" = "gamma
 ui <- fluidPage(
   fluidRow(
     column(width = 6,
+           wellPanel(
+      h4("Datapoints"),
       sliderInput("noise", "noise", min = 0, max = 1, value = 0),
       sliderInput("gennoise", "generating noise", min = 0, max = 1, value = 0),
       numericInput("n", "number of training points", min = 1, value = 10),
       checkboxInput("drawrand", "Choose training points at random"),
       sliderInput("xlim", "xlim", min = -10, max = 10, value = c(-5,5))
-      ),
+      )),
       
-    column(width = 6,
-      selectInput("cov", "Covariance Function", choices = names(cov_names)),
+    column(width = 6,wellPanel(
+      h4("Covariance function"),
+      selectInput("cov", "", choices = cov_df$display),
       uiOutput("selectors"),
       actionButton("opthyp","Optimize Hyperparameters")
-      )
+      ))
   ),
   fluidRow(
     column(width = 12,  
@@ -29,7 +32,7 @@ ui <- fluidPage(
 
 #Helper function to remove sliders
 switchrenderUI <- function(i, session, min_noise, kdesc, ...){
-  n <- 6 #number of options
+  n <- nrow(cov_df) #number of options
   for (j in (1:n)[-i]) removeUI(selector = paste0("div#selectdiv", j)) #remove other UIs
   #change minimum value for noise
   updateSliderInput(session, "noise", value = min_noise,
@@ -80,10 +83,9 @@ server <- function(input, output,session){
     )
   })
   observeEvent(input$opthyp,{
-    print(cov_names[[input$cov]])
-    z <- fit(X,y,input$noise+0.1,list(cov_names[[input$cov]]))
+    z <- fit(X,y,input$noise+0.1,list(cov_df$name[cov_df$display == input$cov]))
     for (i in seq_along(z$par)) updateSliderInput(session, sprintf("par%s",i), value = z$par[i])
-    print(z$par)
+    print(paste("Optimal parameter: ", z$par))
   })
   output$plot1 <- renderPlot({
     if (input$drawrand){
@@ -91,8 +93,7 @@ server <- function(input, output,session){
       X <- reactive(matrix(runif(input$n,input$xlim[1],input$xlim[2]), nrow = 1))
     }
     else{
-      X <- reactive(matrix(seq(input$xlim[1],input$xlim[2],
-                               by = (input$xlim[2] - input$xlim[1])/input$n), nrow = 1))
+      X <- reactive(matrix(seq(input$xlim[1],input$xlim[2], by = (input$xlim[2] - input$xlim[1])/input$n), nrow = 1))
     }
     #generate datapoints using function f
     y <- reactive(c(f(X()) + rnorm(length(X()),0,sqrt(input$gennoise))))
@@ -101,10 +102,7 @@ server <- function(input, output,session){
     switch(input$cov, 
       "Squared Exponential" = {
         if (!is.null(input$par1) & !is.null(input$par2)){
-          kappa <- reactive(function(x,y){
-          input$par2 * exp(-(1/(2*input$par1^2))*(x - y)^2)
-        })
-        Gaussian <- reactive(GPR$new(X(), y(), kappa(), input$noise))
+        Gaussian <- reactive(GPR.sqrexp$new(X(), y(), input$par1, input$noise))
         }
       },
      "Constant" = {
