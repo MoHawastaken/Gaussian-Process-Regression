@@ -1,10 +1,10 @@
-#'  Predictions and Plots for Gaussian process regression
+#'  Predictions and Plots for Gaussian process classification
 #'
-#'  Implements a gaussian process and gives tools to predict and plot its values for given testpoints
+#'  Implements a gaussian process for classification and gives tools 
+#'  to predict and plot its values for given testpoints
 #' 
 #'
-#' @usage \preformatted{GPC <- GPC$new(X, y, cov_Fun, noise)
-#'
+#' @usage \preformatted{GPC <- GPC$new(X, y, cov_fun, noise)
 #'
 #' GPC$predict(X*)
 #' GPC$plot(testpoints)
@@ -13,7 +13,7 @@
 #' 
 #'   \code{X} matrix of inputs
 #'
-#'   \code{y} numeric vector of targets
+#'   \code{y} numeric vector of targets with values in \{-1,1\}
 #' 
 #'   \code{cov_fun} the chosen covariance function of the gaussian process
 #' 
@@ -26,7 +26,7 @@
 #' @section Methods:
 #' 
 #' \code{$predict()} returns a numeric vector of the expected value of the underlying 
-#' function f and their variance for the test input
+#' function f
 #' 
 #' \code{$plot()} displays the results of the predict function for all testpoints in a nice plot
 #'
@@ -38,6 +38,7 @@
 #'
 #' @importFrom R6 R6Class
 #' @name GPC
+#' @references Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
 NULL
 
 #' @export
@@ -57,8 +58,8 @@ GPC <- R6::R6Class("GPC",
                        stopifnot(is.numeric(epsilon), epsilon > 0, is.function(k))
                        n <- length(y)
                        K <- covariance_matrix(X,X,k)
-                       f <- rep(0, n)
-                       it <- 0
+                       f <- rep(0, n) #starting value
+                       it <- 0 #number of iterations
                        while (TRUE) {
                          it <- it + 1
                          P <- private$.sigmoid(f)
