@@ -44,7 +44,8 @@ cov_dict <- list(
   ),
   rationalquadratic = list(func = rationalquadratic, display = "Rational Quadratic",
                            deriv = function(x, y, alpha, l){
-                              r <- sum((x - y)^2)
+                              if (is.vector(x)) r <- sum((x - y)^2)
+                              else r <- colSums((x - y)^2)
                               c(((r/(2*l^2*alpha) + 1)^(-alpha) * (r - (2*l^2*alpha + r) * log(r/(2 * l^2*alpha) 
                                                                                                + 1)))/(2*l^2*alpha + r),
                                 (r*(r/(2*l^2*alpha) + 1)^(-alpha - 1))/(l^3))
@@ -86,8 +87,8 @@ fit <-  function(X, y, noise, cov_names){
         K_deriv <- array(0, c(n, n, nparam))
         for (i in 1:n) {
           for (j in 1:n) {
-            K[i, j] <-  do.call(usedcov$func[[1]], as.list(c(X[, i], X[, j], v)))
-            K_deriv[i, j,] <- do.call(usedcov$deriv[[1]], as.list(c(X[, i], X[, j], v)))
+            K[i, j] <-  do.call(usedcov$func[[1]], append(list(X[, i], X[, j]), v))
+            K_deriv[i, j,] <- do.call(usedcov$deriv[[1]], append(list(X[, i], X[, j]), v))
           }
         }
         

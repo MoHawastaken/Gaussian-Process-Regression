@@ -125,16 +125,21 @@ GPC <- R6::R6Class("GPC",
                          dat <- data.frame(x.1 = testpoints[1,], x.2 = testpoints[2,],
                             y = apply(testpoints, 2, function(x) {
                               2*as.integer(gaussian_classifier$predict_class(x) >= 0.5) - 1}))
-                         ggplot2::ggplot(dat, ggplot2::aes(x = x.1, y = x.2, fill = factor(y))) +
+                         ggplot2::ggplot(dat, inherit.aes = F, ggplot2::aes(x = x.1, y = x.2, fill = factor(y))) +
                            ggplot2::theme_classic() +
                            ggplot2::scale_y_continuous(expression("x_2")) +
                            ggplot2::scale_x_continuous(expression("x_1")) +
                            ggplot2::geom_tile() + 
                            ggplot2::scale_fill_manual(values = c("red", "blue")) +
-                           ggplot2::guides(fill = ggplot2::guide_legend(title = "Labels"))
-                       }
+                           ggplot2::guides(fill = ggplot2::guide_legend(title = "Labels")) +
+                           ggplot2::geom_point(inherit.aes = F, data = data.frame(xpoints = c(self$X[1,]), ypoints = c(self$X[2,])), 
+                                               mapping = ggplot2::aes(x = xpoints, y = ypoints, shape = factor(self$y))) +
+                           ggplot2::scale_shape_manual(values = c(4, 2)) +
+                           ggplot2::guides(shape = ggplot2::guide_legend(title = "Testpoints")) +
+                           ggplot2::scale_color_manual(values = c("red", "blue"))
+                         }
                        else warning("Plot function not available for this dimension")
-                     }
+                   }
                    ),
                    active = list(
                      X = function(value){
@@ -199,6 +204,16 @@ gaussian_classifier$plot(seq(-2,2, by = 0.1))
 s <- seq(-1, 1, by = 0.5)
 X <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
 y <- 2*as.integer(X[1, ] > X[2, ]) - 1
+kappa <- function(x,y) sqrexp(x,y,l=1)
+gaussian_classifier <- GPC$new(X, y, kappa, 1e-5)
+s <- seq(-1, 1, by = 0.1)
+testpoints <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
+gaussian_classifier$plot(testpoints)
+
+n <- 10
+X <- cbind(multivariate_normal(n, c(0.5,0.5), diag(c(0.1,0.1))), multivariate_normal(n, c(-0.5,-0.5), diag(c(0.1,0.1))))
+plot(X[1,], X[2, ])
+y <- rep(c(1,-1), each = n)
 kappa <- function(x,y) sqrexp(x,y,l=1)
 gaussian_classifier <- GPC$new(X, y, kappa, 1e-5)
 s <- seq(-1, 1, by = 0.1)

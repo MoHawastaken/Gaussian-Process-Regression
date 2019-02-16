@@ -100,7 +100,7 @@ GPR <- R6::R6Class("GPR",
                  v <- solve(self$L, K_star)
                  if (pointwise_var) {
                    posterior_variance <- self$k(X_star, X_star) - colSums(v * v)
-                   return(cbind(posterior_mean, posterior_variance))
+                   return(cbind(posterior_mean, posterior_variance, deparse.level = 0))
                  } else {
                    posterior_variance <- covariance_matrix(X_star, X_star, self$k) - t(v) %*% v
                    return(list(posterior_mean, posterior_variance))
@@ -111,7 +111,7 @@ GPR <- R6::R6Class("GPR",
                    message("No plot method for multidimensional data.")
                    return
                  }
-                 y <- unname(self$predict(testpoints, pointwise_var = TRUE))
+                 y <- self$predict(testpoints, pointwise_var = TRUE)
                  dat <- data.frame(x = testpoints, y = y)
                  ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y.1)) +
                    ggplot2::theme_classic() +

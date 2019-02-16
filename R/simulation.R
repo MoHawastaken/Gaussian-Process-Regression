@@ -12,26 +12,32 @@ simulate <- function(func, training_points, limits, noise = 0, error = function(
   Gaussian <- GPR$new(X, y, k, noise)
   predictions <- Gaussian$predict(test_points, pointwise_var = TRUE)
   residual <- predictions[, 1] - apply(test_points, 2, func)
+  # Visualizations
   cat("The mean absolute difference of predictions and ground truth",
               "in the considered limits is ", mean(abs(residual)), "\n")
   plot(predictions[, 2], abs(residual))
   x <- seq(limits[1, 1], limits[1, 2], by = 0.05)
-  if (D == 1) y <- cbind(sapply(x, func), Gaussian$predict(x))
-  else {
+  if (D == 1) {
+    predictions <- Gaussian$predict(x, pointwise_var = TRUE)
+    ground_truth <- sapply(x, func)
+  } else {
     print("Plot with respect to first variable with all others fixed.")
-    test_points <- rbind(test_points, matrix(apply(limits, 1, mean)[-1], nrow = D-1))
-    y <- cbind(apply(test_points, 2, func), Gaussian$predict(test_points, pointwise_var = TRUE))
+    plot_points <- rbind(x, matrix(apply(limits, 1, mean)[-1], 
+                                          nrow = D-1, ncol = length(x)))
+    ground_truth <- apply(plot_points, 2, func)
+    predictions <- Gaussian$predict(plot_points, pointwise_var = TRUE)
   }
-  print(y)
-  dat <- data.frame(x = x, y = y)
-  dat1 <- tidyr::gather(dat, y.1, y.2, key = "Function", value = "value")
+  dat <- data.frame(x = x, ground_truth = ground_truth, 
+                    regression = predictions[, 1], variance = predictions[, 2])
+  dat1 <- tidyr::gather(dat, ground_truth, regression, key = "Function", value = "value")
   ggplot2::ggplot(dat1, ggplot2::aes(x = x, y = value, colour = Function)) +
     ggplot2::theme_classic() +
-    ggplot2::scale_y_continuous("output, f(x)") +
     ggplot2::geom_line() +
-    ggplot2::geom_ribbon(inherit.aes = F, mapping = ggplot2::aes(x = x, ymin = y.2 - 2*sqrt(pmax(y.3,0)),
-                                ymax = y.2 + 2*sqrt(pmax(y.3,0))), data = dat, alpha = 0.3) 
-  
+    ggplot2::geom_ribbon(inherit.aes = F, 
+        data = dat,
+        mapping = ggplot2::aes(x = x, ymin = regression - 2*sqrt(pmax(variance,0)),
+                              ymax = regression + 2*sqrt(pmax(variance,0))), 
+        alpha = 0.3) 
 }
  
  
@@ -62,7 +68,7 @@ simulate(f, X, limits, noise = 1, error = error, cov_names = c("gammaexp", "rati
 # example 1
 f <- function(x) 0.1*sum(x^2)
 limits <- matrix(c(-5.5, 5.5, -5.5, 5.5), nrow = 2, byrow = TRUE)
-X <- combine_all(list(seq(-5,5,by = 0.2), seq(-5,5,by = 0.2)))
+X <- combine_all(list(seq(-5,5,by = 1), seq(-5,5,by = 1)))
 error <- normal(1)
 #Bei Fit ergibt sich ein error
-#simulate(f, X, limits, noise = 1, error = error, cov_names = c("gammaexp", "rationalquadratic"))
+simulate(f, X, limits, noise = 1, error = error, cov_names = c("constant"))
