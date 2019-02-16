@@ -36,9 +36,9 @@ Initialize an object of class GPR with training data X, target vector y, the cov
 Gaussian <- GPR$new(X, y, cov_func, noise)
 ```
 The following covariance functions have already been implemented and can be used by selecting the corresponding subclass:
-- constant, $ k(x,y) = c$,
-- linear, $ k(x,y) = \sum_{d=1}^D \sigma_d * x_d * y_d $,
-- polynomial, $ k(x,y) = (x * y + \sigma)^p $,
+- constant, $k(x,y) = c$,
+- linear, $k(x,y) = \sum_{d=1}^D \sigma_d * x_d * y_d$,
+- polynomial, $k(x,y) = (x * y + \sigma)^p$,
 - squared exponential, $k(x,y) = exp(-\frac{|x-y|^2}{2 l^2})$,
 - gamma exponential, $k(x,y) = exp(-(|x-y|/l)^\gamma)$,
 - rational quadratic, $k(x,y) = \left(1+ \frac{|x-y|^2}{2 \alpha l^2}\right)^{-\alpha}$.
@@ -125,4 +125,38 @@ y <- 2*as.integer(X > 0) - 1
 kappa <- function(x,y) exp(-3*(x - y)^2)
 Gaussian_classifier <- GPC$new(X, y, kappa, 1e-5)
 Gaussian_classifier$plot(seq(-2,2, by = 0.1))
+```
+
+```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE}
+#Copy function definitions, since they aren't being exported by the package
+multivariate_normal <- function(n, mean, covariance) {
+  stopifnot(is.numeric(mean), is.numeric(covariance), length(mean) == nrow(covariance))
+  L <- t(chol(covariance))
+  c(mean) + L %*% matrix(rnorm(n*length(mean), 0, 1), nrow = length(mean))
+}
+sqrexp <- function(x, y, l) UseMethod("sqrexp")
+sqrexp.matrix <- function(x, y, l) exp(-colSums((x - y)^2)/(2 * l^2))
+sqrexp.numeric <- function(x, y, l) exp(-sum((x - y)^2)/(2 * l^2))
+
+s <- seq(-1, 1, by = 0.5)
+X <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
+y <- 2*as.integer(X[1, ] > X[2, ]) - 1
+kappa <- function(x,y) sqrexp(x,y,l=1)
+gaussian_classifier <- GPC$new(X, y, kappa, 1e-5)
+s <- seq(-1, 1, by = 0.1)
+testpoints <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
+gaussian_classifier$plot(testpoints)
+```
+
+TEXT
+
+```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=FALSE}
+n <- 10
+X <- cbind(multivariate_normal(n, c(0.5,0.5), diag(c(0.1,0.1))), multivariate_normal(n, c(-0.5,-0.5), diag(c(0.1,0.1))))
+y <- rep(c(1,-1), each = n)
+kappa <- function(x,y) sqrexp(x,y,l=1)
+gaussian_classifier <- GPC$new(X, y, kappa, 1e-5)
+s <- seq(-1, 1, by = 0.1)
+testpoints <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
+gaussian_classifier$plot(testpoints)
 ```
