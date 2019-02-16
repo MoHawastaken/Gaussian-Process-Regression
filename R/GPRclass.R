@@ -86,6 +86,9 @@ GPR <- R6::R6Class("GPR",
                  if (min(sapply(1:n, function(i) det((K + noise * diag(n))[1:i, 1:i, drop = F]))) <= 0) {
                    stop("Inputs lead to non positive definite covariance matrix. Try using a larger noise or a smaller lengthscale.")
                  }
+                 if(class(try(solve(K + noise * diag(n)),silent=T)) != "matrix"){
+                   stop("K(X,X) + noise * I is not invertible, the algorithm is not defined for this case.")
+                 }
                  private$.L <- t(chol(K + noise * diag(n)))
                  private$.alpha <- solve(t(self$L), solve(self$L, y))
                  private$.logp <- -0.5 * self$y %*% self$alpha - sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
@@ -311,8 +314,8 @@ gammaexp.matrix <- function(x, y, l, gamma) exp(-(sqrt(colSums((x - y)^2))/l)^ga
 gammaexp.numeric <- function(x, y, l, gamma) exp(-(sqrt(sum((x - y)^2))/l)^gamma)
 
 rationalquadratic <- function(x, y, l, alpha) UseMethod("rationalquadratic")
-rationalquadratic.matrix <- function(x, y, l, alpha) (1 + sqrt(colSums((x - y)^2)) / (2 * alpha * l^2))^(-alpha)
-rationalquadratic.numeric <- function(x, y, l, alpha) (1 + sqrt(sum((x - y)^2)) / (2 * alpha * l^2))^(-alpha)
+rationalquadratic.matrix <- function(x, y, l, alpha) (1 + colSums((x - y)^2) / (2 * alpha * l^2))^(-alpha)
+rationalquadratic.numeric <- function(x, y, l, alpha) (1 + sum((x - y)^2) / (2 * alpha * l^2))^(-alpha)
 
 #section for testing:
 
