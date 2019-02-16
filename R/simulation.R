@@ -1,6 +1,7 @@
 #limits D x 2 Matrix, X D x N
 max_predict <- 10000
-simulate <- function(func, training_points, limits, noise = 0, error = function(x) 0, cov_names = names(cov_dict)) {
+#' @export
+simulate_regression <- function(func, training_points, limits, noise = 0, error = function(x) 0, cov_names = names(cov_dict)) {
   stopifnot(nrow(limits) == nrow(training_points))
   D <- nrow(limits)
   test_points <- combine_all(lapply(1:D, function(i) seq(limits[i, 1], limits[i, 2], length.out = max_predict^(1/D))))
@@ -9,7 +10,7 @@ simulate <- function(func, training_points, limits, noise = 0, error = function(
   best <- fit(training_points, y, noise, cov_names)
   print(2)
   k <- function(x,y) do.call(cov_df[best$cov, ]$func[[1]], append(list(x, y), best$par))
-  Gaussian <- GPR$new(X, y, k, noise)
+  Gaussian <- GPR$new(training_points, y, k, noise)
   predictions <- Gaussian$predict(test_points, pointwise_var = TRUE)
   residual <- predictions[, 1] - apply(test_points, 2, func)
   # Visualizations
@@ -39,8 +40,10 @@ simulate <- function(func, training_points, limits, noise = 0, error = function(
                               ymax = regression + 2*sqrt(pmax(variance,0))), 
         alpha = 0.3) 
 }
+
+simulate_classification 
  
- 
+#' @export
 combine_all <- function(lst) {
   l <- length(lst)
   lengths <- sapply(lst, length)
@@ -53,22 +56,22 @@ combine_all <- function(lst) {
   }
   out
 }
- 
+
+#' @export
 normal <- function(sd, mean = 0) {
   function(k) rnorm(k, mean = mean, sd = sd)
 }
 
 # example 1
 f <- function(x) 0.1*x^3
-limits <- matrix(c(-5.5, 5.5), nrow = 1)
+limits <- matrix(c(-6, 6), nrow = 1)
 X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
 error <- normal(1)
-simulate(f, X, limits, noise = 1, error = error, cov_names = c("gammaexp", "rationalquadratic"))
+simulate_regression(f, X, limits, noise = 1, error = error, cov_names = c("gammaexp", "rationalquadratic"))
 
 # example 1
 f <- function(x) 0.1*sum(x^2)
 limits <- matrix(c(-5.5, 5.5, -5.5, 5.5), nrow = 2, byrow = TRUE)
 X <- combine_all(list(seq(-5,5,by = 1), seq(-5,5,by = 1)))
 error <- normal(1)
-#Bei Fit ergibt sich ein error
-simulate(f, X, limits, noise = 1, error = error, cov_names = c("constant"))
+simulate_regression(f, X, limits, noise = 1, error = error, cov_names = c("gammaexp", "rationalquadratic"))
