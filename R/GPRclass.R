@@ -107,6 +107,10 @@ GPR <- R6::R6Class("GPR",
                  }
                },
                plot = function(testpoints){
+                 if (nrow(self$X) > 1) {
+                   message("No plot method for multidimensional data.")
+                   return
+                 }
                  y <- unname(self$predict(testpoints, pointwise_var = TRUE))
                  dat <- data.frame(x = testpoints, y = y)
                  ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y.1)) +
@@ -129,7 +133,7 @@ GPR <- R6::R6Class("GPR",
                    ggplot2::theme_classic() +
                    ggplot2::scale_y_continuous("Random functions drawn from posterior") +
                    ggplot2::geom_line() +
-                   ggplot2::geom_ribbon(inherit.aes = F,mapping = ggplot2::aes(x = testpoints, ymin = y.1 - 2*sqrt(pmax(y.2,0)),
+                   ggplot2::geom_ribbon(inherit.aes = F, mapping = ggplot2::aes(x = testpoints, ymin = y.1 - 2*sqrt(pmax(y.2,0)),
                                                      ymax = y.1 + 2*sqrt(pmax(y.2,0))), data = dat, alpha = 0.3) 
                    #ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
                     #              mapping = ggplot2::aes(x = xpoints, y = ypoints))
