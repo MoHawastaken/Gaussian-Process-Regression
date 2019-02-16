@@ -12,6 +12,7 @@ simulate <- function(func, training_points, limits, noise = 0, error = function(
   Gaussian <- GPR$new(X, y, k, noise)
   predictions <- Gaussian$predict(test_points, pointwise_var = TRUE)
   residual <- predictions[, 1] - apply(test_points, 2, func)
+  # Visualizations
   cat("The mean absolute difference of predictions and ground truth",
               "in the considered limits is ", mean(abs(residual)), "\n")
   plot(predictions[, 2], abs(residual))
@@ -21,9 +22,10 @@ simulate <- function(func, training_points, limits, noise = 0, error = function(
     ground_truth <- sapply(x, func)
   } else {
     print("Plot with respect to first variable with all others fixed.")
-    test_points <- rbind(test_points, matrix(apply(limits, 1, mean)[-1], nrow = D-1))
-    ground_truth <- apply(test_points, 2, func)
-    predictions <- Gaussian$predict(test_points, pointwise_var = TRUE)
+    plot_points <- rbind(x, matrix(apply(limits, 1, mean)[-1], 
+                                          nrow = D-1, ncol = length(x)))
+    ground_truth <- apply(plot_points, 2, func)
+    predictions <- Gaussian$predict(plot_points, pointwise_var = TRUE)
   }
   dat <- data.frame(x = x, ground_truth = ground_truth, 
                     regression = predictions[, 1], variance = predictions[, 2])
@@ -36,7 +38,6 @@ simulate <- function(func, training_points, limits, noise = 0, error = function(
         mapping = ggplot2::aes(x = x, ymin = regression - 2*sqrt(pmax(variance,0)),
                               ymax = regression + 2*sqrt(pmax(variance,0))), 
         alpha = 0.3) 
-  
 }
  
  
@@ -70,4 +71,4 @@ limits <- matrix(c(-5.5, 5.5, -5.5, 5.5), nrow = 2, byrow = TRUE)
 X <- combine_all(list(seq(-5,5,by = 1), seq(-5,5,by = 1)))
 error <- normal(1)
 #Bei Fit ergibt sich ein error
-simulate(f, X, limits, noise = 1, error = error, cov_names = c("constant", "rationalquadratic"))
+simulate(f, X, limits, noise = 1, error = error, cov_names = c("constant"))
