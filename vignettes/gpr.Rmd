@@ -22,6 +22,7 @@ library(gaussianprocess)
  [via](https://twitter.com/allimoberger/status/1085268564821585921)
 
 This package implements
+
 - gaussian process regression
 - gaussian process binary classification
 - clear and complete plots of the results
@@ -36,12 +37,14 @@ Initialize an object of class GPR with training data X, target vector y, the vec
 Gaussian <- GPR$new(X, y, cov_func, noise)
 ```
 The following covariance functions have already been implemented and can be used by selecting the corresponding subclass:
+
 - constant, $k(x,y) = c$,
 - linear, $k(x,y) = \sum_{d=1}^D \sigma_d * x_d * y_d$,
 - polynomial, $k(x,y) = (x * y + \sigma)^p$,
 - squared exponential, $k(x,y) = exp(-\frac{|x-y|^2}{2 l^2})$,
 - gamma exponential, $k(x,y) = exp(-(|x-y|/l)^\gamma)$,
 - rational quadratic, $k(x,y) = \left(1+ \frac{|x-y|^2}{2 \alpha l^2}\right)^{-\alpha}$.
+
 
 ```{r, eval=FALSE}
 Gaussian <- GPR.sqrexp$new(X, y, l = 1, noise = 0.5)
