@@ -70,15 +70,17 @@ fit <-  function(X, y, noise, cov_names){
   param <- list()
   score <- c()
   for (cov in cov_names){
-    if(class(try(solve(K + noise * diag(n)),silent=T)) != "matrix"){
-      warning("K(X,X) + noise * I is not invertible for ", cov,". The algorithm is not defined for this case.")
-      param <- append(param, -Inf)
-      score <- c(score, -Inf)
-      next
-    }
+    #if(class(try(solve(K + noise * diag(n)),silent=T)) != "matrix"){
+    #  warning("K(X,X) + noise * I is not invertible for ", cov,". The algorithm is not defined for this case.")
+    #  param <- append(param, -Inf)
+    #  score <- c(score, -Inf)
+    #  next
+    #}
     usedcov <- cov_df[cov,]
     nparam <- length(usedcov$start[[1]])
     l <- list() #parameters for optim()
+    best_par <- list(usedcov$start[[1]])
+    prev_par <- c()
     dens <- function(v){
       K <- covariance_matrix(X, X, function(x, y) do.call(usedcov$func[[1]], append(list(x, y), v)))
 
@@ -107,10 +109,26 @@ fit <-  function(X, y, noise, cov_names){
     #Switch optim method if parameter is one dimensional
     if (nparam == 1) l <- append(l, list(method = "Brent", lower = 0, upper = 10))
     else l <- append(l, list(method = "BFGS"))
+    if (cov == "polynomial"){
+      p_s <- list()
+      p_sc <- list()
+      for (i in 1:10){
+        q <- optim(usedcov$start[[1]][1], function(sig) dens(c(sig,i)), method = "Brent", 
+              lower = 0, upper = 5, control = list(fnscale = -1))
+        p_s <- append(p_s, list(q))
+        p_sc <- append(p_sc, q$value)
+        
+      }
+      p <- list(par = c(p_s[[which.max(unlist(p_sc))]]$par, which.max(unlist(p_sc))), value = max(unlist(p_sc)))
+    }
+    else{
     l <- append(l, list(control = list(fnscale = -1)))
     p <- do.call(optim, append(list(usedcov$start[[1]], dens), l))
+    }
+    print(p)
     param <- append(param, list(p$par))
     score <- c(score, p$value)
+    
   }
   return(list(par = param[[which.max(score)]], cov = cov_names[[which.max(score)]], score = score))
 }
@@ -120,7 +138,7 @@ fit <-  function(X, y, noise, cov_names){
 X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
 y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
 
-z <- fit(X, y, noise = 1, cov_names = list("sqrexp","rationalquadratic"))
+z <- fit(X, y, noise = 1, cov_names = list("polynomial", "sqrexp", "gammaexp"))
 
 print(z)
 Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_df[z$cov, ]$func[[1]], append(list(x, y), z$par)), noise = 1)
