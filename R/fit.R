@@ -70,12 +70,6 @@ fit <-  function(X, y, noise, cov_names){
   param <- list()
   score <- c()
   for (cov in cov_names){
-    if(class(try(solve(K + noise * diag(n)),silent=T)) != "matrix"){
-      warning("K(X,X) + noise * I is not invertible for ", cov,". The algorithm is not defined for this case.")
-      param <- append(param, -Inf)
-      score <- c(score, -Inf)
-      next
-    }
     usedcov <- cov_df[cov,]
     nparam <- length(usedcov$start[[1]])
     l <- list() #parameters for optim()
