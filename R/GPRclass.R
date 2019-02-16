@@ -107,6 +107,10 @@ GPR <- R6::R6Class("GPR",
                  }
                },
                plot = function(testpoints){
+                 if (nrow(self$X) > 1) {
+                   message("No plot method for multidimensional data.")
+                   return
+                 }
                  y <- unname(self$predict(testpoints, pointwise_var = TRUE))
                  dat <- data.frame(x = testpoints, y = y)
                  ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y.1)) +
