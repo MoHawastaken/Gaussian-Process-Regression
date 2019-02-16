@@ -61,7 +61,7 @@ server <- function(input, output, session){
     "Polynomial" = {
       output$selectors <- switchrenderUI(4, session, 0.1, 
                  "(x \\cdot x'^\\top + \\sigma)^p",
-                 sliderInput("par1", withMathJax("$$\\huge{\\sigma}$$"), min = 0, max = 10, value = 1),
+                 sliderInput("par1", withMathJax("$$\\huge{\\sigma}$$"), min = 0, max = 10, value = 1, step = 0.01),
                  sliderInput("par2", withMathJax("$$\\huge{p}$$"), min = 1, max = 10, value = 5))
     },
     "Gamma Exponential" = {

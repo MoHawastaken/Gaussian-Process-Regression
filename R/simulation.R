@@ -41,7 +41,7 @@ simulate_regression <- function(func, training_points, limits, noise = 0, error 
         alpha = 0.3) 
 }
 
-simulate_classification 
+#simulate_classification 
  
 #' @export
 combine_all <- function(lst) {
