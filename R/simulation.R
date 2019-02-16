@@ -44,10 +44,6 @@ simulate_regression <- function(func, limits, training_points, num_data = 10,
         alpha = 0.3) 
 }
 
-<<<<<<< HEAD
-#simulate_classification 
-=======
-
 
 simulate_classification <- function(func, training_points, limits, k, num_data = 10) {
   D <- nrow(limits)
@@ -63,7 +59,6 @@ simulate_classification <- function(func, training_points, limits, k, num_data =
   cat("Proportion of misclassified test points.", mean(abs(residual))/2, "\n")
   Gaussian$plot(test_points)
 }
->>>>>>> 4b06cc0b86d0c64cd258605b65df599fe2e20eca
  
 #' @export
 combine_all <- function(lst) {
