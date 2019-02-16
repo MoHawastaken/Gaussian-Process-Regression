@@ -70,12 +70,18 @@ fit <-  function(X, y, noise, cov_names){
   param <- list()
   score <- c()
   for (cov in cov_names){
+    if(class(try(solve(K + noise * diag(n)),silent=T)) != "matrix"){
+      warning("K(X,X) + noise * I is not invertible for ", cov,". The algorithm is not defined for this case.")
+      param <- append(param, -Inf)
+      score <- c(score, -Inf)
+      next
+    }
     usedcov <- cov_df[cov,]
     nparam <- length(usedcov$start[[1]])
     l <- list() #parameters for optim()
     dens <- function(v){
       K <- covariance_matrix(X, X, function(x, y) do.call(usedcov$func[[1]], append(list(x, y), v)))
-      
+
       L <- t(chol(K + noise * diag(ncol(X))))
       alpha <- solve(t(L), solve(L, y))
       - 0.5 * y %*% alpha - sum(log(diag(L))) - ncol(X) / 2 * log(2 * pi)
