@@ -280,6 +280,7 @@ GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
 covariance_matrix <- function(A, B, covariance_function) {
   outer(1:ncol(A), 1:ncol(B), function(i, j) covariance_function(A[, i, drop = F], B[, j, drop = F]))
 }
+#' @export
 multivariate_normal <- function(n, mean, covariance) {
   stopifnot(is.numeric(mean), is.numeric(covariance), length(mean) == nrow(covariance))
   degenerate <- diag(covariance) < 0.05

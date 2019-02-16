@@ -103,6 +103,16 @@ GPC <- R6::R6Class("GPC",
                        P_hat <- integrate(hilfs_func, -Inf, Inf)[1]
                        return(P_hat$value)
                      },
+                     predict_class2 = function(X_star) {
+                       P <- private$.sigmoid(self$f_hat)
+                       W <- P * (1 - P)
+                       K_star <- covariance_matrix(self$X, X_star, self$k)
+                       fs_bar <- t(K_star) %*% ((self$y + 1)/2 - P)
+                       v <- solve(self$L, (sqrt(W) * K_star))
+                       Vfs <- self$k(X_star, X_star) - colSums(v * v)
+                       sapply(1:length(Vfs), function(i) integrate(function(z) 
+                                private$.sigmoid(z) * dnorm(z, mean = fs_bar[i, 1], sd = Vfs[i]), -Inf, Inf)$value)
+                     },
                      plot = function(testpoints){
                        if(is.vector(testpoints)){
                          dat <- data.frame(x = testpoints, 
@@ -122,9 +132,11 @@ GPC <- R6::R6Class("GPC",
                            ggplot2::scale_shape_identity() 
                        }
                        else if(nrow(testpoints) == 2){
-                         dat <- data.frame(x.1 = testpoints[1,], x.2 = testpoints[2,],
-                            y = apply(testpoints, 2, function(x) {
-                              2*as.integer(gaussian_classifier$predict_class(x) >= 0.5) - 1}))
+                         #dat <- data.frame(x.1 = testpoints[1,], x.2 = testpoints[2,],
+                            #y = apply(testpoints, 2, function(x) {
+                             # 2*as.integer(self$predict_class(x) >= 0.5) - 1}))
+                        dat <- data.frame(x.1 = testpoints[1,], x.2 = testpoints[2,],
+                                  y = 2*as.integer(self$predict_class2(testpoints) >= 0.5) - 1)
                          ggplot2::ggplot(dat, inherit.aes = F, ggplot2::aes(x = x.1, y = x.2, fill = factor(y))) +
                            ggplot2::theme_classic() +
                            ggplot2::scale_y_continuous(expression("x_2")) +
