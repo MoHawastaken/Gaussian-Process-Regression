@@ -2,24 +2,24 @@
 % Please edit documentation in R/GPCclass.R
 \name{GPC}
 \alias{GPC}
-\title{Predictions and Plots for Gaussian process regression}
+\title{Predictions and Plots for Gaussian process classification}
 \usage{
-\preformatted{GPC <- GPC$new(X, y, cov_Fun, noise)
-
+\preformatted{GPC <- GPC$new(X, y, cov_fun, noise)
 
 GPC$predict(X*)
 GPC$plot(testpoints)
 }
 }
 \description{
-Implements a gaussian process and gives tools to predict and plot its values for given testpoints
+Implements a gaussian process for classification and gives tools 
+ to predict and plot its values for given testpoints
 }
 \section{Arguments}{
 
 
   \code{X} matrix of inputs
 
-  \code{y} numeric vector of targets
+  \code{y} numeric vector of targets with values in \{-1,1\}
 
   \code{cov_fun} the chosen covariance function of the gaussian process
 
@@ -34,7 +34,7 @@ Implements a gaussian process and gives tools to predict and plot its values for
 
 
 \code{$predict()} returns a numeric vector of the expected value of the underlying 
-function f and their variance for the test input
+function f
 
 \code{$plot()} displays the results of the predict function for all testpoints in a nice plot
 }
@@ -43,4 +43,7 @@ function f and their variance for the test input
 Hier Beispiele einfügen
 
 
+}
+\references{
+Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
 }
