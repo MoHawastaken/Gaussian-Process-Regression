@@ -4,7 +4,7 @@ author: "Michael Budjan, Moritz Haas, Konstantin Klumpp, Tim Reitze"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{Gaussian Processes}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -16,6 +16,11 @@ knitr::opts_chunk$set(
 )
 library(gaussianprocess)
 ```
+This package implements
+- gaussian process regression
+- gaussian process binary classification
+- clear and complete plots of the results
+- optimization for a certain set of covariance functions,
 
 Vignettes are long form documentation commonly included in packages. Because they are part of the distribution of the package, they need to be as compact as possible. The `html_vignette` output type provides a custom style sheet (and tweaks some options) to ensure that the resulting html is as small as possible. The `html_vignette` format:
 

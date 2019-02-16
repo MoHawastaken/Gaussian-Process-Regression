@@ -1,4 +1,4 @@
-#'  Predictions and Plots for Gaussian process regression
+#'  Predictions and Plots for Gaussian process classification
 #'
 #'  Implements a gaussian process and gives tools to predict and plot its values for given testpoints
 #' 
