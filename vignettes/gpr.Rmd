@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 )
 library(gaussianprocess)
 ```
-> "You shouldn't feel ashamed about your code - if it solves the problem, it's perfect just the way it is. But also, it could always be better." — @hadleywickham
+> "You shouldn't feel ashamed about your code - if it solves the problem, it's perfect just the way it is. But also, it could always be better." —- @hadleywickham
  [via](https://twitter.com/allimoberger/status/1085268564821585921)
  
 A Gaussian Process is a stochastic process $(X_t)_{t \in T}$ with $\mathbb{E}\left[ X_t \right] = 0$ and for all finite subsets $S \subset T$, $(X_t)_{t \in S}$ has a multivariate normal distribution.
@@ -34,7 +34,7 @@ Gaussian <- GPR.sqrexp$new(X, y, l = 1, noise = 0.5)
 ```
 The class provides two methods, the first one is for the prediction of points
 
-> “Prediction is very difficult, especially about the future. – Niels Bohr" - Hadley Wickham
+> “Prediction is very difficult, especially about the future. – Niels Bohr" -- Hadley Wickham
 [via](https://www.quora.com/profile/Hadley-Wickham)
 
 ```{r, eval=FALSE}
@@ -56,8 +56,59 @@ Gaussian <- GPR.sqrexp$new(X, y, 1, noise)
 Gaussian$plot(seq(-10,10, by = 0.05))
 ```
 
+
+```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62}
+X <- matrix(seq(-3,3,by = 0.5), nrow = 1)
+noise <- 0.5
+y <- c(0.1*X^3 + rnorm(length(X), 0, noise))
+Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise = 0.1)
+Gaussian$plot_posterior_draws(10, seq(-3,3, by = 0.1))
+```
+
+## Optimization of Hyperparameters
+> "Any real data analysis involves data manipulation (sometimes called wrangling or munging), visualization and modelling." -- Hadley Wickham
+[via](http://bulletin.imstat.org/2014/09/data-science-how-is-it-different-to-statistics%E2%80%89/)
+
+
+```{r, eval=FALSE}
+fit(X, y, noise = 1, cov_names = list("sqrexp","rationalquadratic"))
+```
+
+> "So I have experienced this many times I look at my code and it's not only like a stranger has written it, but a potentially insane stranger [...] and I have no idea what it does."-- Hadley Wickham
+[via](https://youtu.be/rz3_FDVt9eg?t=583)
+
+```{r, eval=TRUE, include=FALSE}
+X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
+y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
+
+z <- fit(X, y, noise = 1, cov_names = list("sqrexp","rationalquadratic"))
+
+print(z)
+#Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_df[z$cov, ]$func[[1]], append(list(x, y), z$par)), noise = 1)
+#Gaussian$plot(seq(-5, 5, by = 0.1))
+```
+
+
 ## Classification
 
-> "Dear past-Hadley: PLEASE COMMENT YOUR CODE BETTER. Love present-Hadley" — @hadleywickham
+> "Dear past-Hadley: PLEASE COMMENT YOUR CODE BETTER. Love present-Hadley" -- @hadleywickham
 [via](https://twitter.com/hadleywickham/status/718203628528349184)
 
+```{r, eval=FALSE}
+Gaussian_classifier <- GPC$new(X, y, cov_func, noise = 0.5)
+```
+
+
+```{r, eval=FALSE}
+Gaussian_classifier$plot(seq(-2, 2, by = 0.1))
+```
+> "The fact that data science exists as a field is a colossal failure of statistics. To me, that is what statistics is all about." -- Hadley Wickham
+[via](https://priceonomics.com/hadley-wickham-the-man-who-revolutionized-r/)
+
+```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE}
+X <- matrix(seq(-1,1,by = 0.1), nrow = 1)
+y <- 2*as.integer(X > 0) - 1
+kappa <- function(x,y) exp(-3*(x - y)^2)
+Gaussian_classifier <- GPC$new(X, y, kappa, 1e-5)
+Gaussian_classifier$plot(seq(-2,2, by = 0.1))
+```
