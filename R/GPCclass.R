@@ -114,9 +114,9 @@ GPC <- R6::R6Class("GPC",
                                 private$.sigmoid(z) * dnorm(z, mean = fs_bar[i, 1], sd = Vfs[i]), -Inf, Inf)$value)
                      },
                      plot = function(testpoints){
-                       if(is.vector(testpoints)){
-                         dat <- data.frame(x = testpoints, 
-                                           y = sapply(testpoints, function(x) self$predict_class(x)))
+                       if(is.vector(testpoints) || nrow(testpoints) == 1){
+                         dat <- data.frame(x = c(testpoints), 
+                                           y = self$predict_class2(testpoints))
                          ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y)) +
                            ggplot2::theme_classic() +
                            ggplot2::scale_y_continuous("output, p(y = 1| x)") +
@@ -200,6 +200,10 @@ GPC <- R6::R6Class("GPC",
 )
 
 #section for testing:
+f <- function(x) (sum(abs(x)) > 2.5) - (!(sum(x) > 2.5))
+limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
+k <- function(x, y) sqrexp(x, y, 1)
+simulate_classification(func = f, limits = limits, k = k, num_data = 20)
 
 X <- matrix(seq(-1,1,by = 0.1), nrow = 1)
 y <- 2*as.integer(X > 0) - 1

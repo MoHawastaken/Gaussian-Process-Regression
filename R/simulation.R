@@ -1,9 +1,12 @@
 #limits D x 2 Matrix, X D x N
 max_predict <- 10000
 #' @export
-simulate_regression <- function(func, training_points, limits, noise = 0, error = function(x) 0, cov_names = names(cov_dict)) {
-  stopifnot(nrow(limits) == nrow(training_points))
+simulate_regression <- function(func, limits, training_points, num_data = 10, 
+                                noise = 0, error = function(x) 0, cov_names = names(cov_dict)) {
   D <- nrow(limits)
+  if (missing(training_points)) {
+    training_points <- t(sapply(1:D, function(i) runif(num_data, limits[i,1], limits[i,2])))
+  } else stopifnot(nrow(limits) == nrow(training_points))
   test_points <- combine_all(lapply(1:D, function(i) seq(limits[i, 1], limits[i, 2], length.out = max_predict^(1/D))))
   y <- apply(training_points, 2, func) + error(ncol(training_points))
   print(1)
@@ -41,7 +44,26 @@ simulate_regression <- function(func, training_points, limits, noise = 0, error 
         alpha = 0.3) 
 }
 
+<<<<<<< HEAD
 #simulate_classification 
+=======
+
+
+simulate_classification <- function(func, training_points, limits, k, num_data = 10) {
+  D <- nrow(limits)
+  if (missing(training_points)) {
+    training_points <- t(sapply(1:nrow(limits), function(i) runif(num_data, limits[i,1], limits[i,2])))
+  } else stopifnot(nrow(limits) == nrow(training_points))
+  test_points <- combine_all(lapply(1:D, function(i) seq(limits[i, 1], limits[i, 2], length.out = max_predict^(1/D))))
+  y <- apply(training_points, 2, func)
+  Gaussian <- GPC$new(training_points, y, k, 1e-5)
+  predictions <- Gaussian$predict_class2(test_points)
+  residual <- 2*as.integer(predictions >= 0.5) - 1 - apply(test_points, 2, func)
+  # Visualizations
+  cat("Proportion of misclassified test points.", mean(abs(residual))/2, "\n")
+  Gaussian$plot(test_points)
+}
+>>>>>>> 4b06cc0b86d0c64cd258605b65df599fe2e20eca
  
 #' @export
 combine_all <- function(lst) {
@@ -62,6 +84,7 @@ normal <- function(sd, mean = 0) {
   function(k) rnorm(k, mean = mean, sd = sd)
 }
 
+#Regression
 # example 1
 f <- function(x) 0.1*x^3
 limits <- matrix(c(-6, 6), nrow = 1)
@@ -75,3 +98,28 @@ limits <- matrix(c(-5.5, 5.5, -5.5, 5.5), nrow = 2, byrow = TRUE)
 X <- combine_all(list(seq(-5,5,by = 1), seq(-5,5,by = 1)))
 error <- normal(1)
 simulate_regression(f, X, limits, noise = 1, error = error, cov_names = c("gammaexp", "rationalquadratic"))
+
+#Classification
+#example 1
+f <- function(x) (x < - 2) + (x > 2) - (-2 <= x && x <= 2)
+limits <- matrix(c(-4, 4), nrow = 1, byrow = TRUE)
+k <- function(x, y) sqrexp(x, y, 1)
+simulate_classification(func = f, limits = limits, k = k, num_data = 20)
+
+#example 2
+f <- function(x) (sum(abs(x)) > 2.5) - (!(sum(abs(x)) > 2.5))
+limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
+k <- function(x, y) sqrexp(x, y, 1)
+simulate_classification(func = f, limits = limits, k = k, num_data = 50)
+
+#Haus
+f <- function(x) {
+  ((sum(abs(x)) < 4 && x[2] > 1)|| (x[1] > -3 && x[1] < 3 && x[2] <= 1)) - 
+    (!((sum(abs(x)) < 4 && x[2] > 1)|| (x[1] > -3 && x[1] < 3 && x[2] <= 1))) -
+    2*(x[1] > -0.75 && x[1] < 0.75 && x[2] < -2) -
+    2*(x[1] > -2 && x[1] < -0.5 && x[2] > -1 && x[2] < 0.5) -
+    2*(x[1] > 0.5 && x[1] < 2 && x[2] > -1 && x[2] < 0.5)
+}
+limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
+k <- function(x, y) sqrexp(x, y, 1)
+simulate_classification(func = f, limits = limits, k = k, num_data = 600)
