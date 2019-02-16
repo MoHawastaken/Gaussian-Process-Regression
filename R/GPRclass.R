@@ -307,8 +307,8 @@ gammaexp.matrix <- function(x, y, l, gamma) exp(-(sqrt(colSums((x - y)^2))/l)^ga
 gammaexp.numeric <- function(x, y, l, gamma) exp(-(sqrt(sum((x - y)^2))/l)^gamma)
 
 rationalquadratic <- function(x, y, l, alpha) UseMethod("rationalquadratic")
-rationalquadratic.matrix <- function(x, y, l, alpha) (1 + sqrt(colSums((x - y)^2)) / (2 * alpha * l^2))^(-alpha)
-rationalquadratic.numeric <- function(x, y, l, alpha) (1 + sqrt(sum((x - y)^2)) / (2 * alpha * l^2))^(-alpha)
+rationalquadratic.matrix <- function(x, y, l, alpha) (1 + colSums((x - y)^2) / (2 * alpha * l^2))^(-alpha)
+rationalquadratic.numeric <- function(x, y, l, alpha) (1 + sum((x - y)^2) / (2 * alpha * l^2))^(-alpha)
 
 #section for testing:
 

@@ -31,7 +31,7 @@ This package implements
 A Gaussian Process is a stochastic process $(X_t)_{t \in T}$ with $\mathbb{E}\left[ X_t \right] = 0$ and for all finite subsets $S \subset T$, $(X_t)_{t \in S}$ has a multivariate normal distribution.
 
 ## Regression
-Initialize an object of class GPR with training data X, target vector y, the covariance function `cov_func` and the noise level which is assumed.
+Initialize an object of class GPR with training data X, target vector y, the vectorized covariance function `cov_func` and the noise level which is assumed.
 ```{r, eval=FALSE}
 Gaussian <- GPR$new(X, y, cov_func, noise)
 ```
