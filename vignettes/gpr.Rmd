@@ -52,10 +52,10 @@ Gaussian <- GPR$new(X, y, cov_func, noise)
 The following covariance functions have already been implemented and can be used by selecting the corresponding subclass:
 
 - constant, $k(x,y) = c$,
-- linear, $k(x,y) = \sum_{d=1}^D \sigma_d * x_d * y_d$,
-- polynomial, $k(x,y) = (x * y + \sigma)^p$,
-- squared exponential, $k(x,y) = exp(-\frac{|x-y|^2}{2 l^2})$,
-- gamma exponential, $k(x,y) = exp(-(|x-y|/l)^\gamma)$,
+- linear, $k(x,y) = \sum_{d=1}^D \sigma_d \cdot x_d \cdot y_d$,
+- polynomial, $k(x,y) = (x \cdot y + \sigma)^p$,
+- squared exponential, $k(x,y) = \exp\left(-\frac{|x-y|^2}{2 l^2}\right)$,
+- gamma exponential, $k(x,y) = \exp \left(-\left( \frac{|x-y|}{l} \right)^\gamma \right)$,
 - rational quadratic, $k(x,y) = \left(1+ \frac{|x-y|^2}{2 \alpha l^2}\right)^{-\alpha}$.
 
 
