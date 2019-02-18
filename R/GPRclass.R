@@ -116,7 +116,7 @@ GPR <- R6::R6Class("GPR",
                  }
                  y <- self$predict(testpoints, pointwise_var = TRUE)
                  dat <- data.frame(x = testpoints, y = y)
-                 ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y.1)) +
+                 print(ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y.1)) +
                    ggplot2::theme_classic() +
                    ggplot2::scale_y_continuous("output, f(x)") +
                    ggplot2::geom_line() +
@@ -124,7 +124,7 @@ GPR <- R6::R6Class("GPR",
                                    ymax = y.1 + 2 * sqrt(pmax(y.2,0))), alpha = 0.2) +
                    ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
                               mapping = ggplot2::aes(x = xpoints, y = ypoints, shape = 4)) +
-                   ggplot2::scale_shape_identity()
+                   ggplot2::scale_shape_identity())
                },
                plot_posterior_draws = function(n, testpoints) {
                  predictions <- self$predict(testpoints)

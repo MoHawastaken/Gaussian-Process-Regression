@@ -114,10 +114,15 @@ GPC <- R6::R6Class("GPC",
                                 private$.sigmoid(z) * dnorm(z, mean = fs_bar[i, 1], sd = Vfs[i]), -Inf, Inf)$value)
                      },
                      plot = function(testpoints){
-                       if(is.vector(testpoints) || nrow(testpoints) == 1){
-                         dat <- data.frame(x = c(testpoints), 
-                                           y = self$predict_class2(matrix(testpoints, nrow = 1)))
-                         ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y)) +
+                       if (is.matrix(testpoints) && nrow(testpoints) > 2) {
+                         warning("Plot function not available for this dimension")
+                         return
+                       }
+                       if (is.vector(testpoints)) dim(testpoints) <- c(1, length(testpoints))
+                       predictions <- self$predict_class2(testpoints)
+                       if(nrow(testpoints) == 1){
+                         dat <- data.frame(x = t(testpoints), y = predictions)
+                         print(ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y)) +
                            ggplot2::theme_classic() +
                            ggplot2::scale_y_continuous("output, p(y = 1| x)") +
                            ggplot2::geom_tile(ggplot2::aes(x = x, y = y, fill = factor(as.integer(y > 0.5))), 
@@ -129,15 +134,12 @@ GPC <- R6::R6Class("GPC",
                            #                                  ymax = y.1 + 2*sqrt(pmax(y.2,0))), alpha = 0.2) +
                            ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = pmax(0,self$y)), 
                                                mapping = ggplot2::aes(x = xpoints, y = ypoints, shape = 4)) +
-                           ggplot2::scale_shape_identity() 
+                           ggplot2::scale_shape_identity())
                        }
                        else if(nrow(testpoints) == 2){
-                         #dat <- data.frame(x.1 = testpoints[1,], x.2 = testpoints[2,],
-                            #y = apply(testpoints, 2, function(x) {
-                             # 2*as.integer(self$predict_class(x) >= 0.5) - 1}))
-                        dat <- data.frame(x.1 = testpoints[1,], x.2 = testpoints[2,],
-                                  y = 2*as.integer(self$predict_class2(testpoints) >= 0.5) - 1)
-                         ggplot2::ggplot(dat, inherit.aes = F, ggplot2::aes(x = x.1, y = x.2, fill = factor(y))) +
+                         #predictions <- self$predict_class2(testpoints)
+                         dat <- data.frame(x.1 = testpoints[1,], x.2 = testpoints[2,], y = 2*as.integer(predictions >= 0.5) - 1)
+                         print(ggplot2::ggplot(dat, inherit.aes = F, ggplot2::aes(x = x.1, y = x.2, fill = factor(y))) +
                            ggplot2::theme_classic() +
                            ggplot2::scale_y_continuous(expression("x_2")) +
                            ggplot2::scale_x_continuous(expression("x_1")) +
@@ -148,9 +150,9 @@ GPC <- R6::R6Class("GPC",
                                                mapping = ggplot2::aes(x = xpoints, y = ypoints, shape = factor(self$y))) +
                            ggplot2::scale_shape_manual(values = c(4, 2)) +
                            ggplot2::guides(shape = ggplot2::guide_legend(title = "Testpoints")) +
-                           ggplot2::scale_color_manual(values = c("red", "blue"))
+                           ggplot2::scale_color_manual(values = c("red", "blue")))
                          }
-                       else warning("Plot function not available for this dimension")
+                       return(predictions)
                    }
                    ),
                    active = list(
