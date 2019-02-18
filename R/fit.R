@@ -119,7 +119,6 @@ fit <-  function(X, y, noise, cov_names){
     l <- append(l, list(control = list(fnscale = -1)))
     p <- do.call(optim, append(list(usedcov$start[[1]], dens), l))
     }
-    print(p)
     param <- append(param, list(p$par))
     score <- c(score, p$value)
     

@@ -45,9 +45,8 @@ server <- function(input, output, session){
     switch(input$cov, 
     "Squared Exponential" = {
       output$selectors <- switchrenderUI(1, session, 0,
-        "\\sigma \\cdot \\text{exp} \\left( \\frac{||x-x'||^2}{2 \\ell^2} \\right)",
-        sliderInput("par1", withMathJax("$$\\huge{\\ell}$$"), min = 0.01, max = 3, value = 1),
-        sliderInput("par2", withMathJax("$$\\huge{\\sigma}$$"), min = 0.1, max = 3, value = 1))
+        "\\text{exp} \\left( \\frac{||x-x'||^2}{2 \\ell^2} \\right)",
+        sliderInput("par1", withMathJax("$$\\huge{\\ell}$$"), min = 0.01, max = 3, value = 1))
     },
     "Constant" = {
       output$selectors <- switchrenderUI(2, session, 0.1, "c",
@@ -92,6 +91,7 @@ server <- function(input, output, session){
       X <- reactive(matrix(seq(input$xlim[1],input$xlim[2], by = (input$xlim[2] - input$xlim[1])/input$n), nrow = 1))
     }
     #generate datapoints using function f
+    set.seed(seed)
     y <- reactive(c(f(X()) + rnorm(length(X()), 0, sqrt(input$gennoise))))
     #standard plot if nothing is selected:
     Gaussian <- reactive(GPR.sqrexp$new(X(), y(), l = 1, noise = input$noise)) 

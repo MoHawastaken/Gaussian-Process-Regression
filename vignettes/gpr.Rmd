@@ -40,8 +40,12 @@ This package implements
 
 A Gaussian Process is a stochastic process $(X_t)_{t \in T}$ where every finite subset $S \subset T$, $(X_t)_{t \in S}$ is multivariate normal distributed. 
 The Gaussian Process $f(x)$ is specified via $m(x)=\erw{f(x)}$ and $k(x,x')=\text{Cov}(f(x),f(x'))$.
-Typically one observes datasets $(x_i,y_i)$ with $y_i=f(x_i)+\varepsilon_i$ and assumes $\varepsilon \sim \norm{0,\sigma_n^2}$.
-Now given these datasets there are serveral question tbc.. 
+Typically one observes datasets $(x_i,y_i)$ with $y_i=f(x_i)+\varepsilon_i$ and assumes $\varepsilon \sim \norm{0,\sigma_n^2}$, $\sigma_n^2=\sigma^2\cdot I_n$.
+Now given these datasets there are mostly two questions one likes to answer:
+
+- predict the value of the Gaussian Process at other points based on the observations
+- find the covariance function of the observed Gaussian Process
+
 
 
 ## Regression

@@ -87,8 +87,9 @@ normal <- function(sd, mean = 0) {
   function(k) rnorm(k, mean = mean, sd = sd)
 }
 
+#' @export
 examples <- function() {
-  #Regression
+  # Regression
   # example 1
   f <- function(x) 0.1*x^3
   limits <- matrix(c(-6, 6), nrow = 1)
@@ -103,20 +104,20 @@ examples <- function() {
   error <- normal(1)
   simulate_regression(f, limits, X, noise = 1, error = error, cov_names = c("gammaexp", "rationalquadratic"))
   
-  #Classification
-  #example 1
+  # Classification
+  # example 1
   f <- function(x) (x < - 2) + (x > 2) - (-2 <= x && x <= 2)
   limits <- matrix(c(-4, 4), nrow = 1, byrow = TRUE)
   k <- function(x, y) sqrexp(x, y, 1)
   simulate_classification(func = f, limits = limits, k = k, num_data = 20)
   
-  #example 2
+  # example 2
   f <- function(x) (sum(abs(x)) > 2.5) - (!(sum(abs(x)) > 2.5))
   limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
   k <- function(x, y) sqrexp(x, y, 1)
   simulate_classification(func = f, limits = limits, k = k, num_data = 50)
   
-  #Haus
+  # Haus
   f <- function(x) {
     ((sum(abs(x)) < 4 && x[2] > 1)|| (x[1] > -3 && x[1] < 3 && x[2] <= 1)) - 
       (!((sum(abs(x)) < 4 && x[2] > 1)|| (x[1] > -3 && x[1] < 3 && x[2] <= 1))) -
@@ -124,6 +125,25 @@ examples <- function() {
       2*(x[1] > -2 && x[1] < -0.5 && x[2] > -1 && x[2] < 0.5) -
       2*(x[1] > 0.5 && x[1] < 2 && x[2] > -1 && x[2] < 0.5)
   }
+  limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
+  k <- function(x, y) sqrexp(x, y, 1)
+  simulate_classification(func = f, limits = limits, k = k, num_data = 600)
+  
+  # Example R
+  g <- function(x){
+    if (x == 0) return(-1)
+    if (x == -3) return(-1)
+    return(x)
+  }
+  f <- function(x) {
+    g(((x[1] > -3.2 && x[1] < 1.8 && x[2] <= 3.2 && x[2] > 0) || (x[1] > -3 && x[1] < 3.5 && x[2] <= 3 && x[2] <= 0) ) - 
+        (!((x[1] > -3.2 && x[1] < 1.8 && x[2] <= 3.2 && x[2] > 0) || (x[1] > -3 && x[1] < 3.5 && x[2] <= 3 && x[2] <= 0) )) -
+        2*(x[1] > -1.5 && x[1] < 0 && x[2] < -1) -
+        2*(x[1] > 0 && x[1] < 2 && x[2]  < -1 && sum(x) < -1.8) -
+        2*(x[1] > -2 && x[1] < 0.5 && x[2] > 0 && x[2] < 2) -
+        2*(x[1] > 1 && x[2] < 0 && x[2] > -3.5 && x[1] < 3.5 && sum(x) > -0.4))
+  }
+  
   limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
   k <- function(x, y) sqrexp(x, y, 1)
   simulate_classification(func = f, limits = limits, k = k, num_data = 600)
