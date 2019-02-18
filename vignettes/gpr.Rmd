@@ -49,7 +49,7 @@ Now given these datasets there are mostly two questions one likes to answer:
 
 
 ## Regression
-Initialize an object of class GPR with training data X, target vector y, the vectorized covariance function `cov_func` and the noise level which is assumed.
+Initialize an object of class GPR with training data $X$, target vector $y$, the vectorized covariance function `cov_func` and the assumed noise level $\sigma$.
 ```{r, eval=FALSE}
 Gaussian <- GPR$new(X, y, cov_func, noise)
 ```
@@ -79,8 +79,8 @@ The class provides two methods, the first one is for the prediction of points:
 Gaussian$predict(X_star, pointwise_var = TRUE)
 ```
 
-predict returns a matrix of the expected value of the underlying function f and its variance for the testpoints. If the input is a vector of length n, predict will interpret it as n testpoints.
-For `pointwise_var = FALSE` , predict will return the predicted covariance matrix cov(X_star, X_star) instead of only its diagonal.
+`$predict` returns a matrix of the expected value of the underlying function f and its variance for the testpoints. If the input is a vector of length n, predict will interpret it as n testpoints.
+For `pointwise_var = FALSE` , predict will return the predicted covariance matrix `cov(X_star, X_star)` instead of only its diagonal.
 
 
 
@@ -138,12 +138,15 @@ print(z)
 Gaussian_classifier <- GPC$new(X, y, cov_func, noise = 0.5)
 ```
 
+> "The fact that data science exists as a field is a colossal failure of statistics. To me, that is what statistics is all about." -- Hadley Wickham
+[via](https://priceonomics.com/hadley-wickham-the-man-who-revolutionized-r/)
 
+The `$plot` function displays the results of the classification.
+
+- For a set of one dimensional testpoints the decision function and additionally the decision regions and the trainingpoints are plotted
 ```{r, eval=FALSE}
 Gaussian_classifier$plot(seq(-2, 2, by = 0.1))
 ```
-> "The fact that data science exists as a field is a colossal failure of statistics. To me, that is what statistics is all about." -- Hadley Wickham
-[via](https://priceonomics.com/hadley-wickham-the-man-who-revolutionized-r/)
 
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE}
 X <- matrix(seq(-1,1,by = 0.1), nrow = 1)
@@ -152,6 +155,8 @@ kappa <- function(x,y) exp(-3*(x - y)^2)
 Gaussian_classifier <- GPC$new(X, y, kappa, 1e-5)
 Gaussian_classifier$plot(seq(-2,2, by = 0.1))
 ```
+
+- For two dimensional data the testpoints and the decision regions are shown.
 
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE}
 #Copy function definitions, since they aren't being exported by the package
