@@ -1,12 +1,20 @@
 library(shiny)
 
+`%then%` <- shiny:::`%OR%`
 seed <- runif(1, 0, 100)
-f <- sin #function used to create datapoints
 
 ui <- fluidPage(
+  tags$head(
+    tags$style(HTML("
+                    .shiny-output-error-validation {
+                    color: red;
+                    }
+                    "))
+    ),
   fluidRow(
     column(width = 6, wellPanel(
       h4("Datapoints"),
+      textInput("func", "Data function of x", value = "sin(x)"),
       sliderInput("noise", "noise", min = 0, max = 1, value = 0),
       sliderInput("gennoise", "generating noise", min = 0, max = 1, value = 0),
       numericInput("n", "number of training points", min = 1, value = 10),
@@ -40,12 +48,19 @@ switchrenderUI <- function(i, session, min_noise, kdesc, ...){
 }
 
 server <- function(input, output, session){
+  #function used to create datapoints
+  f <- reactive({
+    validate(
+      need(try(eval({x <- 0; parse(text = input$func)})), "Input a valid function definition") %then%
+      need(input$func != "", "Input a valid function definition"))
+    function(x) eval(parse(text = input$func))
+  })
   observeEvent(input$cov, {
     #switch formula and sliders for parameters for each covariance function
     switch(input$cov, 
     "Squared Exponential" = {
       output$selectors <- switchrenderUI(1, session, 0,
-        "\\text{exp} \\left( \\frac{||x-x'||^2}{2 \\ell^2} \\right)",
+        "\\text{exp} \\left(- \\frac{||x-x'||^2}{2 \\ell^2} \\right)",
         sliderInput("par1", withMathJax("$$\\huge{\\ell}$$"), min = 0.01, max = 3, value = 1))
     },
     "Constant" = {
@@ -65,59 +80,62 @@ server <- function(input, output, session){
     },
     "Gamma Exponential" = {
       output$selectors <- switchrenderUI(5, session, 0, 
-                 "\\text{exp} \\left( - \\left(\\frac{||x-x'||}{\\ell}\\right)^\\gamma \\right)",
-                 sliderInput("par1", withMathJax("$$\\huge{\\gamma}$$"), min = 0, max = 10, value = 1),
+                 "\\exp \\left( - \\left(\\frac{||x-x'||}{\\ell}\\right)^\\gamma \\right)",
+                 sliderInput("par1", withMathJax("$$\\huge{\\gamma}$$"), min = 1, max = 10, value = 2),
                  sliderInput("par2", withMathJax("$$\\huge{\\ell}$$"), min = 0.01, max = 3, value = 1))
     },
     "Rational Quadratic" = {
       output$selectors <- switchrenderUI(6, session, 0, 
                  "\\left( 1 + \\frac{||x-x'||^2}{2 \\alpha \\ell^2}\\right)^{-\\alpha}",
-                 sliderInput("par1", withMathJax("$$\\huge{\\alpha}$$"), min = -2, max = 2, value = 1, step = 0.1),
+                 sliderInput("par1", withMathJax("$$\\huge{\\alpha}$$"), min = 0.1, max = 3, value = 1, step = 0.1),
                  sliderInput("par2", withMathJax("$$\\huge{\\ell}$$"), min = 0.01, max = 7, value = 1))
     }
     )
   })
+  X <- reactive({validate(need(input$n, "Number of datapoints can't be empty"))
+    if (input$drawrand){
+    set.seed(seed) #keep the randomly generated datapoints fixed so changing other parameter doesn't change them
+    matrix(runif(input$n, input$xlim[1], input$xlim[2]), nrow = 1)
+  }
+  else{
+    matrix(seq(input$xlim[1],input$xlim[2], by = (input$xlim[2] - input$xlim[1])/input$n), nrow = 1)
+  }})
+  #generate datapoints using function f
+  set.seed(seed)
+  y <- reactive(c(f()(X()) + rnorm(length(X()), 0, sqrt(input$gennoise))))
   observeEvent(input$opthyp,{
-    z <- fit(X, y, input$noise+0.1, list(cov_df$name[cov_df$display == input$cov]))
+    z <- fit(X(), y(), input$noise + 0.1, list(cov_df$name[cov_df$display == input$cov]))
     for (i in seq_along(z$par)) updateSliderInput(session, sprintf("par%s", i), value = z$par[i])
     print(paste("Optimal parameter: ", z$par))
   })
   output$plot1 <- renderPlot({
-    if (input$drawrand){
-      set.seed(seed) #keep the randomly generated datapoints fixed so changing other parameter doesn't change them
-      X <- reactive(matrix(runif(input$n, input$xlim[1], input$xlim[2]), nrow = 1))
-    }
-    else{
-      X <- reactive(matrix(seq(input$xlim[1],input$xlim[2], by = (input$xlim[2] - input$xlim[1])/input$n), nrow = 1))
-    }
-    #generate datapoints using function f
-    set.seed(seed)
-    y <- reactive(c(f(X()) + rnorm(length(X()), 0, sqrt(input$gennoise))))
     #standard plot if nothing is selected:
     Gaussian <- reactive(GPR.sqrexp$new(X(), y(), l = 1, noise = input$noise)) 
     switch(input$cov, 
-      "Squared Exponential" = {
-        if (!is.null(input$par1) & !is.null(input$par2)){
+      "Squared Exponential" = {validate(need(input$par1, "Invalid parameters"))
         Gaussian <- reactive(GPR.sqrexp$new(X(), y(), input$par1, input$noise))
-        }
       },
-     "Constant" = {
-        if (!is.null(input$par1) & input$noise > 0) Gaussian <- reactive(GPR.constant$new(X(), y(), input$par1, input$noise))
+     "Constant" = {validate(need(input$par1, "Invalid parameters") %then% 
+                              need(input$noise > 0, "Invalid parameters") %then% 
+                              need(input$par1 > 0, "Invalid parameters") )
+        Gaussian <- reactive(GPR.constant$new(X(), y(), input$par1, input$noise))
       },
-      "Linear" = {
-        if (!is.null(input$par1) & input$noise > 0) Gaussian <- reactive(GPR.linear$new(X(), y(), input$par1, input$noise))
+      "Linear" = {validate(need(input$par1, "Invalid parameters") %then% 
+                             need(input$noise > 0, "Invalid parameters"))
+        Gaussian <- reactive(GPR.linear$new(X(), y(), input$par1, input$noise))
       },
-      "Polynomial" = {
-        if (!is.null(input$par1) & !is.null(input$par2) & input$noise > 0){
-        Gaussian <- reactive(GPR.polynomial$new(X(), y(), input$par1, input$par2, input$noise))}
+      "Polynomial" = {validate(need(input$par1, "Invalid parameters") %then% 
+                                 need(input$noise > 0, "Invalid parameters") %then% 
+                                 need(input$par2, "Invalid parameters") )
+        Gaussian <- reactive(GPR.polynomial$new(X(), y(), input$par1, input$par2, input$noise))
       },
-      "Gamma Exponential" = {
-        if (!is.null(input$par1) & !is.null(input$par2)){
-        Gaussian <- reactive(GPR.gammaexp$new(X(), y(), input$par1, input$par2, input$noise))}
+      "Gamma Exponential" = {validate(need(input$par1, "Invalid parameters") %then% 
+                                        need(input$par2, "Invalid parameters"))
+        Gaussian <- reactive(GPR.gammaexp$new(X(), y(), input$par1, input$par2, input$noise))
       },
-      "Rational Quadratic" = {
-      if (!is.null(input$par1) & !is.null(input$par2)){
-        Gaussian <- reactive(GPR.rationalquadratic$new(X(), y(), input$par1, input$par2, input$noise))}
+      "Rational Quadratic" = {validate(need(input$par1, "Invalid parameters") %then% 
+                                         need(input$par2, "Invalid parameters"))
+        Gaussian <- reactive(GPR.rationalquadratic$new(X(), y(), input$par1, input$par2, input$noise))
       })
     Gaussian()$plot(seq(input$xlim[1], input$xlim[2], by = 0.1))
   })
