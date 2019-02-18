@@ -6,7 +6,7 @@
 #' \preformatted{GPR <- GPR$new(X, y, cov_fun, noise)
 #'
 #'
-#' GPR$predict(X*)
+#' GPR$predict(X_star, pointwise_var = TRUE)
 #' GPR$plot(testpoints)
 #'}
 
@@ -20,12 +20,13 @@
 #' 
 #'   \code{noise} the inflicted noise of the observations
 #' 
-#'   \code{X*} a numeric vector as the test input
+#'   \code{X_star} a matrix as the test inputs where every column is one observation.
 #' 
 #'   \code{testpoints} a matrix of testpoints
 #'   
 #' @section Methods:
-#' \code{$predict()} returns a numeric vector of the expected value of the underlying function f and its variance for the test input
+#' \code{$predict()} returns a matrix of the expected value of the underlying function f and its variance for the testpoints. If the input is a vector of length n, predict will interpret it as n testpoints. 
+#' For \code{pointwise_var = FALSE} , predict will return the predicted covariance matrix cov(X_star, X_star) instead of only its diagonal.
 #' 
 #' \code{$plot()} displays the results of the \code{predict} function for all testpoints and confidence regions of two standard deviations in a transparent plot
 #' 
@@ -71,16 +72,19 @@ GPR <- R6::R6Class("GPR",
                .logp = NA
              ),
              public = list(
-               initialize = function(X, y, k, noise){
-                 stopifnot(is.matrix(X), is.vector(y), is.numeric(y))
+               initialize = function(X, y, k = fit(X, y, noise, cov_names)$func, noise = 0, 
+                                     cov_names = names(cov_dict)){
+                 stopifnot(is.numeric(X), is.vector(y), is.numeric(y))
                  stopifnot(is.numeric(noise), length(noise) == 1, noise >= 0)
                  stopifnot(is.function(k))
+                 # Ist Input X ein Vektor, wird dieser als einzeilige Matrix behandelt.
+                 if (!is.matrix(X)) dim(X) <- c(1, length(X))
+                 stopifnot(length(y) == ncol(X))
                  private$.X <- X
                  private$.y <- y
                  private$.k <- k
                  private$.noise <- noise
                  n <- ncol(X)
-                 #K <- outer(1:n, 1:n, function(i,j) k(X[, i, drop = FALSE], X[, j, drop = FALSE]))
                  K <- covariance_matrix(X, X, k)
                  #Pruefe, ob alle Hauptminoren positiv sind.
                  if (min(sapply(1:n, function(i) det((K + noise * diag(n))[1:i, 1:i, drop = F]))) <= 0) {
@@ -93,7 +97,7 @@ GPR <- R6::R6Class("GPR",
                  private$.alpha <- solve(t(self$L), solve(self$L, y))
                  private$.logp <- -0.5 * self$y %*% self$alpha - sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
                },
-               predict = function(X_star, pointwise_var = FALSE){
+               predict = function(X_star, pointwise_var = TRUE){
                  stopifnot(is.numeric(X_star), length(X_star) %% nrow(self$X) == 0)
                  if (is.null(dim(X_star))) {
                    dim(X_star) <- c(nrow(self$X), length(X_star)/nrow(self$X))
@@ -116,7 +120,7 @@ GPR <- R6::R6Class("GPR",
                  }
                  y <- self$predict(testpoints, pointwise_var = TRUE)
                  dat <- data.frame(x = testpoints, y = y)
-                 ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y.1)) +
+                 print(ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y.1)) +
                    ggplot2::theme_classic() +
                    ggplot2::scale_y_continuous("output, f(x)") +
                    ggplot2::geom_line() +
@@ -124,10 +128,10 @@ GPR <- R6::R6Class("GPR",
                                    ymax = y.1 + 2 * sqrt(pmax(y.2,0))), alpha = 0.2) +
                    ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
                               mapping = ggplot2::aes(x = xpoints, y = ypoints, shape = 4)) +
-                   ggplot2::scale_shape_identity()
+                   ggplot2::scale_shape_identity())
                },
                plot_posterior_draws = function(n, testpoints) {
-                 predictions <- self$predict(testpoints)
+                 predictions <- self$predict(testpoints, pointwise_var = FALSE)
                  y <- cbind(predictions[[1]], diag(predictions[[2]]))
                  z <- multivariate_normal(n, predictions[[1]], predictions[[2]])
                  dat <- data.frame(x = testpoints, y = y, z = z)
@@ -144,7 +148,7 @@ GPR <- R6::R6Class("GPR",
               plot_posterior_variance = function(where, limits = c(min(self$X), max(self$X)), subdivisions = 100L) {
                 x <- seq(limits[1], limits[2], length.out = subdivisions)
                 len <- length(where)
-                y <- self$predict(c(where, x))[[2]][(len + 1):(len + subdivisions), 1:len]
+                y <- self$predict(c(where, x), pointwise_var = FALSE)[[2]][(len + 1):(len + subdivisions), 1:len]
                 dat <- data.frame(x = x, y = y)
                 names(dat) <- c("x", as.character(where))
                 dat <- tidyr::gather(dat, -x, key = "z", value = "value")

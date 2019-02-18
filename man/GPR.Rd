@@ -7,7 +7,7 @@
 \preformatted{GPR <- GPR$new(X, y, cov_fun, noise)
 
 
-GPR$predict(X*)
+GPR$predict(X_star, pointwise_var = TRUE)
 GPR$plot(testpoints)
 }
 }
@@ -25,14 +25,15 @@ Implements gaussian processes and gives tools for gaussian process regression an
 
   \code{noise} the inflicted noise of the observations
 
-  \code{X*} a numeric vector as the test input
+  \code{X_star} a matrix as the test inputs where every column is one observation.
 
   \code{testpoints} a matrix of testpoints
 }
 
 \section{Methods}{
 
-\code{$predict()} returns a numeric vector of the expected value of the underlying function f and its variance for the test input
+\code{$predict()} returns a matrix of the expected value of the underlying function f and its variance for the testpoints. If the input is a vector of length n, predict will interpret it as n testpoints. 
+For \code{pointwise_var = FALSE} , predict will return the predicted covariance matrix cov(X_star, X_star) instead of only its diagonal.
 
 \code{$plot()} displays the results of the \code{predict} function for all testpoints and confidence regions of two standard deviations in a transparent plot
 }

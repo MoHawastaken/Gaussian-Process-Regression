@@ -56,27 +56,33 @@ Gaussian <- GPR$new(X, y, cov_func, noise)
 The following covariance functions have already been implemented and can be used by selecting the corresponding subclass:
 
 - constant, $k(x,y) = c$,
-- linear, $k(x,y) = \sum_{d=1}^D \sigma_d \cdot x_d \cdot y_d$,
-- polynomial, $k(x,y) = (x \cdot y + \sigma)^p$,
-- squared exponential, $k(x,y) = \exp\left(-\frac{|x-y|^2}{2 l^2}\right)$,
-- gamma exponential, $k(x,y) = \exp \left(-\left( \frac{|x-y|}{l} \right)^\gamma \right)$,
-- rational quadratic, $k(x,y) = \left(1+ \frac{|x-y|^2}{2 \alpha l^2}\right)^{-\alpha}$.
 
+- linear, $k(x,y) = \sum\limits_{d=1}^D \sigma_d \cdot x_d \cdot y_d$,
+
+- polynomial, $k(x,y) = (x \cdot y + \sigma)^p$,
+
+- sqrexp, $k(x,y) = \exp\left(-\frac{|x-y|^2}{2 l^2}\right)$,
+- gammaexp, $k(x,y) = \exp \left(-\left( \frac{|x-y|}{l} \right)^\gamma \right)$,
+- rationalquadratic, $k(x,y) = \left(1+ \frac{|x-y|^2}{2 \alpha l^2}\right)^{-\alpha}$.
 
 ```{r, eval=FALSE}
 Gaussian <- GPR.sqrexp$new(X, y, l = 1, noise = 0.5)
 ```
-The class provides two methods, the first one is for the prediction of points
+
+
+The class provides two methods, the first one is for the prediction of points:
 
 > “Prediction is very difficult, especially about the future. – Niels Bohr" -- Hadley Wickham
 [via](https://www.quora.com/profile/Hadley-Wickham)
 
 ```{r, eval=FALSE}
-Gaussian$predict(x, pointwise_var = FALSE)
+Gaussian$predict(X_star, pointwise_var = TRUE)
 ```
 
-> "Visualization can surprise you, but it doesn’t scale well. Modelling scales well, but it can’t surprise you." --Hadley Wickham
-[via](https://www.johndcook.com/blog/2013/02/07/visualization-modeling-and-surprises/)
+predict returns a matrix of the expected value of the underlying function f and its variance for the testpoints. If the input is a vector of length n, predict will interpret it as n testpoints.
+For `pointwise_var = FALSE` , predict will return the predicted covariance matrix cov(X_star, X_star) instead of only its diagonal.
+
+
 
 ```{r, eval=FALSE}
 Gaussian$plot(seq(-10, 10, by = 0.05))
