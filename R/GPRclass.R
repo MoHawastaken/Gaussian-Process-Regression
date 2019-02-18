@@ -71,16 +71,19 @@ GPR <- R6::R6Class("GPR",
                .logp = NA
              ),
              public = list(
-               initialize = function(X, y, k, noise){
-                 stopifnot(is.matrix(X), is.vector(y), is.numeric(y))
+               initialize = function(X, y, k = fit(X, y, noise, cov_names)$func, noise = 0, 
+                                     cov_names = names(cov_dict)){
+                 stopifnot(is.numeric(X), is.vector(y), is.numeric(y))
                  stopifnot(is.numeric(noise), length(noise) == 1, noise >= 0)
                  stopifnot(is.function(k))
+                 # Ist Input X ein Vektor, wird dieser als einzeilige Matrix behandelt.
+                 if (!is.matrix(X)) dim(X) <- c(1, length(X))
+                 stopifnot(length(y) == ncol(X))
                  private$.X <- X
                  private$.y <- y
                  private$.k <- k
                  private$.noise <- noise
                  n <- ncol(X)
-                 #K <- outer(1:n, 1:n, function(i,j) k(X[, i, drop = FALSE], X[, j, drop = FALSE]))
                  K <- covariance_matrix(X, X, k)
                  #Pruefe, ob alle Hauptminoren positiv sind.
                  if (min(sapply(1:n, function(i) det((K + noise * diag(n))[1:i, 1:i, drop = F]))) <= 0) {
