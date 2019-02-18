@@ -118,3 +118,22 @@ f <- function(x) {
 limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
 k <- function(x, y) sqrexp(x, y, 1)
 simulate_classification(func = f, limits = limits, k = k, num_data = 600)
+
+#example
+g <- function(x){
+  if (x == 0) return(-1)
+  if (x == -3) return(-1)
+  return(x)
+}
+f <- function(x) {
+  g(((x[1] > -3.2 && x[1] < 1.8 && x[2] <= 3.2 && x[2] > 0) || (x[1] > -3 && x[1] < 3.5 && x[2] <= 3 && x[2] <= 0) ) - 
+  (!((x[1] > -3.2 && x[1] < 1.8 && x[2] <= 3.2 && x[2] > 0) || (x[1] > -3 && x[1] < 3.5 && x[2] <= 3 && x[2] <= 0) )) -
+    2*(x[1] > -1.5 && x[1] < 0 && x[2] < -1) -
+    2*(x[1] > 0 && x[1] < 2 && x[2]  < -1 && sum(x) < -1.8) -
+    2*(x[1] > -2 && x[1] < 0.5 && x[2] > 0 && x[2] < 2) -
+    2*(x[1] > 1 && x[2] < 0 && x[2] > -3.5 && x[1] < 3.5 && sum(x) > -0.4))
+}
+
+limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
+k <- function(x, y) sqrexp(x, y, 1)
+simulate_classification(func = f, limits = limits, k = k, num_data = 600)
