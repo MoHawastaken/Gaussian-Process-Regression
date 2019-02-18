@@ -142,7 +142,7 @@ z <- fit2(X, y, noise = 1, cov_names = names(cov_dict))
 optim_until_error <- function(start, f, ...) {
   l <- list()
   f_new <- function(...) {
-    out <- tryCatch(error = function(cond) return(-1000), f(...))
+    out <- tryCatch(error = function(cond) return(-Inf), f(...))
     #print(1)
     if (!(out == -Inf)) {
       rlang::env_bind(rlang::env_parent(), l = append(l, list(c(...), out)))
@@ -152,7 +152,7 @@ optim_until_error <- function(start, f, ...) {
   }
   opt <- tryCatch(error = function(cond) return(NULL), optim(start, f_new, ...))
   if (is.null(opt)) {
-    which_best <- which.min(l[2*(1:(length(l)/2))])
+    which_best <- which.max(l[2*(1:(length(l)/2))])
     par <- l[2*which_best - 1]
     return(list(par = par, value = l[2*which_best]))
   } else {
