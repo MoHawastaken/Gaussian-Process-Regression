@@ -3,26 +3,31 @@
 \name{fit}
 \alias{fit}
 \title{Optimization of hyperparameters}
+\usage{
+\preformatted{fit(X, y, noise, cov_names)}
+}
+\arguments{
+\item{X}{matrix of inputs}
+
+\item{y}{numeric vector of targets}
+
+\item{noise}{the inflicted noise of the observations}
+
+\item{cov_names}{a list of names of covariance functions ("linear",
+"constant","polynomial","sqrexp","gammaexp","rationalquadratic")}
+}
+\value{
+A list of outputs:
+\describe{
+  \item{par}{The optimal parameters}
+  \item{cov}{The name of the optimal covariance function}
+  \item{score}{The scores for the different covariance functions in \code{cov_names}}
+  \item{func}{The optimal covariance function}
+}
+}
 \description{
 Applies optimization methods to find optimal parameters of the covariance function for a given set of datapoints
 }
-\section{Usage}{
- 
-\preformatted{fit(X, y, noise, cov_names)}
-}
-
-\section{Arguments}{
-
-
-  \code{X} matrix of inputs
-
-  \code{y} numeric vector of targets
-
-  \code{noise} the inflicted noise of the observations
-
-  \code{cov_names} a list of names of covariance functions
-}
-
 \references{
 Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
 }
