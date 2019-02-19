@@ -1,4 +1,4 @@
 library(testthat)
-library(gaussianprocess)
+library(gprc)
 
-test_check("gaussianprocess")
+test_check("gprc")

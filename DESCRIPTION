@@ -18,12 +18,12 @@ Authors@R:
            family = "Reitze",
            role = c("aut"),
            email = ""))
-Description: This package implements methods and optimization for Gaussian Process Regression and Classification
+Description: This package implements methods for plotting and optimizing Gaussian Process Regression and Classification
 License: CC0
 Encoding: UTF-8
 LazyData: true
 Collate: 
-    'GPRclass.R' 'GPCclass.R' 'fit.R' 'simulation.R' 'GPplot.R' 'gaussianprocess.R'
+    'GPRclass.R' 'GPCclass.R' 'fit.R' 'simulation.R' 'GPplot.R' 'gprc.R'
 RoxygenNote: 6.1.1
 Suggests: 
     testthat,
