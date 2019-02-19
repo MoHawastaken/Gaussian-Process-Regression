@@ -38,13 +38,18 @@ This package implements
 - clear and complete plots of the results
 - optimization for a certain set of covariance functions.
 
-A Gaussian Process is a stochastic process $(X_t)_{t \in T}$ where every finite subset $S \subset T$, $(X_t)_{t \in S}$ is multivariate normal distributed. 
-The Gaussian Process $f(x)$ is specified via $m(x)=\erw{f(x)}$ and $k(x,x')=\text{Cov}(f(x),f(x'))$.
-Typically one observes data sets $(x_i,y_i)$ with $y_i=f(x_i)+\varepsilon_i$ and assumes $\varepsilon \sim \norm{0,\sigma_n^2}$, $\sigma_n^2=\sigma^2\cdot I_n$.
-Now given these data sets there are mostly two questions one likes to answer:
+A Gaussian Process is a stochastic process $(f_x)_{x \in X}$ where every finite subset $Y \subset X$, $(f_x)_{x \in Y}$ is multivariate normally distributed. 
+With the notation $f(x) := f_x$ it is more intuitive that $(f_x)_{x \in X}$ can be seen
+as a random function $f:X \to \mathbb{R}$.
+In the following $X$ will be a subset of $\mathbb{R}^D$ for some $D \geq 1$.
+The Gaussian Process $f(x)$ is uniquely specified by its mean function $m(x)=\erw{f(x)}$ and covariance function $k(x,x')=\text{Cov}(f(x),f(x'))$. <br/>
+Now one observes data sets $\{(x_i,y_i)| x_i \in X, y_i\in\mathbb{R}, i \leq n\}$ which we model as $$y_i=f(x_i)+\varepsilon_i,$$ typically assuming $\varepsilon \sim \norm{0,\sigma_n^2}$, $\sigma_n^2=\sigma^2\cdot I_n$ and $m(x)=\erw{f(x)} = 0$.
+Given such a data set, one would like to do two things:
 
-- predict the value of the Gaussian Process at other points based on the observations
-- find the covariance function of the observed Gaussian Process
+- Predict the value $f(x)$ of the Gaussian Process at other points $x\in X$ based on the given observations (see section Regression). And to do so:
+- Find the covariance function $k$ for which the given observations $(x_i,y_i)$ are most likely (see section Optimization of Hyperparameters).
+
+
 
 
 
