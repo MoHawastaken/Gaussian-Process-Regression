@@ -8,7 +8,11 @@
 }
 }
 \arguments{
-\item{func}{}
+\item{func}{A function for the simulation of data points}
+
+\item{training_points}{A vector of training points}
+
+\item{limits}{}
 }
 \description{
 Simulates data for Classification problems, which can then be analyzed via a Gaussian process
