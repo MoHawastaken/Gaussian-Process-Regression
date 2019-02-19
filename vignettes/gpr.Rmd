@@ -33,15 +33,15 @@ $\newcommand\erw[1]{\mathbb{E}\left[#1\right]}
 
 This package implements
 
-- gaussian process regression
-- gaussian process binary classification
+- Gaussian process regression
+- Gaussian process binary classification
 - clear and complete plots of the results
 - optimization for a certain set of covariance functions.
 
 A Gaussian Process is a stochastic process $(X_t)_{t \in T}$ where every finite subset $S \subset T$, $(X_t)_{t \in S}$ is multivariate normal distributed. 
 The Gaussian Process $f(x)$ is specified via $m(x)=\erw{f(x)}$ and $k(x,x')=\text{Cov}(f(x),f(x'))$.
-Typically one observes datasets $(x_i,y_i)$ with $y_i=f(x_i)+\varepsilon_i$ and assumes $\varepsilon \sim \norm{0,\sigma_n^2}$, $\sigma_n^2=\sigma^2\cdot I_n$.
-Now given these datasets there are mostly two questions one likes to answer:
+Typically one observes data sets $(x_i,y_i)$ with $y_i=f(x_i)+\varepsilon_i$ and assumes $\varepsilon \sim \norm{0,\sigma_n^2}$, $\sigma_n^2=\sigma^2\cdot I_n$.
+Now given these data sets there are mostly two questions one likes to answer:
 
 - predict the value of the Gaussian Process at other points based on the observations
 - find the covariance function of the observed Gaussian Process
@@ -79,7 +79,7 @@ The class provides two methods, the first one is for the prediction of points:
 Gaussian$predict(X_star, pointwise_var = TRUE)
 ```
 
-`$predict` returns a matrix of the expected value of the underlying function f and its variance for the testpoints. If the input is a vector of length n, predict will interpret it as n testpoints.
+`$predict` returns a matrix of the expected value of the underlying function f and its variance for the test points. If the input is a vector of length n, predict will interpret it as n test points.
 For `pointwise_var = FALSE` , predict will return the predicted covariance matrix `cov(X_star, X_star)` instead of only its diagonal.
 
 
@@ -109,15 +109,18 @@ Gaussian$plot_posterior_draws(10, seq(-3,3, by = 0.1))
 > "Any real data analysis involves data manipulation (sometimes called wrangling or munging), visualization and modelling." -- Hadley Wickham
 [via](http://bulletin.imstat.org/2014/09/data-science-how-is-it-different-to-statistics%E2%80%89/)
 
-
+For a given set of data points the `fit()` function can select the optimal hyperparameters of the covariance function and choose the best covariance function from a given list. `X` and `y` have to be data from a regression problem with assumed `noise` and `cov_names` is a list of names of covariance functions. Then the maximum of the marginal log likelihood (given by the formula from the `$predict` function) is calculated over the parameter region. 
+$$ \log(y| X, \theta) = - \frac{1}{2} y^\top K^{-1} y - \frac{1}{2} \log |K| - \frac{n}{2}\log 2 \pi $$
+This is done by using the derivative of the likelihood and the `optim` function.
+$$ \frac{\partial}{\partial \theta_j} \log(y| X, \theta) = \frac{1}{2} \text{tr} \left( (\alpha \alpha^\top - K^{-1}) \frac{\partial K}{\partial \theta_j} \right) \; \text{ where } \alpha = K^{-1}y$$
 ```{r, eval=FALSE}
-fit(X, y, noise = 1, cov_names = list("sqrexp","rationalquadratic"))
+fit(X, y, noise, cov_names)
 ```
 
 > "So I have experienced this many times I look at my code and it's not only like a stranger has written it, but a potentially insane stranger [...] and I have no idea what it does."-- Hadley Wickham
 [via](https://youtu.be/rz3_FDVt9eg?t=583)
 
-```{r, eval=TRUE, include=FALSE}
+```{r, eval=TRUE, include=TRUE}
 X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
 y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
 
@@ -131,19 +134,21 @@ print(z)
 
 ## Classification
 
+The class `GPC` solves binary classification problems by using a Gaussian process. 
 > "Dear past-Hadley: PLEASE COMMENT YOUR CODE BETTER. Love present-Hadley" -- @hadleywickham
 [via](https://twitter.com/hadleywickham/status/718203628528349184)
 
 ```{r, eval=FALSE}
-Gaussian_classifier <- GPC$new(X, y, cov_func, noise = 0.5)
+Gaussian_classifier <- GPC$new(X, y, cov_func, noise)
 ```
 
+The `$predict` function uses the Laplace approximation
 > "The fact that data science exists as a field is a colossal failure of statistics. To me, that is what statistics is all about." -- Hadley Wickham
 [via](https://priceonomics.com/hadley-wickham-the-man-who-revolutionized-r/)
 
 The `$plot` function displays the results of the classification.
 
-- For a set of one dimensional testpoints the decision function and additionally the decision regions and the trainingpoints are plotted
+- For a set of one dimensional test points the decision function and additionally the decision regions and the training points are plotted
 ```{r, eval=FALSE}
 Gaussian_classifier$plot(seq(-2, 2, by = 0.1))
 ```
@@ -156,7 +161,7 @@ Gaussian_classifier <- GPC$new(X, y, kappa, 1e-5)
 Gaussian_classifier$plot(seq(-2,2, by = 0.1))
 ```
 
-- For two dimensional data the testpoints and the decision regions are shown.
+- For two dimensional data the test points and the decision regions are shown.
 
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE}
 #Copy function definitions, since they aren't being exported by the package
@@ -190,3 +195,6 @@ s <- seq(-1, 1, by = 0.1)
 testpoints <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
 gaussian_classifier$plot(testpoints)
 ```
+
+## Simulation
+

@@ -1,3 +1,20 @@
+#' Simulation for Regression and Classification
+#' 
+#' Simulates data for Regression and Classification problems, which can then be analyzed via a Gaussian process
+#' 
+#' @usage \preformatted{simulate_regression(func, limits, training_points, num_data = 10, 
+#' noise = 0, error = function(x) 0, cov_names = names(cov_dict))
+#' 
+#' simulate_classification(func, training_points, limits, k, num_data = 10)
+#'}
+#' 
+#' @section Functions
+#' 
+#' @examples 
+#' 
+#' @name Simulation
+NULL
+
 #limits D x 2 Matrix, X D x N
 max_predict <- 10000
 #' @export
@@ -54,7 +71,7 @@ simulate_regression <- function(func, limits, training_points, num_data = 10,
         alpha = 0.3))
 }
 
-
+#' @export
 simulate_classification <- function(func, training_points, limits, k, num_data = 10) {
   D <- nrow(limits)
   if (missing(training_points)) {
