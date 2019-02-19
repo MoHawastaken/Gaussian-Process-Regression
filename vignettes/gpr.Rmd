@@ -18,6 +18,7 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 library(gprc)
+set.seed(0)
 ```
 
 $\newcommand\erw[1]{\mathbb{E}\left[#1\right]}
@@ -227,10 +228,10 @@ kappa <- function(x,y) sqrexp(x,y,l=1)
 gaussian_classifier <- GPC$new(X, y, 1e-5, kappa)
 s <- seq(-1, 1, by = 0.1)
 testpoints <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
-gaussian_classifier$plot(testpoints)$plot
+gaussian_classifier$plot()$plot
 ```
 
-Decision regions are chosen with the threshold of 0.5, as the decison function maps into the intervall [0,1]. The labels of the points are also shown as 0 or 1, instead of -1 or 1. 
+Decision regions are chosen with a threshold of 0.5, as the decison function maps into the intervall [0,1]. The labels of the points are also shown as 0 or 1, instead of -1 or 1. 
 
 ## Simulation
 
