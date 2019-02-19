@@ -4,7 +4,7 @@
 \alias{GPC}
 \title{Predictions and Plots for Gaussian process classification}
 \usage{
-\preformatted{GPC <- GPC$new(X, y, cov_fun, noise)
+\preformatted{GPC <- GPC$new(X, y, noise, cov_fun)
 
 GPC$predict(X*)
 GPC$plot(testpoints)
