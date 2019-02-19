@@ -258,7 +258,7 @@ GPR.polynomial <- R6::R6Class("GPR.polynomial", inherit = GPR,
 #' @export
 GPR.sqrexp <-  R6::R6Class("GPR.sqrexp", inherit = GPR,
                            public = list(
-                             initialize = function(X, y, noise, l = fit(X, y, noise, "sqrexp")$par[[1]]){
+                             initialize = function(X, y, noise, l = fit(X, y, noise, "sqrexp")$par){
                                stopifnot(length(l) == 1)
                                k <- function(x, y) sqrexp(x, y, l)
                                super$initialize(X, y, noise, k)

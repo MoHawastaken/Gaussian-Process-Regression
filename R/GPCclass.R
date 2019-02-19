@@ -140,8 +140,8 @@ GPC <- R6::R6Class("GPC",
          dat <- data.frame(x.1 = testpoints[1,], x.2 = testpoints[2,], y = 2*as.integer(predictions >= 0.5) - 1)
           g <- ggplot2::ggplot(dat, inherit.aes = F, ggplot2::aes(x = x.1, y = x.2, fill = factor(y))) +
            ggplot2::theme_classic() +
-           ggplot2::scale_y_continuous(expression("x_2")) +
-           ggplot2::scale_x_continuous(expression("x_1")) +
+           ggplot2::scale_y_continuous(expression(x[2])) +
+           ggplot2::scale_x_continuous(expression(x[1])) +
            ggplot2::geom_tile() + 
            ggplot2::scale_fill_manual(values = c("red", "blue")) +
            ggplot2::guides(fill = ggplot2::guide_legend(title = "Labels")) +
@@ -199,7 +199,6 @@ GPC <- R6::R6Class("GPC",
      }
    )
 )
-
 
 "
 #section for testing:

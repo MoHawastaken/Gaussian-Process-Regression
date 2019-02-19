@@ -1,13 +1,13 @@
 ---
-title: "Gaussian Process Presentation"
+title: "Gaussian Processes"
 author: "Budjan, Haas, Klumpp, Reitze"
-date: "22 Februar 2019"
+date: "22. Februar 2019"
 output: ioslides_presentation
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
-library(gaussianprocess)
+library(gprc)
 #Copy function definitions, since they aren't being exported by the package
 multivariate_normal <- function(n, mean, covariance) {
   stopifnot(is.numeric(mean), is.numeric(covariance), length(mean) == nrow(covariance))
@@ -17,10 +17,11 @@ multivariate_normal <- function(n, mean, covariance) {
 sqrexp <- function(x, y, l) UseMethod("sqrexp")
 sqrexp.matrix <- function(x, y, l) exp(-colSums((x - y)^2)/(2 * l^2))
 sqrexp.numeric <- function(x, y, l) exp(-sum((x - y)^2)/(2 * l^2))
+k <- 50 #DPI Anzahl, setze niedrig, um schneller zu rendern
 ```
 
 ## Regression und Klassifikation
-```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=TRUE}
+```{r dpi=k, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=TRUE}
 n <- 10
 X <- seq(-5, 5, by = 1)
 y <- sin(X)
@@ -30,7 +31,7 @@ ggplot2::ggplot(data = data.frame(x = X, y = y), ggplot2::aes(x = x, y = y)) + g
 
 ## Regression und Klassifikation
 
-```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=TRUE}
+```{r dpi=k, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=TRUE}
 n <- 10
 X <- cbind(multivariate_normal(n, c(0.5,0.5), diag(c(0.1,0.1))), multivariate_normal(n, c(-0.5,-0.5), diag(c(0.1,0.1))))
 y <- rep(c(1,-1), each = n)
@@ -54,7 +55,8 @@ ggplot2::ggplot(data = data.frame(x = X[1, ], y = X[2, ], label = y), ggplot2::a
 `GPR$new(X, y, noise, cov_func)`
 
 - R6 Klasse
-- Methoden `$predict`, `$plot`
+- speichert Daten, vorberechnete Matrizen
+- Methoden `$predict`, `$plot`, `$plot_posterior_draws`, `$plot_posterior_variance`
 
 ## predict Algorithmus
 <img src="https://trello-attachments.s3.amazonaws.com/5c1367e7bda778491a4a4fde/5c1b68f238a2808027971811/dd63ca23dffa380ebbbce68d2d931ae2/algorithm_2_1_clear.png"
@@ -63,7 +65,7 @@ ggplot2::ggplot(data = data.frame(x = X[1, ], y = X[2, ], label = y), ggplot2::a
 
 ## Regression
 
-```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62}
+```{r dpi=k, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62}
 X <- matrix(seq(-5,5,by = 0.5), nrow = 1)
 noise <- 0.5
 y <- c(0.1*X^3 + rnorm(length(X), 0, noise))
@@ -74,18 +76,21 @@ Gaussian$plot(seq(-6,6, by = 0.05))$plot
 
 ## Optimierung der Hyperparameter
 
-- Maximierung der Marginal log likelihood
+- Maximierung der Marginal Log-Likelihood
 - Newton Methode, `optim()`
 
 ## fit()
 
 `fit(X, y, noise, cov_names)`
 
-- funktioniert nur über eingespeicherte Kovarianzfunktionen 
+- Funktioniert nur über eingespeicherte Kovarianzfunktionen 
+- Findet für jede Kovarianzfunktion in `cov_names` die optimalen Parameter
+- Gibt die beste Kovarianzfunktion mit optimalen Parametern zurück
+- error handling bei nicht invertierbaren / nicht positiv definiten Matrizen
 
 ## Gewählte Kovarianzfunktion
 
-```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62}
+```{r dpi=k, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62}
 X <- matrix(seq(-5,5,by = 0.5), nrow = 1)
 noise <- 0.5
 y <- c(0.1*X^3 + rnorm(length(X), 0, noise))
@@ -95,12 +100,14 @@ Gaussian$plot(seq(-6,6, by = 0.05))$plot
 
 ## Optimierte Kovarianzfunktion
 
-```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62}
+```{r dpi=k, out.width="95%", echo=FALSE, fig.width = 5, fig.asp = .62}
 X <- matrix(seq(-5,5,by = 0.5), nrow = 1)
 noise <- 0.5
 y <- c(0.1*X^3 + rnorm(length(X), 0, noise))
-Gaussian <- GPR$new(X, y, noise)
+z <- fit(X,y,noise,list("linear","constant","polynomial","sqrexp","gammaexp","rationalquadratic"))
+Gaussian <- GPR$new(X, y, noise, z$func)
 Gaussian$plot(seq(-6,6, by = 0.05))$plot
+message(sprintf("Optimal covariance function: %s",z$cov))
 ```
 
 ## Mathe zu GPC
@@ -114,7 +121,7 @@ Gaussian$plot(seq(-6,6, by = 0.05))$plot
 
 ## Simulation Beispiele
 
-```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=FALSE}
+```{r dpi=k, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=FALSE}
 set.seed(0)
 # Haus
   f <- function(x) {
@@ -131,7 +138,7 @@ set.seed(0)
 
 ## Simulation Beispiele
 
-```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=FALSE}
+```{r dpi=k, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=FALSE}
 set.seed(0)
  # Example R
   g <- function(x){

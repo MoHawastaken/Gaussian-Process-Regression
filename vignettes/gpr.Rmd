@@ -17,7 +17,8 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-library(gaussianprocess)
+library(gprc)
+set.seed(0)
 ```
 
 $\newcommand\erw[1]{\mathbb{E}\left[#1\right]}
@@ -38,7 +39,7 @@ This package implements
 - clear and complete plots of the results
 - optimization for a certain set of covariance functions.
 
-A Gaussian Process is a stochastic process $(f_x)_{x \in X}$ where every finite subset $Y \subset X$, $(f_x)_{x \in Y}$ is multivariate normally distributed. 
+A Gaussian Process is a stochastic process $(f_x)_{x \in X}$ where for every finite subset $Y \subset X$, $(f_x)_{x \in Y}$ is multivariate normally distributed. 
 With the notation $f(x) := f_x$ it is more intuitive that $(f_x)_{x \in X}$ can be seen
 as a random function $f:X \to \mathbb{R}$.
 In the following $X$ will be a subset of $\mathbb{R}^D$ for some $D \geq 1$.
@@ -48,8 +49,6 @@ Given such a data set, one would like to do two things:
 
 - Predict the value $f(x)$ of the Gaussian Process at other points $x\in X$ based on the given observations (see section Regression). And to do so:
 - Find the covariance function $k$ for which the given observations $(x_i,y_i)$ are most likely (see section Optimization of Hyperparameters).
-
-
 
 
 
@@ -110,15 +109,24 @@ Gaussian$plot(seq(-10,10, by = 0.05))$plot
 ```
 
 The second one plots random functions drawn from the posterior distribution of the process.
+```{r eval = FALSE}
+plot_posterior_draws(n = 5, testpoints = seq(min(self$X), max(self$X), length.out = 100))
+```
+
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62}
 X <- matrix(seq(-3,3,by = 0.5), nrow = 1)
 noise <- 0.5
 y <- c(0.1*X^3 + rnorm(length(X), noise, 0))
 Gaussian <- GPR.gammaexp$new(X, y, 0.1, 1, 1.5)
-Gaussian$plot_posterior_draws(10, seq(-3,3, by = 0.1))
+Gaussian$plot_posterior_draws()
 ```
 
 The last one visualizes the posterior covariance with specific points.
+
+```{r eval = FALSE}
+plot_posterior_variance(where, limits = c(min(self$X), max(self$X)), subdivisions = 100L)
+```
+
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62}
 X <- matrix(seq(-3,3,by = 0.5), nrow = 1)
 noise <- 0.5
@@ -139,8 +147,13 @@ $$ \frac{\partial}{\partial \theta_j} \log(y| X, \theta) = \frac{1}{2} \text{tr}
 fit(X, y, noise, cov_names)
 ```
 
-> "So I have experienced this many times I look at my code and it's not only like a stranger has written it, but a potentially insane stranger [...] and I have no idea what it does."-- Hadley Wickham
+The returned list includes the selected parameters and covariance function, which can be used to generate a GPR object for the data.
+
+```{r, eval=FALSE, include=FALSE}
+> "So I have experienced this many times I look at my code and it's not only like a stranger has written it, but a potentially insane stranger [...] and I have no idea what it does."-- Hadley Wickham'
 [via](https://youtu.be/rz3_FDVt9eg?t=583)
+```
+
 
 ```{r, eval=TRUE, include=FALSE}
 X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
@@ -155,21 +168,20 @@ Gaussian$plot(seq(-5, 5, by = 0.1))$plot
 
 ## Classification
 
-The class `GPC` solves binary classification problems by using a Gaussian process. 
-> "Dear past-Hadley: PLEASE COMMENT YOUR CODE BETTER. Love present-Hadley" -- @hadleywickham
-[via](https://twitter.com/hadleywickham/status/718203628528349184)
+The class `GPC` solves binary classification problems by using a Gaussian process. It is initialized with training data $X$ ($D\times n$ matrix), target vector $y \in \{-1, 1\}^n$, the assumed noise level $\sigma$ and the vectorized covariance function `cov_func`. 
 
 ```{r, eval=FALSE}
-Gaussian_classifier <- GPC$new(X, y, noise, cov_func)
+GPC$new(X, y, noise, cov_func)
 ```
 
 The `$predict` function uses the Laplace approximation
+
 > "The fact that data science exists as a field is a colossal failure of statistics. To me, that is what statistics is all about." -- Hadley Wickham
 [via](https://priceonomics.com/hadley-wickham-the-man-who-revolutionized-r/)
 
 The `$plot` function displays the results of the classification.
 
-- For a set of one dimensional test points the decision function and additionally the decision regions and the training points are plotted
+- For a set of one dimensional test points the decision function, the decision regions and the training points are plotted
 ```{r, eval=FALSE}
 Gaussian_classifier$plot(seq(-2, 2, by = 0.1))
 ```
@@ -181,6 +193,8 @@ kappa <- function(x,y) exp(-3*(x - y)^2)
 Gaussian_classifier <- GPC$new(X, y, 1e-5, kappa)
 Gaussian_classifier$plot(seq(-2,2, by = 0.1))$plot
 ```
+
+
 
 - For two dimensional data the test points and the decision regions are shown.
 
@@ -214,8 +228,10 @@ kappa <- function(x,y) sqrexp(x,y,l=1)
 gaussian_classifier <- GPC$new(X, y, 1e-5, kappa)
 s <- seq(-1, 1, by = 0.1)
 testpoints <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
-gaussian_classifier$plot(testpoints)$plot
+gaussian_classifier$plot()$plot
 ```
+
+Decision regions are chosen with a threshold of 0.5, as the decison function maps into the intervall [0,1]. The labels of the points are also shown as 0 or 1, instead of -1 or 1. 
 
 ## Simulation
 

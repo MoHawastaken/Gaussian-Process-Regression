@@ -113,6 +113,16 @@ normal <- function(sd, mean = 0) {
 }
 
 #' @export
+exp_distr <- function(rate) {
+  function(k) rexp(k, rate)
+}
+
+#' @export
+beta_distr <- function(shape1, shape2, ncp = 0){
+  function(k) rbeta(k, shape1, shape2, ncp)
+}
+
+#' @export
 examples <- function() {
   # Regression
   # example 1: one-dimensional
@@ -122,12 +132,20 @@ examples <- function() {
   error <- normal(2)
   simulate_regression(f, limits, X, noise = 1, error = error)
   
-  # example 2: two-dimensional
+  # example 2: beta distributed error
+  f <- function(x) sin(10*x)
+  limits <- matrix(c(0, 1), nrow = 1)
+  X <- matrix(seq(0,1,by = 0.05), nrow = 1)
+  error <- beta_distr(2,3)
+  simulate_regression(f, limits, X, noise = 1, error = error)
+  
+  # example 3: two-dimensional
   f <- function(x) 0.1*sum(x^2)
   limits <- matrix(c(-5.5, 5.5, -5.5, 5.5), nrow = 2, byrow = TRUE)
   X <- combine_all(list(seq(-5,5,by = 1), seq(-5,5,by = 1)))
   error <- normal(1)
   simulate_regression(f, limits, X, noise = 1, error = error)
+
   
   # Classification
   # example 1
