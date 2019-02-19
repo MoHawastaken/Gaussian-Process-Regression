@@ -54,7 +54,7 @@ Given such a data set, one would like to do two things:
 
 
 ## Regression
-Initialize an object of class GPR with training data $X$, target vector $y$, the vectorized covariance function `cov_func` and the assumed noise level $\sigma$.
+Initialize an object of class GPR with training data $X$ ($D\times n$ matrix), target vector $y$,  the assumed noise level $\sigma$ and the vectorized covariance function `cov_func`.
 ```{r, eval=FALSE}
 Gaussian <- GPR$new(X, y, noise, cov_func)
 ```
@@ -73,9 +73,16 @@ The following covariance functions have already been implemented and can be used
 ```{r, eval=FALSE}
 Gaussian <- GPR.sqrexp$new(X, y, noise = 0.5, l = 1)
 ```
+Furthermore, it is possible to initialize a GPR object with a vector of names picked from the covariance functions above. In this case, the function `fit` (see section Optimization of Hyperparameters) is used to pick the covariance function and the corresponding parameters which are best suited to describe the training data.
+```{r, eval=FALSE}
+Gaussian <- GPR.sqrexp$new(X, y, noise = 0.5, cov_names = c("linear", "polynomial", "sqrexp"))
+```
+If neither an explicit covariance function nor a vector of names is given, optimization will be done with all predefined covariance functions.
+```{r, eval=FALSE}
+Gaussian <- GPR.sqrexp$new(X, y, noise = 0.5)
+```
 
-
-The class provides two methods, the first one is for the prediction of points:
+The class provides four methods. The first one implements the prediction of the Gaussian process $f$ at specified points:
 
 > “Prediction is very difficult, especially about the future. – Niels Bohr" -- Hadley Wickham
 [via](https://www.quora.com/profile/Hadley-Wickham)
@@ -84,9 +91,10 @@ The class provides two methods, the first one is for the prediction of points:
 Gaussian$predict(X_star, pointwise_var = TRUE)
 ```
 
-`$predict` returns a matrix of the expected value of the underlying function f and its variance for the test points. If the input is a vector of length n, predict will interpret it as n test points.
-For `pointwise_var = FALSE` , predict will return the predicted covariance matrix `cov(X_star, X_star)` instead of only its diagonal.
-
+Given a $D\times n$ matrix `X_Star` of input points, `$predict` returns a matrix, the columns of which are the conditional expectation and variance of the underlying process f in each of the test points, conditioned on the training data. If the input is a vector of length n, predict will interpret it as n test points.
+If `pointwise_var` is set to `FALSE` , `$predict` returns the conditional covariance matrix `cov(X_star, X_star)` instead of only its diagonal.
+Apart from predict, there are three methods for different kinds of plots.
+The first one plots the training data and the resulting predictions of the Gaussian process $f$.
 
 
 ```{r, eval=FALSE}
@@ -101,13 +109,22 @@ Gaussian <- GPR.sqrexp$new(X, y, noise, 1)
 Gaussian$plot(seq(-10,10, by = 0.05))$plot
 ```
 
-
+The second one plots random functions drawn from the posterior distribution of the process.
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62}
 X <- matrix(seq(-3,3,by = 0.5), nrow = 1)
 noise <- 0.5
 y <- c(0.1*X^3 + rnorm(length(X), noise, 0))
 Gaussian <- GPR.gammaexp$new(X, y, 0.1, 1, 1.5)
 Gaussian$plot_posterior_draws(10, seq(-3,3, by = 0.1))
+```
+
+The last one visualizes the posterior covariance with specific points.
+```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62}
+X <- matrix(seq(-3,3,by = 0.5), nrow = 1)
+noise <- 0.5
+y <- c(0.1*X^3 + rnorm(length(X), noise, 0))
+Gaussian <- GPR.gammaexp$new(X, y, 0.1, 1, 1.5)
+Gaussian$plot_posterior_variance(c(-2, 0, 1))
 ```
 
 ## Optimization of Hyperparameters

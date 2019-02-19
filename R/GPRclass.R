@@ -113,7 +113,7 @@ GPR <- R6::R6Class("GPR",
                    return(list(posterior_mean, posterior_variance))
                  }
                },
-               plot = function(testpoints){
+               plot = function(testpoints = seq(min(self$X), max(self$X), length.out = 200)){
                  if (nrow(self$X) > 1) {
                    message("No plot method for multidimensional data.")
                    return
@@ -131,7 +131,7 @@ GPR <- R6::R6Class("GPR",
                    ggplot2::scale_shape_identity()
                   list(plot = g, pred = y)
                },
-               plot_posterior_draws = function(n, testpoints) {
+               plot_posterior_draws = function(n = 5, testpoints = seq(min(self$X), max(self$X), length.out = 100)) {
                  predictions <- self$predict(testpoints, pointwise_var = FALSE)
                  y <- cbind(predictions[[1]], diag(predictions[[2]]))
                  z <- multivariate_normal(n, predictions[[1]], predictions[[2]])
@@ -216,7 +216,7 @@ GPR <- R6::R6Class("GPR",
 GPR.constant <- R6::R6Class("GPR.constant",
                           inherit = GPR,
                           public = list(
-                            initialize = function(X, y, noise, c){
+                            initialize = function(X, y, noise, c = fit(X,y,noise,"constant")$par){
                               stopifnot(is.numeric(c), c > 0)
                               k <- function(x, y) constant(x, y, c)
                               super$initialize(X, y, noise, k)
@@ -227,7 +227,7 @@ GPR.constant <- R6::R6Class("GPR.constant",
 #' @export
 GPR.linear <- R6::R6Class("GPR.linear", inherit = GPR,
                           public = list(
-                            initialize = function(X, y, noise, sigma){
+                            initialize = function(X, y, noise, sigma = fit(X,y,noise,"linear")$par){
                               stopifnot(length(sigma) == nrow(X))
                               k <- function(x, y) linear(x, y, sigma)
                               super$initialize(X, y, noise, k)
@@ -238,7 +238,7 @@ GPR.linear <- R6::R6Class("GPR.linear", inherit = GPR,
 #' @export
 GPR.polynomial <- R6::R6Class("GPR.polynomial", inherit = GPR,
                               public = list(
-                                initialize = function(X, y, noise, sigma, p){
+                                initialize = function(X, y, noise, sigma = fit(X,y,noise,"polynomial")$par[[1]], p = fit(X,y,noise,"polynomial")$par[[2]]){
                                   stopifnot(length(sigma) == 1, length(p) == 1)
                                   k <- function(x, y) polynomial(x, y, sigma, p)
                                   super$initialize(X, y, noise, k)
@@ -261,7 +261,7 @@ GPR.sqrexp <-  R6::R6Class("GPR.sqrexp", inherit = GPR,
 #' @export
 GPR.gammaexp <- R6::R6Class("GPR.gammaexp", inherit = GPR,
                           public = list(
-                            initialize = function(X, y, noise, gamma, l){
+                            initialize = function(X, y, noise, gamma = fit(X,y,noise,"gammaexp")$par[[1]], l = fit(X,y,noise,"gammaexp")$par[[2]]){
                               stopifnot(length(gamma) == 1, length(l) == 1)
                               k <- function(x, y) gammaexp(x, y, l, gamma)
                               super$initialize(X, y, noise, k)
@@ -272,7 +272,7 @@ GPR.gammaexp <- R6::R6Class("GPR.gammaexp", inherit = GPR,
 #' @export
 GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
                             public = list(
-                              initialize = function(X, y, noise, alpha, l){
+                              initialize = function(X, y, noise, alpha = fit(X,y,noise,"rationalquadratic")$par[[1]], l = fit(X,y,noise,"rationalquadratic")$par[[2]]){
                                 stopifnot(length(alpha) == 1, length(l) == 1)
                                 k <- function(x, y) rationalquadratic(x, y, l, alpha)
                                 super$initialize(X, y, noise, k)
@@ -341,7 +341,7 @@ Gaussian$plot(seq(-5,5, by = 0.1))
 Gaussian <- GPR.gammaexp$new(X, y, noise, 1, 1.5)
 Gaussian$plot(seq(-5,5, by = 0.1))
 
-Gaussian <- GPR.gammaexp$new(X, y, 0.1, 1, 1.5)
+Gaussian <- GPR.gammaexp$new(X, y, 0.1)
 Gaussian$plot(seq(-5,5, by = 0.1))
 Gaussian$plot_posterior_draws(10, seq(-5, 5, by = 0.1))
 Gaussian$plot_posterior_variance(seq(-5, 5, by = 3))
