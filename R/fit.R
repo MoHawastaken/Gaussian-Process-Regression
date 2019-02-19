@@ -136,7 +136,7 @@ y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
 z <- fit2(X, y, noise = 1, cov_names = names(cov_dict))
 
 #print(z)
-#Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_df[z$cov, ]$func[[1]], append(list(x, y), z$par)), noise = 1)
+#Gaussian <- GPR$new(X, y, noise = 1, function(x,y) do.call(cov_df[z$cov, ]$func[[1]], append(list(x, y), z$par)))
 #Gaussian$plot(seq(-5, 5, by = 0.1))
 
 optim_until_error <- function(start, f, ...) {

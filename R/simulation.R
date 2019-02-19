@@ -79,10 +79,12 @@ simulate_classification <- function(func, training_points, limits, k, num_data =
   } else stopifnot(nrow(limits) == nrow(training_points))
   test_points <- combine_all(lapply(1:D, function(i) seq(limits[i, 1], limits[i, 2], length.out = max_predict^(1/D))))
   y <- apply(training_points, 2, func)
-  Gaussian <- GPC$new(training_points, y, k, 1e-5)
-  predictions <- Gaussian$plot(test_points)
+  Gaussian <- GPC$new(training_points, y, 1e-5, k)
+  plot_l <- Gaussian$plot(test_points)
+  predictions <- plot_l$pred
   residual <- 2*as.integer(predictions >= 0.5) - 1 - apply(test_points, 2, func)
   cat("Proportion of misclassified test points.", mean(abs(residual))/2, "\n")
+  print(plot_l$plot)
 }
  
 #' @export

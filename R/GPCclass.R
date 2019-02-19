@@ -4,7 +4,7 @@
 #'  to predict and plot its values for given testpoints
 #' 
 #'
-#' @usage \preformatted{GPC <- GPC$new(X, y, cov_fun, noise)
+#' @usage \preformatted{GPC <- GPC$new(X, y, noise, cov_fun)
 #'
 #' GPC$predict(X*)
 #' GPC$plot(testpoints)
@@ -53,7 +53,7 @@ GPC <- R6::R6Class("GPC",
      .sigmoid = function(x) 1/(1 + exp(-x)) #used sigmoid function
    ),
    public = list(
-     initialize = function(X, y, k, epsilon){
+     initialize = function(X, y, epsilon, k){
        stopifnot(is.numeric(X), is.vector(y), is.numeric(y))
        stopifnot(is.numeric(epsilon), epsilon > 0, is.function(k))
        # Ist Input X ein Vektor, wird dieser als einzeilige Matrix behandelt.
@@ -115,7 +115,7 @@ GPC <- R6::R6Class("GPC",
        predictions <- self$predict_class(testpoints)
        if(nrow(testpoints) == 1){
          dat <- data.frame(x = t(testpoints), y = predictions)
-         print(ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y)) +
+         g <- ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y)) +
            ggplot2::theme_classic() +
            ggplot2::scale_y_continuous("output, p(y = 1| x)") +
            ggplot2::geom_tile(ggplot2::aes(x = x, y = y, fill = factor(as.integer(y > 0.5))), 
@@ -125,11 +125,11 @@ GPC <- R6::R6Class("GPC",
            ggplot2::geom_line() +
            ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = pmax(0,self$y)), 
                                mapping = ggplot2::aes(x = xpoints, y = ypoints, shape = 4)) +
-           ggplot2::scale_shape_identity())
+           ggplot2::scale_shape_identity()
        }
        else if(nrow(testpoints) == 2){
          dat <- data.frame(x.1 = testpoints[1,], x.2 = testpoints[2,], y = 2*as.integer(predictions >= 0.5) - 1)
-         print(ggplot2::ggplot(dat, inherit.aes = F, ggplot2::aes(x = x.1, y = x.2, fill = factor(y))) +
+          g <- ggplot2::ggplot(dat, inherit.aes = F, ggplot2::aes(x = x.1, y = x.2, fill = factor(y))) +
            ggplot2::theme_classic() +
            ggplot2::scale_y_continuous(expression("x_2")) +
            ggplot2::scale_x_continuous(expression("x_1")) +
@@ -140,9 +140,9 @@ GPC <- R6::R6Class("GPC",
                                mapping = ggplot2::aes(x = xpoints, y = ypoints, shape = factor(self$y))) +
            ggplot2::scale_shape_manual(values = c(4, 2)) +
            ggplot2::guides(shape = ggplot2::guide_legend(title = "Testpoints")) +
-           ggplot2::scale_color_manual(values = c("red", "blue")))
+           ggplot2::scale_color_manual(values = c("red", "blue"))
          }
-       return(predictions)
+       return(list(plot = g, pred = predictions))
    }
    ),
    active = list(
@@ -200,32 +200,32 @@ k <- function(x, y) sqrexp(x, y, 1)
 X <- matrix(seq(-1,1,by = 0.1), nrow = 1)
 y <- 2*as.integer(X > 0) - 1
 kappa <- function(x,y) exp(-3*(x - y)^2)
-gaussian_classifier <- GPC$new(X, y, kappa, 1e-5)
-gaussian_classifier$plot(seq(-2,2, by = 0.1))
+gaussian_classifier <- GPC$new(X, y, 1e-5, kappa)
+gaussian_classifier$plot(seq(-2,2, by = 0.1))$plot
 
 X <- matrix(c(seq(-1, -0.1, by = 0.1), seq(0, 1, by = 0.2)), nrow = 1)
 y <- 2*as.integer(X > 0) - 1
 kappa <- function(x,y) exp(-3*(x - y)^2)
-gaussian_classifier <- GPC$new(X, y, kappa, 1e-5)
-gaussian_classifier$plot(seq(-2,2, by = 0.1))
+gaussian_classifier <- GPC$new(X, y, 1e-5, kappa)
+gaussian_classifier$plot(seq(-2,2, by = 0.1))$plot
 
 s <- seq(-1, 1, by = 0.5)
 X <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
 y <- 2*as.integer(X[1, ] > X[2, ]) - 1
 kappa <- function(x,y) sqrexp(x,y,l=1)
-gaussian_classifier <- GPC$new(X, y, kappa, 1e-5)
+gaussian_classifier <- GPC$new(X, y, 1e-5, kappa)
 s <- seq(-1, 1, by = 0.1)
 testpoints <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
-gaussian_classifier$plot(testpoints)
+gaussian_classifier$plot(testpoints)$plot
 
 n <- 10
 X <- cbind(multivariate_normal(n, c(0.5,0.5), diag(c(0.1,0.1))), multivariate_normal(n, c(-0.5,-0.5), diag(c(0.1,0.1))))
 plot(X[1,], X[2, ])
 y <- rep(c(1,-1), each = n)
 kappa <- function(x,y) sqrexp(x,y,l=1)
-gaussian_classifier <- GPC$new(X, y, kappa, 1e-5)
+gaussian_classifier <- GPC$new(X, y, 1e-5, kappa)
 s <- seq(-1, 1, by = 0.1)
 testpoints <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
-gaussian_classifier$plot(testpoints)
+gaussian_classifier$plot(testpoints)$plot
 
 

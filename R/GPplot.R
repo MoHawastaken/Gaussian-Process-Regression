@@ -125,34 +125,34 @@ server <- function(input, output, session){
   })
   output$plot1 <- renderPlot({
     #standard plot if nothing is selected:
-    Gaussian <- reactive(GPR.sqrexp$new(X(), y(), l = 1, noise = input$noise)) 
+    Gaussian <- reactive(GPR.sqrexp$new(X(), y(), noise = input$noise, l = 1)) 
     switch(input$cov, 
       "Squared Exponential" = {validate(need(input$par1, "Invalid parameters"))
-        Gaussian <- reactive(GPR.sqrexp$new(X(), y(), input$par1, input$noise))
+        Gaussian <- reactive(GPR.sqrexp$new(X(), y(), input$noise, input$par1))
       },
      "Constant" = {validate(need(input$par1, "Invalid parameters") %then% 
                               need(input$par1 > 0, "Invalid parameters") )
-        Gaussian <- reactive(GPR.constant$new(X(), y(), input$par1, input$noise))
+        Gaussian <- reactive(GPR.constant$new(X(), y(), input$noise, input$par1))
       },
       "Linear" = {validate(need(input$par1, "Invalid parameters") %then% 
                              need(input$noise > 0, "Invalid parameters"))
-        Gaussian <- reactive(GPR.linear$new(X(), y(), input$par1, input$noise))
+        Gaussian <- reactive(GPR.linear$new(X(), y(), input$noise, input$par1))
       },
       "Polynomial" = {validate(need(input$par1, "Invalid parameters") %then% 
                                  need(input$noise > 0, "Invalid parameters") %then% 
                                  need(input$par2, "Invalid parameters") )
-        Gaussian <- reactive(GPR.polynomial$new(X(), y(), input$par1, input$par2, input$noise))
+        Gaussian <- reactive(GPR.polynomial$new(X(), y(), input$noise, input$par1, input$par2))
       },
       "Gamma Exponential" = {validate(need(input$par1, "Invalid parameters") %then% 
                                         need(input$par2, "Invalid parameters"))
-        Gaussian <- reactive(GPR.gammaexp$new(X(), y(), input$par1, input$par2, input$noise))
+        Gaussian <- reactive(GPR.gammaexp$new(X(), y(), input$noise, input$par1, input$par2))
       },
       "Rational Quadratic" = {validate(need(input$par1, "Invalid parameters") %then% 
                                          need(input$par2, "Invalid parameters"))
-        Gaussian <- reactive(GPR.rationalquadratic$new(X(), y(), input$par1, input$par2, input$noise))
+        Gaussian <- reactive(GPR.rationalquadratic$new(X(), y(), input$noise, input$par1, input$par2))
       })
     X_points <- reactive(seq(input$xlim[1], input$xlim[2], by = 0.1))
-    p <- Gaussian()$plot(X_points())
+    p <- Gaussian()$plot(X_points())$plot
     if (input$drawtrue) p <- p + ggplot2::geom_line(data = data.frame(x = X_points(), y = sapply(X_points(), f())), ggplot2::aes(x = x, y = y), linetype = "dashed")
     p
   })
@@ -177,7 +177,7 @@ server <- function(input, output, session){
   })
   dat <- eventReactive(c(input$refresh,input$n2),{
     kappa <- function(x,y) sqrexp(x, y, l = 1)
-    gaussian_classifier <- GPC$new(X_c(), y_c(), kappa, 1e-5)
+    gaussian_classifier <- GPC$new(X_c(), y_c(), 1e-5, kappa)
     s <- seq(min(X_c()), max(X_c()), by = 0.1)
     testpoints <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
     predictions <- gaussian_classifier$predict_class(testpoints)
