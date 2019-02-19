@@ -1,9 +1,11 @@
 context("test-gpr")
 
+#simple examples validated by calculation by hand
+
 test_that("predict works", {
   X1 <-  matrix(c(-1/2, 1/2), nrow = 1)
   y1 <- c(4, 4)
-  GPRobj1 <- GPR.polynomial$new(X1, y1, 1/4, 1, 1/2)
+  GPRobj1 <- GPR.polynomial$new(X1, y1, 1/2, 1/4, 1)
   expect_equivalent(GPRobj1$predict(0), c(2,1/8))
   
   # fstar = 1/3*(y_1 + y_2), Covstar = 1/3 for any X,y,xstar

@@ -1,22 +1,18 @@
-#' Simulation for Regression and Classification
+#limits D x 2 Matrix, X D x N
+max_predict <- 10000
+
+#' Simulation for Regression
 #' 
-#' Simulates data for Regression and Classification problems, which can then be analyzed via a Gaussian process
+#' Simulates data for Regression problems, which can then be analyzed via a Gaussian process
 #' 
 #' @usage \preformatted{simulate_regression(func, limits, training_points, num_data = 10, 
 #' noise = 0, error = function(x) 0, cov_names = names(cov_dict))
-#' 
-#' simulate_classification(func, training_points, limits, k, num_data = 10)
 #'}
-#' 
-#' @section Functions
+#' @param func
 #' 
 #' @examples 
 #' 
-#' @name Simulation
-NULL
-
-#limits D x 2 Matrix, X D x N
-max_predict <- 10000
+#' @name simulate_regression
 #' @export
 simulate_regression <- function(func, limits, training_points, num_data = 10, 
                                 noise = 0, error = function(x) 0, cov_names = names(cov_dict)) {
@@ -27,8 +23,6 @@ simulate_regression <- function(func, limits, training_points, num_data = 10,
   
   # Use fit to get best Gaussian model
   y <- apply(training_points, 2, func) + error(ncol(training_points))
-  #best <- fit(training_points, y, noise, cov_names)
-  #k <- function(x,y) do.call(cov_df[best$cov, ]$func[[1]], append(list(x, y), best$par))
   Gaussian <- GPR$new(training_points, y, noise = noise, cov_names = cov_names)
   
   # Test the model on a large set of test points (size max_predict)
@@ -44,7 +38,6 @@ simulate_regression <- function(func, limits, training_points, num_data = 10,
   plot(variance, resid, xlim = c(0, 1.1*variance[length(variance)]),
        main = "Connection of absolute prediction error \n and predicted variance",
        xlab = "Variance", ylab = "Absolute Prediction Error", col = "blue")
-  # abline(lm(resid ~ variance)$coefficients, col = "red")
   
   # Plot regression function and estimated function.
   x <- seq(limits[1, 1], limits[1, 2], by = 0.05)
@@ -54,7 +47,7 @@ simulate_regression <- function(func, limits, training_points, num_data = 10,
   } else {
     print("Plot with respect to first variable with all others fixed.")
     plot_points <- rbind(x, matrix(apply(limits, 1, mean)[-1], 
-                                          nrow = D-1, ncol = length(x)))
+                                          nrow = D - 1, ncol = length(x)))
     ground_truth <- apply(plot_points, 2, func)
     predictions <- Gaussian$predict(plot_points, pointwise_var = TRUE)
   }
@@ -71,6 +64,19 @@ simulate_regression <- function(func, limits, training_points, num_data = 10,
         alpha = 0.3))
 }
 
+#' Simulation for Classification
+#' 
+#' Simulates data for Classification problems, which can then be analyzed via a Gaussian process
+#' 
+#' @usage \preformatted{simulate_classification(func, training_points, limits, k, num_data = 10)
+#'}
+#' @param func A function for the simulation of data points
+#' @param training_points A vector of training points
+#' @param limits 
+#' 
+#' @examples 
+#' 
+#' @name simulate_classification
 #' @export
 simulate_classification <- function(func, training_points, limits, k, num_data = 10) {
   D <- nrow(limits)
