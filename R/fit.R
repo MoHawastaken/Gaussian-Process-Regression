@@ -142,9 +142,9 @@ z <- fit2(X, y, noise = 1, cov_names = names(cov_dict))
 optim_until_error <- function(start, f, ...) {
   l <- list()
   f_new <- function(...) {
-    out <- tryCatch(error = function(cond) return(-Inf), f(...))
+    out <- tryCatch(error = function(cond) return(-1000), f(...))
     #print(1)
-    if (!(out == -Inf)) {
+    if (!(out == -1000)) {
       rlang::env_bind(rlang::env_parent(), l = append(l, list(c(...), out)))
     }
     #print(str(l))
