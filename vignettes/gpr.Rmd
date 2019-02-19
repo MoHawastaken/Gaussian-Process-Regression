@@ -51,8 +51,6 @@ Given such a data set, one would like to do two things:
 
 
 
-
-
 ## Regression
 Initialize an object of class GPR with training data $X$ ($D\times n$ matrix), target vector $y$,  the assumed noise level $\sigma$ and the vectorized covariance function `cov_func`.
 ```{r, eval=FALSE}
@@ -139,8 +137,13 @@ $$ \frac{\partial}{\partial \theta_j} \log(y| X, \theta) = \frac{1}{2} \text{tr}
 fit(X, y, noise, cov_names)
 ```
 
-> "So I have experienced this many times I look at my code and it's not only like a stranger has written it, but a potentially insane stranger [...] and I have no idea what it does."-- Hadley Wickham
+The returned list includes the selected parameters and covariance function, which can be used to generate a GPR object for the data.
+
+```{r, eval=FALSE, include=FALSE}
+> "So I have experienced this many times I look at my code and it's not only like a stranger has written it, but a potentially insane stranger [...] and I have no idea what it does."-- Hadley Wickham'
 [via](https://youtu.be/rz3_FDVt9eg?t=583)
+```
+
 
 ```{r, eval=TRUE, include=FALSE}
 X <- matrix(seq(-5,5,by = 0.2), nrow = 1)

@@ -1,24 +1,3 @@
-#' Optimization of hyperparameters
-#' 
-#' Applies optimization methods to find optimal parameters of the covariance function for a given set of datapoints
-#' 
-#' @section Usage: 
-#' \preformatted{fit(X, y, noise, cov_names)}
-#'
-#'
-#' @section Arguments:
-#' 
-#'   \code{X} matrix of inputs
-#'
-#'   \code{y} numeric vector of targets
-#' 
-#'   \code{noise} the inflicted noise of the observations
-#' 
-#'   \code{cov_names} a list of names of covariance functions
-#' @name fit
-#' @references Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
-NULL
-
 #Save derivatives of covariance functions
 cov_dict <- list(
   sqrexp = list(func = sqrexp, display = "Squared Exponential",
@@ -69,11 +48,9 @@ optim_until_error <- function(start, f, ...) {
   l <- list()
   f_new <- function(...) {
     out <- tryCatch(error = function(cond) return(-1000), f(...))
-    #print(1)
     if (!(out == -1000)) {
       rlang::env_bind(rlang::env_parent(), l = append(l, list(c(...), out)))
     }
-    #print(str(l))
     return(out)
   }
   opt <- tryCatch(error = function(cond) return(NULL), optim(start, f_new, ...))
@@ -85,7 +62,30 @@ optim_until_error <- function(start, f, ...) {
     return(opt)
   }
 }
-
+#' Optimization of hyperparameters
+#' 
+#' Applies optimization methods to find optimal parameters of the covariance function for a given set of datapoints
+#' 
+#' @usage 
+#' \preformatted{fit(X, y, noise, cov_names)}
+#'
+#' @param X matrix of inputs
+#'
+#' @param y numeric vector of targets
+#' 
+#' @param noise the inflicted noise of the observations
+#' 
+#' @param cov_names a list of names of covariance functions ("linear",
+#'         "constant","polynomial","sqrexp","gammaexp","rationalquadratic")
+#' @return A list of outputs:
+#' \describe{
+#'   \item{par}{The optimal parameters}
+#'   \item{cov}{The name of the optimal covariance function}
+#'   \item{score}{The scores for the different covariance functions in \code{cov_names}}
+#'   \itme{func}{The optimal covariance function}
+#' }
+#' 
+#' @references Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
 #' @export
 fit <-  function(X, y, noise, cov_names){
   param <- list()
