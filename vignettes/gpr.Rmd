@@ -51,7 +51,7 @@ Now given these data sets there are mostly two questions one likes to answer:
 ## Regression
 Initialize an object of class GPR with training data $X$, target vector $y$, the vectorized covariance function `cov_func` and the assumed noise level $\sigma$.
 ```{r, eval=FALSE}
-Gaussian <- GPR$new(X, y, cov_func, noise)
+Gaussian <- GPR$new(X, y, noise, cov_func)
 ```
 The following covariance functions have already been implemented and can be used by selecting the corresponding subclass:
 
@@ -66,7 +66,7 @@ The following covariance functions have already been implemented and can be used
 - rationalquadratic, $k(x,y) = \left(1+ \frac{|x-y|^2}{2 \alpha l^2}\right)^{-\alpha}$.
 
 ```{r, eval=FALSE}
-Gaussian <- GPR.sqrexp$new(X, y, l = 1, noise = 0.5)
+Gaussian <- GPR.sqrexp$new(X, y, noise = 0.5, l = 1)
 ```
 
 
@@ -92,16 +92,16 @@ Gaussian$plot(seq(-10, 10, by = 0.05))
 X <- matrix(seq(-5,5,by = 0.5), nrow = 1)
 noise <- 0.5
 y <- c(0.1*X^3 + rnorm(length(X), 0, noise))
-Gaussian <- GPR.sqrexp$new(X, y, 1, noise)
-Gaussian$plot(seq(-10,10, by = 0.05))
+Gaussian <- GPR.sqrexp$new(X, y, noise, 1)
+Gaussian$plot(seq(-10,10, by = 0.05))$plot
 ```
 
 
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62}
 X <- matrix(seq(-3,3,by = 0.5), nrow = 1)
 noise <- 0.5
-y <- c(0.1*X^3 + rnorm(length(X), 0, noise))
-Gaussian <- GPR.gammaexp$new(X, y, 1, 1.5, noise = 0.1)
+y <- c(0.1*X^3 + rnorm(length(X), noise, 0))
+Gaussian <- GPR.gammaexp$new(X, y, 0.1, 1, 1.5)
 Gaussian$plot_posterior_draws(10, seq(-3,3, by = 0.1))
 ```
 
@@ -120,15 +120,14 @@ fit(X, y, noise, cov_names)
 > "So I have experienced this many times I look at my code and it's not only like a stranger has written it, but a potentially insane stranger [...] and I have no idea what it does."-- Hadley Wickham
 [via](https://youtu.be/rz3_FDVt9eg?t=583)
 
-```{r, eval=TRUE, include=TRUE}
+```{r, eval=TRUE, include=FALSE}
 X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
 y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
 
 z <- fit(X, y, noise = 1, cov_names = list("sqrexp","rationalquadratic"))
 
-print(z)
-#Gaussian <- GPR$new(X, y, function(x,y) do.call(cov_df[z$cov, ]$func[[1]], append(list(x, y), z$par)), noise = 1)
-#Gaussian$plot(seq(-5, 5, by = 0.1))
+Gaussian <- GPR$new(X, y, 1, z$func)
+Gaussian$plot(seq(-5, 5, by = 0.1))$plot
 ```
 
 
@@ -139,7 +138,7 @@ The class `GPC` solves binary classification problems by using a Gaussian proces
 [via](https://twitter.com/hadleywickham/status/718203628528349184)
 
 ```{r, eval=FALSE}
-Gaussian_classifier <- GPC$new(X, y, cov_func, noise)
+Gaussian_classifier <- GPC$new(X, y, noise, cov_func)
 ```
 
 The `$predict` function uses the Laplace approximation
@@ -157,8 +156,8 @@ Gaussian_classifier$plot(seq(-2, 2, by = 0.1))
 X <- matrix(seq(-1,1,by = 0.1), nrow = 1)
 y <- 2*as.integer(X > 0) - 1
 kappa <- function(x,y) exp(-3*(x - y)^2)
-Gaussian_classifier <- GPC$new(X, y, kappa, 1e-5)
-Gaussian_classifier$plot(seq(-2,2, by = 0.1))
+Gaussian_classifier <- GPC$new(X, y, 1e-5, kappa)
+Gaussian_classifier$plot(seq(-2,2, by = 0.1))$plot
 ```
 
 - For two dimensional data the test points and the decision regions are shown.
@@ -178,10 +177,10 @@ s <- seq(-1, 1, by = 0.5)
 X <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
 y <- 2*as.integer(X[1, ] > X[2, ]) - 1
 kappa <- function(x,y) sqrexp(x,y,l=1)
-gaussian_classifier <- GPC$new(X, y, kappa, 1e-5)
+gaussian_classifier <- GPC$new(X, y, 1e-5, kappa)
 s <- seq(-1, 1, by = 0.1)
 testpoints <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
-gaussian_classifier$plot(testpoints)
+gaussian_classifier$plot(testpoints)$plot
 ```
 
 
@@ -190,10 +189,10 @@ n <- 10
 X <- cbind(multivariate_normal(n, c(0.5,0.5), diag(c(0.1,0.1))), multivariate_normal(n, c(-0.5,-0.5), diag(c(0.1,0.1))))
 y <- rep(c(1,-1), each = n)
 kappa <- function(x,y) sqrexp(x,y,l=1)
-gaussian_classifier <- GPC$new(X, y, kappa, 1e-5)
+gaussian_classifier <- GPC$new(X, y, 1e-5, kappa)
 s <- seq(-1, 1, by = 0.1)
 testpoints <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
-gaussian_classifier$plot(testpoints)
+gaussian_classifier$plot(testpoints)$plot
 ```
 
 ## Simulation
