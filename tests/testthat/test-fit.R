@@ -3,7 +3,7 @@ X<-matrix(seq(1, 99.5, by=0.5),nrow=1)
 
 Y1<-3*as.vector(X)+rep(c(0.05,-0.05), length(X)/2)
 Y2<-5+rep(c(0.05,-0.05), length(X)/2)
-Y3<-3*as.vector(X)^2-2*as.vector(X)+rep(c(0.05,-0.05),length(X/2))
+Y3<-3*as.vector(X)^2-2*as.vector(X)+rep(c(0.05,-0.05),length(X)/2)
 Y4<-exp(-as.vector(X)^2)+rep(c(0.05,-0.05), length(X)/2)
 Y5<-exp(-as.vector(X)^5)+rep(c(0.05,-0.05), length(X)/2)
 Y6<-1/(1+as.vector(X)^2)
