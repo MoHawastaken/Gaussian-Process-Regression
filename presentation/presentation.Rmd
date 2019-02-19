@@ -57,7 +57,7 @@ ggplot2::ggplot(data = data.frame(x = X[1, ], y = X[2, ], label = y), ggplot2::a
 - Methoden `$predict`, `$plot`
 
 ## predict Algorithmus
-<img src="https://trello-attachments.s3.amazonaws.com/5c1367e7bda778491a4a4fde/5c1b68f238a2808027971811/c157d3615d008527e047178b5e0b2f81/algorithm_2_1.png"
+<img src="https://trello-attachments.s3.amazonaws.com/5c1367e7bda778491a4a4fde/5c1b68f238a2808027971811/dd63ca23dffa380ebbbce68d2d931ae2/algorithm_2_1_clear.png"
      alt="algorithm1"
      style="width:800px;" />
 
