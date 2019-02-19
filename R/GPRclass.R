@@ -158,7 +158,7 @@ GPR <- R6::R6Class("GPR",
                   return
                 }
                 len <- length(where)
-                y <- self$predict(c(where, testpoints), pointwise_var = FALSE)[[2]][(len + 1):(len + subdivisions), 1:len]
+                y <- self$predict(c(where, testpoints), pointwise_var = FALSE)[[2]][(len + 1):(len + length(testpoints)), 1:len]
                 dat <- data.frame(x = testpoints, y = y)
                 names(dat) <- c("x", as.character(where))
                 dat <- tidyr::gather(dat, -x, key = "z", value = "value")
