@@ -89,7 +89,7 @@ simulate_classification <- function(func, training_points, limits, k, num_data =
   plot_l <- Gaussian$plot(test_points)
   predictions <- plot_l$pred
   residual <- 2*as.integer(predictions >= 0.5) - 1 - apply(test_points, 2, func)
-  cat("Proportion of misclassified test points.", mean(abs(residual))/2, "\n")
+  message(paste("Proportion of misclassified test points.", mean(abs(residual))/2, "\n"))
   print(plot_l$plot)
 }
  
