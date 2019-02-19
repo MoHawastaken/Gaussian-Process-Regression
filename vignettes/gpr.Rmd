@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-library(gaussianprocess)
+library(gprc)
 ```
 
 $\newcommand\erw[1]{\mathbb{E}\left[#1\right]}

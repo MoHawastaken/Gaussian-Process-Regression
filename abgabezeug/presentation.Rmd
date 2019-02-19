@@ -7,7 +7,7 @@ output: ioslides_presentation
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
-library(gaussianprocess)
+library(gprc)
 #Copy function definitions, since they aren't being exported by the package
 multivariate_normal <- function(n, mean, covariance) {
   stopifnot(is.numeric(mean), is.numeric(covariance), length(mean) == nrow(covariance))
@@ -81,7 +81,9 @@ Gaussian$plot(seq(-6,6, by = 0.05))$plot
 
 `fit(X, y, noise, cov_names)`
 
-- funktioniert nur über eingespeicherte Kovarianzfunktionen 
+- Funktioniert nur über eingespeicherte Kovarianzfunktionen 
+- Findet für jede Kovarianzfunktion in `cov_names` die optimalen Parameter
+- Gibt die optimale Kovarianzfunktion mit besten Parametern zurück
 
 ## Gewählte Kovarianzfunktion
 
