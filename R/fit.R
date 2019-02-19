@@ -65,18 +65,6 @@ for (name in names(cov_dict)[-1]){
 }
 row.names(cov_df) <- cov_df$name
 
-
-#section for testing:
-
-X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
-y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
-
-z <- fit2(X, y, noise = 1, cov_names = names(cov_dict))
-
-#print(z)
-#Gaussian <- GPR$new(X, y, noise = 1, function(x,y) do.call(cov_df[z$cov, ]$func[[1]], append(list(x, y), z$par)))
-#Gaussian$plot(seq(-5, 5, by = 0.1))
-
 optim_until_error <- function(start, f, ...) {
   l <- list()
   f_new <- function(...) {
@@ -160,3 +148,15 @@ fit <-  function(X, y, noise, cov_names){
   return(list(par = par, cov = name, score = score, 
               func = function(x,y) do.call(cov_df[name, ]$func[[1]], append(list(x, y), par))))
 }
+
+
+#section for testing:
+
+X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
+y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
+
+z <- fit(X, y, noise = 1, cov_names = names(cov_dict))
+
+#print(z)
+#Gaussian <- GPR$new(X, y, noise = 1, function(x,y) do.call(cov_df[z$cov, ]$func[[1]], append(list(x, y), z$par)))
+#Gaussian$plot(seq(-5, 5, by = 0.1))
