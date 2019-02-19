@@ -11,15 +11,15 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Einleitung
 
-Für unser Paket zu Gausschen Prozessen hatten wir zusammengefasst zwei Aufgaben die wir meistern mussten. Erstens das schreiben zweier "regression functions" zur Vorhersage des Prozesses an anderen Punkten und zweitens die Bestimmung der richtigen Kovarianzfunktion für den Prozess.
+Für unser Paket zu Gausschen Prozessen hatten wir zusammengefasst zwei Aufgaben die wir meistern mussten. Erstens das Schreiben zweier "regression functions" zur Vorhersage des Prozesses an anderen Punkten und zweitens die Bestimmung der richtigen Kovarianzfunktion für den Prozess.
 
 #### Generelle Paketstruktur
 
-Wir haben uns dazu entschieden, die Regressionen in R6 Klassen zu schreiben. Grund hierfür war die leichte Erstellung von schreibgeschützen Bereichen. Dies erschien sinnvoll, da die Algorithmen einige Rechenaufwendige Schritte beinhalten die nur einmal ausgeführt werden sollten (z.B. Cholesky Zerlegung) und somit beim Erstellen der Klasse ausgeführt werden mussen, wir aber den Nutzer davor schützen wollten beim Hinzufügen von Daten eine neue Berechnung der implizit genutzten Variablen in den Algorithmen zu vergessen.
+Wir haben uns dazu entschieden, die Regressionen in R6 Klassen zu schreiben. Grund hierfür war die leichte Erstellung von schreibgeschützen Bereichen. Dies erschien sinnvoll, da die Algorithmen einige rechenaufwendige Schritte beinhalten, die nur einmal ausgeführt werden sollten (z.B. Cholesky Zerlegung) und somit beim Erstellen der Klasse ausgeführt werden müssen, wir aber den Nutzer davor schützen wollten beim Hinzufügen von Daten eine neue Berechnung der implizit genutzten Variablen in den Algorithmen zu vergessen.
 
-Bei der Bestimmung der Kovarianzfunktion war dies hingegen nicht nötig. Hier ist unser Algorithmus als einfache Funktion implementiert. Hier haben wir Metaprogrammierung genutzt um Kovarianzfunktionen mit unterschiedlich vielen Parametern zu optimieren. Außerdem Error Handler um die Fehleranfälligkeit der Choleskyzerlegung und beim Invertieren abzufangen.
+Bei der Bestimmung der optimalen Kovarianzfunktion war dies hingegen nicht nötig. Hier ist unser Algorithmus als einfache Funktion implementiert. Hier haben wir Metaprogrammierung genutzt um Kovarianzfunktionen mit unterschiedlich vielen Parametern zu optimieren. Außerdem Error Handler um die Fehleranfälligkeit der Choleskyzerlegung und beim Invertieren abzufangen.
 
-**Hier was zu den Plots**
+Um die Qualität der Ausgaben zu überprüfen und dem Nutzer eine Visualisierung der Ergebnisse zu ermöglichen, haben wir für die beiden Klassen Methoden zum Plotten der Resultate geschrieben. Dabei wird für einen Eingabevektor die Vorhersage gezeichnet und zusätzlich werden die ursprünglichen Trainingspunkte dargestellt.
   
   
 ## Regression
@@ -30,10 +30,11 @@ Als dritte Option haben wir die Möglichkeit implementiert, der Klasse eine List
 
 ## Optimierung der Hyperparameter
 
-Die Funktion zur Optimierung der Hyperparameter - im Folgenden als Fit-Funktion bezeichnet - beruht auf den Abschnitten zur Bayessian Model Selection durch den Marginal Likelihood. Wir haben uns für diese Methode entschieden, da nach Studium der Quelle Cross-validation als das numerisch aufwändigere Verfahren erschien.
+Die Funktion zur Optimierung der Hyperparameter - im Folgenden als Fit-Funktion bezeichnet - beruht auf den Abschnitten zur Bayessian Model Selection durch die Marginal Likelihood. Wir haben uns für diese Methode entschieden, da in der Quelle  Cross-validation als das numerisch aufwendigere Verfahren beschrieben wurde. Insbesondere ist bei letzterem die Invertierung der Ableitungsmatrix komplizierter.
 
 Allerdings mussten wir das Verfahren an einigen Stellen leicht anpassen um, wie bereits erwähnt, einige Probleme des Algorithmus abzufangen.
-Als erstes mussten wir uns mit den Eigenheiten der einzelnen Kovarianzfunktionen befassen. Bei konstanter und linearer Kovariarianz ist die ?Matrix der Ableitungen? im Allgemeinen nicht invertierbar. Daher mussten wir hier die Optimierung anpassen **?Wie funktionierte das?**. Außerdem mussten wir Sicherstellen, dass bei polynomiellen Kovarianzfunktionen die Exponenten aus der Menge der natürlichen Zahlen gewählt werden und mussten hier somit über diskrete Parameter optimieren.
+Als erstes mussten wir uns mit den Eigenheiten der einzelnen Kovarianzfunktionen befassen. Bei konstanter und linearer Kovariarianz ist die Matrix der Ableitungen im Allgemeinen nicht invertierbar. Daher mussten wir hier die Optimierung anpassen und konnten nicht die Newton Methode mithilfe der Ableitung anwenden. 
+Außerdem mussten wir sicherstellen, dass bei polynomiellen Kovarianzfunktionen die Exponenten aus der Menge der natürlichen Zahlen gewählt werden und somit über diskrete und stetige Parmeter optimieren.
 Außerdem beinhaltet der Algorithmus wie bereits erwähnt das mehrfache Ausführen der Cholesky-Zerlegung innerhalb der Optimierung, welche leider nicht immer ausgeführt werden kann. Um dieses Problem zumindest einzugrenzen haben wir uns entschieden ein Error Handling einzubauen, das bei einem Fehler in einem Iterationsschritt die besten bisher berechneten Parameter zurückgibt zusammen mit einem Hinweis, dass eine weitere Berechnung nicht möglich ist.
 
 ## Klassifizierung
@@ -42,11 +43,11 @@ Außerdem beinhaltet der Algorithmus wie bereits erwähnt das mehrfache Ausführ
 ## Plots
 
 
-##Eigenanteil
+## Eigenanteil
 
 
-##Abschließende Bemerkungen
+## Abschließende Bemerkungen
 **Was zur Teamarbeit**
-Insgesamt war es ein spannendes Projekt, auch wenn R manchmal das Maschienentourette in einem neu erwecken kann.
+Insgesamt war es ein spannendes Projekt, auch wenn R manchmal das Maschinentourette in einem neu erwecken kann.
 
 
