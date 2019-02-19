@@ -1,7 +1,6 @@
 library(shiny)
 
 `%then%` <- shiny:::`%OR%`
-seed <- runif(1, 0, 100)
 
 ui <- fluidPage(tabsetPanel(tabPanel("Regression",
   tags$head(
@@ -18,7 +17,8 @@ ui <- fluidPage(tabsetPanel(tabPanel("Regression",
       sliderInput("noise", "Noise", min = 0, max = 1, value = 0),
       sliderInput("gennoise", "Generating noise", min = 0, max = 1, value = 0),
       numericInput("n", "Number of training points", min = 1, value = 10),
-      checkboxInput("drawrand", "Choose training points at random"),
+      div(style="display: inline-block;vertical-align:top; width: 300px;", checkboxInput("drawrand", "Choose training points at random")),
+      div(style="display: inline-block;vertical-align:top; width: 50px;", actionButton("refrng", "", icon = icon("sync"))),
       checkboxInput("drawtrue", "Draw true function"),
       sliderInput("xlim", "Data Boundaries", min = -10, max = 10, value = c(-5, 5))
       )),
@@ -63,6 +63,9 @@ switchrenderUI <- function(i, session, min_noise, act_noise, kdesc, ...){
 }
 
 server <- function(input, output, session){
+  seed <- eventReactive(input$refrng, {
+     round(as.integer(runif(1, 0, 100)))
+  }, ignoreNULL = FALSE)
   #function used to create datapoints
   f <- reactive({
     validate(
@@ -109,15 +112,15 @@ server <- function(input, output, session){
   })
   X <- reactive({validate(need(input$n, "Number of datapoints can't be empty"))
     if (input$drawrand){
-    set.seed(seed) #keep the randomly generated datapoints fixed so changing other parameter doesn't change them
+    set.seed(seed()) #keep the randomly generated datapoints fixed so changing other parameter doesn't change them
     matrix(runif(input$n, input$xlim[1], input$xlim[2]), nrow = 1)
   }
   else{
     matrix(seq(input$xlim[1],input$xlim[2], by = (input$xlim[2] - input$xlim[1])/input$n), nrow = 1)
   }})
   #generate datapoints using function f
-  set.seed(seed)
-  y <- reactive(c(f()(X()) + rnorm(length(X()), 0, sqrt(input$gennoise))))
+  y <- reactive({set.seed(seed())
+    c(f()(X()) + rnorm(length(X()), 0, sqrt(input$gennoise)))})
   observeEvent(input$opthyp,{
     z <- fit(X(), y(), input$noise + 0.1, list(cov_df$name[cov_df$display == input$cov]))
     for (i in seq_along(z$par)) updateSliderInput(session, sprintf("par%s", i), value = z$par[i])

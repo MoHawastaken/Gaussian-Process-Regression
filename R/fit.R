@@ -65,68 +65,6 @@ for (name in names(cov_dict)[-1]){
 }
 row.names(cov_df) <- cov_df$name
 
-#' @export
-fit2 <-  function(X, y, noise, cov_names){
-  param <- list()
-  score <- c()
-  for (cov in cov_names){
-    usedcov <- cov_df[cov,]
-    nparam <- length(usedcov$start[[1]])
-    l <- list() #parameters for optim()
-    best_par <- list(usedcov$start[[1]])
-    prev_par <- c()
-    dens <- function(v){
-      K <- covariance_matrix(X, X, function(x, y) do.call(usedcov$func[[1]], append(list(x, y), v)))
-
-      L <- t(chol(K + noise * diag(ncol(X))))
-      alpha <- solve(t(L), solve(L, y))
-      - 0.5 * y %*% alpha - sum(log(diag(L))) - ncol(X) / 2 * log(2 * pi)
-    }
-    if (cov %in% c("sqrexp", "gammaexp","rationalquadratic")){
-      dens_deriv <- function(v){
-        n <- ncol(X)
-        K <- matrix(0, nrow = n, ncol = n)
-        K_deriv <- array(0, c(n, n, nparam))
-        for (i in 1:n) {
-          for (j in 1:n) {
-            K[i, j] <-  do.call(usedcov$func[[1]], append(list(X[, i], X[, j]), v))
-            K_deriv[i, j,] <- do.call(usedcov$deriv[[1]], append(list(X[, i], X[, j]), v))
-          }
-        }
-        
-        K_inv <- solve(K)
-        alpha <- K_inv %*% y
-        vapply(1:nparam, function(i) 0.5 * sum(diag(alpha %*% t(alpha) - K_inv) %*% K_deriv[,,i]), numeric(1))
-      }
-      l <- append(l, list(gr = dens_deriv))
-    }
-    #Switch optim method if parameter is one dimensional
-    if (nparam == 1) l <- append(l, list(method = "Brent", lower = 0, upper = 10))
-    else l <- append(l, list(method = "BFGS"))
-    if (cov == "polynomial"){
-      p_s <- list()
-      p_sc <- list()
-      for (i in 1:10){
-        q <- optim(usedcov$start[[1]][1], function(sig) dens(c(sig,i)), method = "Brent", 
-              lower = 0, upper = 5, control = list(fnscale = -1))
-        p_s <- append(p_s, list(q))
-        p_sc <- append(p_sc, q$value)
-        
-      }
-      p <- list(par = c(p_s[[which.max(unlist(p_sc))]]$par, which.max(unlist(p_sc))), value = max(unlist(p_sc)))
-    }
-    else{
-    l <- append(l, list(control = list(fnscale = -1)))
-    p <- do.call(optim, append(list(usedcov$start[[1]], dens), l))
-    }
-    param <- append(param, list(p$par))
-    score <- c(score, p$value)
-  }
-  name <- cov_names[[which.max(score)]]
-  par <- param[[which.max(score)]]
-  return(list(par = par, cov = name, score = score, 
-              func = function(x,y) do.call(cov_df[name, ]$func[[1]], append(list(x, y), par))))
-}
 
 #section for testing:
 
@@ -172,6 +110,7 @@ fit <-  function(X, y, noise, cov_names){
     prev_par <- c()
     dens <- function(v){
       K <- covariance_matrix(X, X, function(x, y) do.call(usedcov$func[[1]], append(list(x, y), v)))
+      stopifnot(min(sapply(1:ncol(X), function(i) det((K + noise * diag(ncol(X)))[1:i, 1:i, drop = F]))) > 0)
       
       L <- t(chol(K + noise * diag(ncol(X))))
       alpha <- solve(t(L), solve(L, y))
