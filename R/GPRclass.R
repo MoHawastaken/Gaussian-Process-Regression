@@ -76,10 +76,9 @@ GPR <- R6::R6Class("GPR",
                                      cov_names = names(cov_dict)){
                  stopifnot(is.numeric(X), is.vector(y), is.numeric(y))
                  stopifnot(is.numeric(noise), length(noise) == 1, noise >= 0)
-                 stopifnot(is.function(k))
                  # Ist Input X ein Vektor, wird dieser als einzeilige Matrix behandelt.
                  if (!is.matrix(X)) dim(X) <- c(1, length(X))
-                 stopifnot(length(y) == ncol(X))
+                 stopifnot(length(y) == ncol(X), is.function(k))
                  private$.X <- X
                  private$.y <- y
                  private$.k <- k
@@ -113,7 +112,7 @@ GPR <- R6::R6Class("GPR",
                    return(list(posterior_mean, posterior_variance))
                  }
                },
-               plot = function(testpoints = seq(min(self$X), max(self$X), length.out = 200)){
+               plot = function(testpoints = seq(expand_range(self$X)[1], expand_range(self$X)[2], length.out = 200L)){
                  if (nrow(self$X) > 1) {
                    message("No plot method for multidimensional data.")
                    return
@@ -131,7 +130,12 @@ GPR <- R6::R6Class("GPR",
                    ggplot2::scale_shape_identity()
                   list(plot = g, pred = y)
                },
-               plot_posterior_draws = function(n = 5, testpoints = seq(min(self$X), max(self$X), length.out = 100)) {
+               plot_posterior_draws = function(n = 5, testpoints = seq(expand_range(self$X)[1], expand_range(self$X)[2],
+                                                                       length.out = 100L)) {
+                 if (nrow(self$X) > 1) {
+                   message("No plot method for multidimensional data.")
+                   return
+                 }
                  predictions <- self$predict(testpoints, pointwise_var = FALSE)
                  y <- cbind(predictions[[1]], diag(predictions[[2]]))
                  z <- multivariate_normal(n, predictions[[1]], predictions[[2]])
@@ -141,16 +145,21 @@ GPR <- R6::R6Class("GPR",
                    ggplot2::theme_classic() +
                    ggplot2::scale_y_continuous("Random functions drawn from posterior") +
                    ggplot2::geom_line() +
-                   ggplot2::geom_ribbon(inherit.aes = F, mapping = ggplot2::aes(x = testpoints, ymin = y.1 - 2*sqrt(pmax(y.2,0)),
-                                                     ymax = y.1 + 2*sqrt(pmax(y.2,0))), data = dat, alpha = 0.3) 
+                   ggplot2::geom_ribbon(inherit.aes = F, data = dat, mapping = ggplot2::aes(x = testpoints, 
+                                    ymin = y.1 - 2*sqrt(pmax(y.2,0)), ymax = y.1 + 2*sqrt(pmax(y.2,0))), alpha = 0.3) +
+                   ggplot2::guides(colour = FALSE)
                    #ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
-                    #              mapping = ggplot2::aes(x = xpoints, y = ypoints))
+                  #               mapping = ggplot2::aes(x = xpoints, y = ypoints))
               },
-              plot_posterior_variance = function(where, limits = c(min(self$X), max(self$X)), subdivisions = 100L) {
-                x <- seq(limits[1], limits[2], length.out = subdivisions)
+              plot_posterior_variance = function(where, testpoints = seq(expand_range(self$X)[1], expand_range(self$X)[2],
+                                                                         length.out = 100L)) {
+                if (nrow(self$X) > 1) {
+                  message("No plot method for multidimensional data.")
+                  return
+                }
                 len <- length(where)
-                y <- self$predict(c(where, x), pointwise_var = FALSE)[[2]][(len + 1):(len + subdivisions), 1:len]
-                dat <- data.frame(x = x, y = y)
+                y <- self$predict(c(where, testpoints), pointwise_var = FALSE)[[2]][(len + 1):(len + length(testpoints)), 1:len]
+                dat <- data.frame(x = testpoints, y = y)
                 names(dat) <- c("x", as.character(where))
                 dat <- tidyr::gather(dat, -x, key = "z", value = "value")
                 ggplot2::ggplot(dat, ggplot2::aes(x = x, y = value, colour = z)) +
@@ -249,7 +258,7 @@ GPR.polynomial <- R6::R6Class("GPR.polynomial", inherit = GPR,
 #' @export
 GPR.sqrexp <-  R6::R6Class("GPR.sqrexp", inherit = GPR,
                            public = list(
-                             initialize = function(X, y, noise, l = fit(X,y,noise,"sqrexp")$par){
+                             initialize = function(X, y, noise, l = fit(X, y, noise, "sqrexp")$par){
                                stopifnot(length(l) == 1)
                                k <- function(x, y) sqrexp(x, y, l)
                                super$initialize(X, y, noise, k)
@@ -285,14 +294,23 @@ GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
 covariance_matrix <- function(A, B, covariance_function) {
   outer(1:ncol(A), 1:ncol(B), function(i, j) covariance_function(A[, i, drop = F], B[, j, drop = F]))
 }
+
 #' @export
-multivariate_normal <- function(n, mean, covariance) {
-  stopifnot(is.numeric(mean), is.numeric(covariance), length(mean) == nrow(covariance))
-  degenerate <- diag(covariance) < 0.05
-  L <- t(chol(covariance[!degenerate, !degenerate]))
-  out <- matrix(0, nrow = nrow(covariance), ncol = n)
-  out[!degenerate] <- L %*% matrix(rnorm(n*nrow(L), 0, 1), nrow = nrow(L))
-  out + c(mean) 
+multivariate_normal <- function(n, mean, covariance, tol = 1e-6) {
+  L <- tryCatch(error = function(cond) return(NULL), t(chol(covariance)))
+  if (is.null(L)) {
+    eig <- eigen(covariance, symmetric = TRUE)
+    eigval <- eig$values
+    stopifnot(all(eigval > - tol*abs(eigval[1])))
+    L <- eig$vectors %*% diag(sqrt(pmax(eigval,0)))
+  }
+  drop(mean) + L %*% matrix(rnorm(n*length(mean), 0, 1), nrow = length(mean))
+}
+
+expand_range <- function(x) {
+  r <- range(x)
+  m <- mean(r)
+  c(m - 1.2*(m - r[1]), m + 1.2*(m = r[2]))
 }
 
 # Implementation von Matrixversionen der Kovarianzfunktionen, um Effizienz zu erhöhen
