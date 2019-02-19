@@ -1,12 +1,13 @@
 context("test-fit")
-X<-matrix(seq(1, 99.5, by=0.5),nrow=1)
+X <- matrix(seq(0, 1.1, by = 0.1), nrow = 1)
 
-Y1<-3*as.vector(X)+rep(c(0.05,-0.05), length(X)/2)
-Y2<-5+rep(c(0.05,-0.05), length(X)/2)
-Y3<-3*as.vector(X)^2-2*as.vector(X)+rep(c(0.05,-0.05),length(X)/2)
-Y4<-exp(-as.vector(X)^2)+rep(c(0.05,-0.05), length(X)/2)
-Y5<-exp(-as.vector(X)^5)+rep(c(0.05,-0.05), length(X)/2)
-Y6<-1/(1+as.vector(X)^2)
+Y1 <- 3 * as.vector(X)
+Y2 <- rep(5, 12)
+Y3 <- 3 * as.vector(X) ^ 2 - 2 * as.vector(X)
+Y4 <- 5 * exp(-as.vector(X) ^ 2)
+Y5 <- 5 * exp(-as.vector(X) ^ 5)
+Y6 <- 5 / (1 + as.vector(X) ^ 2)
+
 test_that("fit", {
   expect_equivalent(fit(X,Y1,0.05,list("linear","constant","polynomial","sqrexp","gammaexp","rationalquadratic"))$cov,"linear")
   expect_equivalent(fit(X,Y2,0.05,list("linear","constant","polynomial","sqrexp","gammaexp","rationalquadratic"))$cov,"constant")

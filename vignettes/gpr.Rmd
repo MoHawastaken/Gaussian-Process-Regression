@@ -38,7 +38,7 @@ This package implements
 - clear and complete plots of the results
 - optimization for a certain set of covariance functions.
 
-A Gaussian Process is a stochastic process $(f_x)_{x \in X}$ where every finite subset $Y \subset X$, $(f_x)_{x \in Y}$ is multivariate normally distributed. 
+A Gaussian Process is a stochastic process $(f_x)_{x \in X}$ where for every finite subset $Y \subset X$, $(f_x)_{x \in Y}$ is multivariate normally distributed. 
 With the notation $f(x) := f_x$ it is more intuitive that $(f_x)_{x \in X}$ can be seen
 as a random function $f:X \to \mathbb{R}$.
 In the following $X$ will be a subset of $\mathbb{R}^D$ for some $D \geq 1$.
