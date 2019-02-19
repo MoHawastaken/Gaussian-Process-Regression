@@ -106,7 +106,16 @@ GPC <- R6::R6Class("GPC",
        sapply(1:length(Vfs), function(i) integrate(function(z) 
                 private$.sigmoid(z) * dnorm(z, mean = fs_bar[i, 1], sd = Vfs[i]), -Inf, Inf)$value)
      },
-     plot = function(testpoints){
+     plot = function(testpoints = NULL){
+       if(identical(testpoints, NULL)){
+         if(nrow(self$X) == 1){
+           testpoints <- seq(min(self$X),max(self$X), length.out = 150)
+         } else if(nrow(self$X) == 2){
+           len <- 50
+           s <- seq(min(self$X),max(self$X),length.out = len)
+           testpoints <- matrix(c(rep(s,each = len), rep(s, len)), nrow = 2, byrow = TRUE)
+         }
+       }
        if (is.matrix(testpoints) && nrow(testpoints) > 2) {
          warning("Plot function not available for this dimension")
          return
@@ -191,7 +200,16 @@ GPC <- R6::R6Class("GPC",
    )
 )
 
+
+"
 #section for testing:
 f <- function(x) (sum(abs(x)) > 2.5) - (!(sum(x) > 2.5))
 limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
 k <- function(x, y) sqrexp(x, y, 1)
+#1-dim testpoints
+testpoints <- seq(min(self$X),max(self$X), length.out = 150)
+#2-dim testpoints
+len <- 50
+s <- seq(min(self$X),max(self$X),length.out = len)
+testpoints <- matrix(c(rep(s,each = len), rep(s, len)), nrow = 2, byrow = TRUE)
+"

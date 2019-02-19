@@ -323,27 +323,16 @@ rationalquadratic <- function(x, y, l, alpha) UseMethod("rationalquadratic")
 rationalquadratic.matrix <- function(x, y, l, alpha) (1 + colSums((x - y)^2) / (2 * alpha * l^2))^(-alpha)
 rationalquadratic.numeric <- function(x, y, l, alpha) (1 + sum((x - y)^2) / (2 * alpha * l^2))^(-alpha)
 
+"
 #section for testing:
 
 X <- matrix(seq(-5,5,by = 1), nrow = 1)
 noise <- 0.5
 y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
-Gaussian <- GPR.constant$new(X, y, noise, 1)
-Gaussian$plot(seq(-5,5, by = 0.1))
-Gaussian <- GPR.linear$new(X, y, noise, 1)
-Gaussian$plot(seq(-5,5, by = 0.1))
-Gaussian <- GPR.polynomial$new(X, y, noise, 1, 3)
-Gaussian$plot(seq(-5,5, by = 0.1))
-Gaussian <- GPR.rationalquadratic$new(X, y, noise, 1, 1.5)
-Gaussian$plot(seq(-5,5, by = 0.1))
-Gaussian <- GPR.sqrexp$new(X, y, noise, 1)
-Gaussian$plot(seq(-5,5, by = 0.1))
-Gaussian <- GPR.gammaexp$new(X, y, noise, 1, 1.5)
-Gaussian$plot(seq(-5,5, by = 0.1))
 
 Gaussian <- GPR.gammaexp$new(X, y, 0.1)
-Gaussian$plot(seq(-5,5, by = 0.1))
-Gaussian$plot_posterior_draws(10, seq(-5, 5, by = 0.1))
+Gaussian$plot()
+Gaussian$plot_posterior_draws()
 Gaussian$plot_posterior_variance(seq(-5, 5, by = 3))
 
 X <- matrix(seq(-5,5, by = 3), nrow = 1)
@@ -352,3 +341,4 @@ y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
 Gaussian <- GPR.sqrexp$new(X, y, 0, 0.5)
 Gaussian$plot(seq(-6,6, by = 0.1))
 Gaussian$plot_posterior_draws(3, seq(-6,6, by = 0.2))
+"

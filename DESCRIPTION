@@ -1,5 +1,5 @@
-Package: gaussianprocess
-Title: Gaussian Process Regression
+Package: gprc
+Title: Gaussian Process Regression and Classification
 Version: 0.0.0.9000
 Authors@R: 
     c(person(given = "Michael",
@@ -9,7 +9,7 @@ Authors@R:
     person(given = "Moritz",
            family = "Haas",
            role = c("aut", "cre"),
-           email = "ha.moritz@gmail.com"),
+           email = "moritz.haas@stud.uni-heidelberg.de"),
     person(given = "Konstantin",
            family = "Klumpp",
            role = c("aut"),
@@ -18,7 +18,7 @@ Authors@R:
            family = "Reitze",
            role = c("aut"),
            email = ""))
-Description: This package implements Gaussian Process Regression and Classification
+Description: This package implements methods and optimization for Gaussian Process Regression and Classification
 License: CC0
 Encoding: UTF-8
 LazyData: true
