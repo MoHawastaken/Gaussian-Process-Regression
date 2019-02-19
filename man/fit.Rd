@@ -22,7 +22,7 @@ A list of outputs:
   \item{par}{The optimal parameters}
   \item{cov}{The name of the optimal covariance function}
   \item{score}{The scores for the different covariance functions in \code{cov_names}}
-  \itme{func}{The optimal covariance function}
+  \item{func}{The optimal covariance function}
 }
 }
 \description{

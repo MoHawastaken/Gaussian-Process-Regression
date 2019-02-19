@@ -82,7 +82,7 @@ optim_until_error <- function(start, f, ...) {
 #'   \item{par}{The optimal parameters}
 #'   \item{cov}{The name of the optimal covariance function}
 #'   \item{score}{The scores for the different covariance functions in \code{cov_names}}
-#'   \itme{func}{The optimal covariance function}
+#'   \item{func}{The optimal covariance function}
 #' }
 #' 
 #' @references Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
@@ -94,8 +94,6 @@ fit <-  function(X, y, noise, cov_names){
     usedcov <- cov_df[cov,]
     nparam <- length(usedcov$start[[1]])
     l <- list() #parameters for optim()
-    best_par <- list(usedcov$start[[1]])
-    prev_par <- c()
     dens <- function(v){
       K <- covariance_matrix(X, X, function(x, y) do.call(usedcov$func[[1]], append(list(x, y), v)))
       stopifnot(min(sapply(1:ncol(X), function(i) det((K + noise * diag(ncol(X)))[1:i, 1:i, drop = F]))) > 0)
@@ -159,4 +157,4 @@ z <- fit(X, y, noise = 1, cov_names = names(cov_dict))
 
 #print(z)
 #Gaussian <- GPR$new(X, y, noise = 1, function(x,y) do.call(cov_df[z$cov, ]$func[[1]], append(list(x, y), z$par)))
-#Gaussian$plot(seq(-5, 5, by = 0.1))
+#Gaussian$plot(seq(-5, 5, by = 0.1))$plot
