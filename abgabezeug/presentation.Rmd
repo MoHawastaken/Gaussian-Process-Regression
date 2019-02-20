@@ -51,7 +51,7 @@ ggplot2::ggplot(data = data.frame(x = X[1, ], y = X[2, ], label = y), ggplot2::a
 >- Ein Gaußscher Prozess ist ein stochastischer Prozess $(f_x)_{x \in X}$ wobei für jede endliche Teilmenge $Y \subset X$, $(f_x)_{x \in Y}$ multivariat normal verteilt ist.  
 $f(x) := f_x$, $(f_x)_{x \in X}$ wird aufgefasst als zufällige Funktion $f:X \to \mathbb{R}$.
 
->- Wird charakterisiert über $m(x)=\erw{f(x)}$ und $k(x,x')=\text{Cov}(f(x),f(x'))$. 
+>- Wird charakterisiert über $m(x)=\mathbb{E}({f(x)})$ und $k(x,x')=\text{Cov}(f(x),f(x'))$. 
 
 ## Anwendung
 
@@ -90,13 +90,10 @@ $$
 
 - R6 Klasse
 - speichert Daten, vorberechnete Matrizen
+- Effizienz durch Speichern und Vektorisierung (*drin lassen?*)
 - Methoden `$predict`, `$plot`, `$plot_posterior_draws`, `$plot_posterior_variance`
+- Unterklassen für häufig auftretende Kovarianzfunktionen die lediglich Parametereingabe erfordern
 
-## predict Algorithmus
-
-Zusätzliche Annahme: noisy data  
-Daten werden mit Fehler $\varepsilon$ beobachtet, $y_i = f(x_i) + \varepsilon_i$
-$\varepsilon_i \overset{\text{iid}}{\sim} \mathcal{N}(0, \sigma_n^2)$
 
 ## predict Algorithmus
 
@@ -132,27 +129,29 @@ Gaussian$plot(seq(-6,6, by = 0.05))$plot
 
 ## Optimierung der Hyperparameter
 
-- Ziel: Suchen Prozess, aus dem die Beobachteten Daten am wahrscheinlichsten Entstehen
-- Idee: Bestimmung einer passenden Kovarianzfunktion
+Ziel: Suchen Prozess, aus dem die beobachteten Daten am Wahrscheinlichsten entstehen
+
+Idee: Bestimmung einer passenden Kovarianzfunktion
 
 Methode:
-Hier noch was ergänzen
 
-- Maximierung der Marginal Log-Likelihood 
-- Newton Methode, `optim()`
+- Maximierung der Marginal Log-Likelihood für verschiedene Kovarianzfunktionen und Parameter
+- Nutzen Newton Methode, `optim()`
 
-Marginal Log-Likelihood: Wahrscheinlichkeit für diese Beobachtungen gegeben eine bestimmte Kovarianzfunktion
+Marginal Log-Likelihood: *Gute Erklärung fehlt*
 
 ## fit()
 
 `fit(X, y, noise, cov_names)`
 
-- Funktioniert nur über eingespeicherte Kovarianzfunktionen 
 - Findet für jede Kovarianzfunktion in `cov_names` die optimalen Parameter
 - Gibt die beste Kovarianzfunktion mit optimalen Parametern zurück
 - error handling bei nicht invertierbaren / nicht positiv definiten Matrizen
+- Unterschiedliche Maximierungsmethoden für verschiedene Kovarianzfunktionen
 
 Feature: Übergibt man Regression eine Liste von Kovarianzfunktionen, wird fit automatisch ausgeführt.
+
+Achtung: Funktioniert nur über eingespeicherte Kovarianzfunktionen
 
 ## Gewählte Kovarianzfunktion
 
