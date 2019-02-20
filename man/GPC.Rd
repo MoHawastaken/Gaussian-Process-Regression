@@ -7,7 +7,8 @@
 \preformatted{GPC <- GPC$new(X, y, noise, cov_fun)
 
 GPC$predict(X*)
-GPC$plot(testpoints)
+GPC$plot(limits, length.out)
+GPC$plot(X*)
 }
 }
 \description{
@@ -26,8 +27,10 @@ Implements a gaussian process for classification and gives tools
   \code{noise} the inflicted noise of the observations
 
   \code{X*} a numeric vector as the test input
-
-  \code{testpoints} a matrix of testpoints
+  
+  \code{limits} a numeric vector with lower and upper bounds for the plot
+  
+  \code{length.out} an integer indicating the number of points, which are getting plotted
 }
 
 \section{Methods}{
@@ -36,11 +39,15 @@ Implements a gaussian process for classification and gives tools
 \code{$predict()} returns a numeric vector of the expected value of the underlying 
 function f
 
-\code{$plot()} displays the results of the predict function for all testpoints in a nice plot
+\code{$plot()} displays the results of the predict function for a number of points between limits or for 
+all testpoints in a nice plot
 }
 
 \examples{
-Hier Beispiele einfügen
+X <- matrix(seq(-1,1,by = 0.1), nrow = 1)
+y <- 2*as.integer(X > 0) - 1
+Gaussian_classifier <- GPC$new(X, y, 1e-5, function(x,y) exp(-3*(x - y)^2))
+Gaussian_classifier$plot()$plot
 
 
 }

@@ -1,13 +1,14 @@
 #'  Predictions and Plots for Gaussian process classification
 #'
-#'  Implements a gaussian process for classification and gives tools 
-#'  to predict and plot its values for given testpoints
+#'  Implements a Gaussian process for classification and gives tools 
+#'  to predict and plot its values for given test points
 #' 
 #'
 #' @usage \preformatted{GPC <- GPC$new(X, y, noise, cov_fun)
 #'
 #' GPC$predict(X*)
-#' GPC$plot(testpoints)
+#' GPC$plot(limits, length.out)
+#' GPC$plot(X*)
 #'}
 #' @section Arguments:
 #' 
@@ -20,20 +21,26 @@
 #'   \code{noise} the inflicted noise of the observations
 #' 
 #'   \code{X*} a numeric vector as the test input
-#' 
-#'   \code{testpoints} a matrix of testpoints
+#'   
+#'   \code{limits} a numeric vector with lower and upper bounds for the plot
+#'   
+#'   \code{length.out} an integer indicating the number of points which are getting plotted
 #'   
 #' @section Methods:
 #' 
 #' \code{$predict()} returns a numeric vector of the expected value of the underlying 
 #' function f
 #' 
-#' \code{$plot()} displays the results of the predict function for all testpoints in a nice plot
+#' \code{$plot()} displays the results of the predict function for a number of points between limits or for 
+#' all testpoints in a nice plot
 #'
 #' 
 #' 
 #' @examples
-#' Hier Beispiele einfügen
+#' X <- matrix(seq(-1,1,by = 0.1), nrow = 1)
+#' y <- 2*as.integer(X > 0) - 1
+#' Gaussian_classifier <- GPC$new(X, y, 1e-5, function(x,y) exp(-3*(x - y)^2))
+#' Gaussian_classifier$plot()
 #'
 #'
 #' @importFrom R6 R6Class
@@ -56,7 +63,7 @@ GPC <- R6::R6Class("GPC",
      initialize = function(X, y, epsilon, k){
        stopifnot(is.numeric(X), is.vector(y), is.numeric(y))
        stopifnot(is.numeric(epsilon), epsilon > 0, is.function(k))
-       # Ist Input X ein Vektor, wird dieser als einzeilige Matrix behandelt.
+       # If X is a vector it gets converted to a matrix with one row
        if (!is.matrix(X)) dim(X) <- c(1, length(X))
        stopifnot(length(y) == ncol(X))
        n <- length(y)
@@ -198,16 +205,3 @@ GPC <- R6::R6Class("GPC",
      }
    )
 )
-
-"
-#section for testing:
-f <- function(x) (sum(abs(x)) > 2.5) - (!(sum(x) > 2.5))
-limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
-k <- function(x, y) sqrexp(x, y, 1)
-#1-dim testpoints
-testpoints <- seq(min(self$X),max(self$X), length.out = 150)
-#2-dim testpoints
-len <- 50
-s <- seq(min(self$X),max(self$X),length.out = len)
-testpoints <- matrix(c(rep(s,each = len), rep(s, len)), nrow = 2, byrow = TRUE)
-"
