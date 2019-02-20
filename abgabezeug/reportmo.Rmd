@@ -1,7 +1,7 @@
 ---
 title: "Gaussian Process Report"
 author: "Budjan, Haas, Klumpp, Reitze"
-date: "19 Februar 2019"
+date: "21 Februar 2019"
 output: pdf_document
 ---
   
@@ -17,8 +17,6 @@ Unser Paket implementiert Gaussian Process Regression (GPR), Classification (GPC
 
 Wir haben uns dazu entschieden, eine R6-Klasse für die Regression anzulegen. Grund hierfür war die leichte Erstellung von schreibgeschützen Bereichen. Dies erschien sinnvoll, da die Algorithmen einige rechenaufwendige Schritte beinhalten, die nur einmal ausgeführt werden sollten (z.B. Cholesky Zerlegung) und somit beim Erstellen der Klasse ausgeführt werden müssen, wir aber den Nutzer davor schützen wollten beim Hinzufügen von Daten eine neue Berechnung der implizit genutzten Variablen in den Algorithmen zu vergessen. Obwohl unsere Klasse die Eingabe beliebiger Daten und Kovarianzfunktionen ermöglicht, besticht sie durch einfache und optimierte Nutzung, indem man nur die nötigen Inputs X, y und noise angibt. Eine Vektorisierung der von uns implementierten Kovarianz-Funktionen sowie der Vorhersage-Methode hat die Effizienz dieser Methode und damit auch der Plots erheblich verbessert. Die Dokumentationen von GPR und fit erläutern die einfache Nutzung unseres Pakets mit Minimalbeispielen.
 
-
-
 ## Optimierung der Hyperparameter
 
 Die Funktion zur Optimierung der Hyperparameter fit(X ,y, noise, cov_names) bestimmt die optimale Kovarianzfunktion unter den in cov_names als Liste Angegebenen.
@@ -28,7 +26,6 @@ Hier haben wir Metaprogrammierung genutzt, um Kovarianzfunktionen mit unterschie
 Die Möglichkeit, dass die zu invertierende Matrix K(X,X) + noise * diag(n) singulär sein kann, wird in unserer Quelle nicht behandelt. Daher haben wir mit error handlern die Fehleranfälligkeit der Choleskyzerlegung von möglicherweise singulären Matrizen abgefangen, sodass für jede Kovarianzfunktion der optimale Parameter bis zum ersten Fehler zurückgegeben wird. So erzeugt fit stabile Ergebnisse, vor allem für noise > 0 und Kovarianzfunktionen, die positiv definite Kovarianzmatrizen erzeugen.
 
 Außerdem mussten wir sicherstellen, dass bei polynomiellen Kovarianzfunktionen die Exponenten aus der Menge der natürlichen Zahlen gewählt werden und somit über diskrete und stetige Parmeter optimieren. Dies haben wir gelöst, indem wir uns für den Exponenten auf die Menge {1, ..., 10} beschränken und jeweils den besten Wert für den zweiten Parameter sigma bestimmen. Dann wird die beste Kombination von Werten zurückgegeben.
-
 
 ## Klassifizierung
 
