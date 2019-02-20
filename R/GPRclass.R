@@ -101,7 +101,7 @@
 #' noise <- 0
 #' y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
 #' # explicit use of squared exponential with l = 0.5
-#' Gaussian <- GPR.sqrexp$new(X, y, l = 0.5, noise = 0.5)
+#' Gaussian <- GPR.sqrexp$new(X, y, noise = 0.5, l = 0.5)
 #' Gaussian$plot()
 #' Gaussian$plot_posterior_draws(3)
 #' Gaussian$plot_posterior_variance(seq(-5, 5, by = 3))
@@ -125,7 +125,7 @@ GPR <- R6::R6Class("GPR",
                                      cov_names = names(cov_dict)){
                  stopifnot(is.numeric(X), is.vector(y), is.numeric(y))
                  stopifnot(is.numeric(noise), length(noise) == 1, noise >= 0)
-                 # Ist Input X ein Vektor, wird dieser als einzeilige Matrix behandelt.
+                 # If input X is a vector, it will get converted to a matrix
                  if (!is.matrix(X)) dim(X) <- c(1, length(X))
                  stopifnot(length(y) == ncol(X), is.function(k))
                  private$.X <- X
@@ -135,13 +135,15 @@ GPR <- R6::R6Class("GPR",
                  n <- ncol(X)
                  K <- covariance_matrix(X, X, k)
                  #Pruefe, ob alle Hauptminoren positiv sind.
-                 if (min(sapply(1:n, function(i) det((K + noise * diag(n))[1:i, 1:i, drop = F]))) <= 0) {
-                   stop("Inputs lead to non positive definite covariance matrix. Try using a larger noise or a smaller lengthscale.")
-                 }
+                 #if (min(sapply(1:n, function(i) det((K + noise * diag(n))[1:i, 1:i, drop = F]))) <= 0) {
+                #   stop("Inputs lead to non positive definite covariance matrix. Try using a larger noise or a smaller lengthscale.")
+                 #}
                  if(class(try(solve(K + noise * diag(n)),silent=T)) != "matrix"){
                    stop("K(X,X) + noise * I is not invertible, the algorithm is not defined for this case.")
                  }
-                 private$.L <- t(chol(K + noise * diag(n)))
+                 private$.L <- tryCatch(t(chol(K + noise * diag(n))), error = function(cond){
+                   stop("Inputs lead to non positive definite covariance matrix. Try using a larger noise or a smaller lengthscale.")
+                 })
                  private$.alpha <- solve(t(self$L), solve(self$L, y))
                  private$.logp <- -0.5 * self$y %*% self$alpha - sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
                },
@@ -341,14 +343,15 @@ GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
                             )
 )
 
-# Funktion, um Kovarianzmatrix zu berechnen. Die verwendete Kovarianzfunktion muss bei Eingabe zweier Matrizen 
-# gleicher Dimension die Werte bei Anwendung auf die jeweils i-ten Spalten für i = 1,...,ncol zurueckgeben.
+# Function, to calculate the covariance matrix. For an input of two matrices with the same dimensions the used 
+# covariance function has to return the values from the application to their ith column for i = 1,...,ncol.
 covariance_matrix <- function(A, B, covariance_function) {
   outer(1:ncol(A), 1:ncol(B), function(i, j) covariance_function(A[, i, drop = F], B[, j, drop = F]))
 }
 
 #' @export
 multivariate_normal <- function(n, mean, covariance, tol = 1e-6) {
+  stopifnot(length(mean) == nrow(covariance))
   L <- tryCatch(error = function(cond) return(NULL), t(chol(covariance)))
   if (is.null(L)) {
     eig <- eigen(covariance, symmetric = TRUE)
@@ -392,3 +395,4 @@ gammaexp.numeric <- function(x, y, l, gamma) exp(-(sqrt(sum((x - y)^2))/l)^gamma
 rationalquadratic <- function(x, y, l, alpha) UseMethod("rationalquadratic")
 rationalquadratic.matrix <- function(x, y, l, alpha) (1 + colSums((x - y)^2) / (2 * alpha * l^2))^(-alpha)
 rationalquadratic.numeric <- function(x, y, l, alpha) (1 + sum((x - y)^2) / (2 * alpha * l^2))^(-alpha)
+
