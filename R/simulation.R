@@ -60,8 +60,31 @@ simulate_regression <- function(func, limits, training_points, num_data = 10,
     ggplot2::geom_ribbon(inherit.aes = F, 
         data = dat,
         mapping = ggplot2::aes(x = x, ymin = regression - 2*sqrt(pmax(variance,0)),
-                              ymax = regression + 2*sqrt(pmax(variance,0))), 
+                              ymax = regression + 2*sqrt(pmax(variance, 0))), 
         alpha = 0.3))
+}
+
+max_set <- 300
+#' @export
+simulate_regression_gp <- function(actual_cov, noise, limits, n_training_data = 10, 
+                                   random_training = TRUE, regression_noise = noise,...) {
+  if (!is.matrix(limits)) dim(limits) <- c(length(limits) / 2, 2)
+  D <- nrow(limits)
+  testpoints <- combine_all(lapply(1:D, function(i) seq(limits[i, 1], limits[i, 2], 
+                                                         length.out = max_set^(1/D))))
+  K <- covariance_matrix(testpoints, testpoints, actual_cov)
+  f <- multivariate_normal(1, rep(0, nrow(K)), K)
+  actual_GP <- GPR$new(testpoints, drop(f), noise = 0.1, k = actual_cov)
+  
+  if (random_training) X <- t(sapply(1:D, function(i) runif(n_training_data, limits[i,1], limits[i,2])))
+  else X <- combine_all(lapply(1:D, function(i) seq(limits[i, 1], limits[i, 2], 
+                                                    length.out = n_training_data^(1/D))))
+  y <- actual_GP$predict(X)[, 1] + rnorm(n_training_data, 0, noise)
+  regression_GP <- GPR$new(X, y, noise = regression_noise, ...)
+  testpoints <- drop(testpoints)
+  lst <- regression_GP$plot(testpoints)
+  lst$plot + ggplot2::geom_line(data = data.frame(x = testpoints, y = f),
+                         ggplot2::aes(x = x, y = y), colour = "green")
 }
 
 #' Simulation for Classification

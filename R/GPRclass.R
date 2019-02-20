@@ -297,6 +297,7 @@ covariance_matrix <- function(A, B, covariance_function) {
 
 #' @export
 multivariate_normal <- function(n, mean, covariance, tol = 1e-6) {
+  stopifnot(length(mean) == nrow(covariance))
   L <- tryCatch(error = function(cond) return(NULL), t(chol(covariance)))
   if (is.null(L)) {
     eig <- eigen(covariance, symmetric = TRUE)
