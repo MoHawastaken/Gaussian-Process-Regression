@@ -74,11 +74,13 @@
 #' @name GPR
 #' @section Details:
 #' If own covariance functions are used with GPR, they need to be vectorized.
-#' The plot functions are only implemented for one dimensional data. Although
-#' this class allows customary use with its amount of optional parameters, since
+#' The plot functions are only implemented for one dimensional data.
+#' 
+#' Although this class allows customary use with its amount of optional parameters,
+#' the class is designed for well fitted
+#' and easy use by only giving the necessary inputs \code{X, y, noise}, since
 #' the default values are set by the optimal choice of hyperparameters and
-#' preimplemented covariance functions, the class is designed for well fitted
-#' and easy use by only giving the necessary inputs \code{X, y, noise}.
+#' preimplemented covariance functions.
 #' 
 #' @examples
 #' X <- matrix(seq(-5,5,by = 1), nrow = 1)
