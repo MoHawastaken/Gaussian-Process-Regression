@@ -106,23 +106,20 @@ GPC <- R6::R6Class("GPC",
        sapply(1:length(Vfs), function(i) integrate(function(z) 
                 private$.sigmoid(z) * dnorm(z, mean = fs_bar[i, 1], sd = Vfs[i]), -Inf, Inf)$value)
      },
-     plot = function(testpoints = NULL){
-       if(identical(testpoints, NULL)){
-         if(nrow(self$X) == 1){
-           testpoints <- seq(min(self$X),max(self$X), length.out = 150)
-         } else if(nrow(self$X) == 2){
-           len <- 50
-           s <- seq(min(self$X),max(self$X),length.out = len)
-           testpoints <- matrix(c(rep(s,each = len), rep(s, len)), nrow = 2, byrow = TRUE)
-         }
+     plot = function(limits = c(expand_range(self$X)[1], expand_range(self$X)[2]), length.out = 100L){
+       if(nrow(self$X) == 1){
+         testpoints <- seq(limits[1], limits[2] , length.out = length.out)
+       } else if(nrow(self$X) == 2){
+         s <- seq(limits[1], limits[2], length.out = length.out)
+         testpoints <- matrix(c(rep(s, each = length.out), rep(s, length.out)), nrow = 2, byrow = TRUE)
        }
-       if (is.matrix(testpoints) && nrow(testpoints) > 2) {
+       if (nrow(self$X) > 2) {
          warning("Plot function not available for this dimension")
          return
        }
        if (is.vector(testpoints)) dim(testpoints) <- c(1, length(testpoints))
        predictions <- self$predict_class(testpoints)
-       if(nrow(testpoints) == 1){
+       if(nrow(self$X) == 1){
          dat <- data.frame(x = t(testpoints), y = predictions)
          g <- ggplot2::ggplot(dat, ggplot2::aes(x = x, y = y)) +
            ggplot2::theme_classic() +
@@ -136,7 +133,7 @@ GPC <- R6::R6Class("GPC",
                                mapping = ggplot2::aes(x = xpoints, y = ypoints, shape = 4)) +
            ggplot2::scale_shape_identity()
        }
-       else if(nrow(testpoints) == 2){
+       else if(nrow(self$X) == 2){
          dat <- data.frame(x.1 = testpoints[1,], x.2 = testpoints[2,], y = 2*as.integer(predictions >= 0.5) - 1)
           g <- ggplot2::ggplot(dat, inherit.aes = F, ggplot2::aes(x = x.1, y = x.2, fill = factor(y))) +
            ggplot2::theme_classic() +

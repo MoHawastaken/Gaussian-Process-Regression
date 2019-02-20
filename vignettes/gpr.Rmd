@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 library(gprc)
-set.seed(0)
+set.seed(49)
 ```
 
 $\newcommand\erw[1]{\mathbb{E}\left[#1\right]}
@@ -97,26 +97,26 @@ The first one plots the training data and the resulting predictions of the Gauss
 
 
 ```{r, eval=FALSE}
-Gaussian$plot(seq(-10, 10, by = 0.05))
+Gaussian$plot()
 ```
 
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62}
 X <- seq(-8, 8, by = 0.1)
 y <- (X^3 + 2*sin(3*X))*exp(-abs(X)) + rnorm(length(X), sd = 0.1)
 Gaussian <- GPR.sqrexp$new(X, y, noise = 0.01, l = 1)
-Gaussian$plot(seq(-9, 9, by = 0.05))$plot
+Gaussian$plot()$plot
 ```
 
 The second one plots random functions drawn from the posterior distribution of the process.
 ```{r eval = FALSE}
-plot_posterior_draws(n = 5, testpoints = seq(min(self$X), max(self$X), length.out = 100))
+plot_posterior_draws(n = 5, limits = c(expand_range(self$X)[1], expand_range(self$X)[2]) max(self$X), length.out = 100))
 ```
 
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62}
 X <- seq(-8, 8, by = 0.1)
 y <- (X^3 + 2*sin(3*X))*exp(-abs(X)) + rnorm(length(X), sd = 0.1)
 Gaussian <- GPR.sqrexp$new(X, y, noise = 0.01, l = 1)
-Gaussian$plot_posterior_draws(3, seq(-9, 9, by = 0.05))
+Gaussian$plot_posterior_draws(3)
 ```
 
 The last one visualizes the posterior covariance with specific points.
@@ -129,7 +129,7 @@ plot_posterior_variance(where, limits = c(min(self$X), max(self$X)), subdivision
 X <- seq(-8, 8, by = 0.1)
 y <- (X^3 + 2*sin(3*X))*exp(-abs(X)) + rnorm(length(X), sd = 0.1)
 Gaussian <- GPR.sqrexp$new(X, y, noise = 0.01, l = 1)
-Gaussian$plot_posterior_variance(c(-6, 0, 3), seq(-9, 9, by = 0.05))
+Gaussian$plot_posterior_variance(c(-6, 0, 3))
 ```
 
 ## Optimization of Hyperparameters
@@ -159,7 +159,7 @@ y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
 z <- fit(X, y, noise = 1, cov_names = list("sqrexp","rationalquadratic"))
 
 Gaussian <- GPR$new(X, y, 1, z$func)
-Gaussian$plot(seq(-5, 5, by = 0.1))$plot
+Gaussian$plot()$plot
 ```
 
 
@@ -180,7 +180,7 @@ The `$plot` function displays the results of the classification.
 
 - For a set of one dimensional test points the decision function, the decision regions and the training points are plotted
 ```{r, eval=FALSE}
-Gaussian_classifier$plot(seq(-2, 2, by = 0.1))
+Gaussian_classifier$plot()
 ```
 
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE}
@@ -188,7 +188,7 @@ X <- matrix(seq(-1,1,by = 0.1), nrow = 1)
 y <- 2*as.integer(X > 0) - 1
 kappa <- function(x,y) exp(-3*(x - y)^2)
 Gaussian_classifier <- GPC$new(X, y, 1e-5, kappa)
-Gaussian_classifier$plot(seq(-2,2, by = 0.1))$plot
+Gaussian_classifier$plot()$plot
 ```
 
 
@@ -213,7 +213,7 @@ kappa <- function(x,y) sqrexp(x,y,l=1)
 gaussian_classifier <- GPC$new(X, y, 1e-5, kappa)
 s <- seq(-1, 1, by = 0.1)
 testpoints <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
-gaussian_classifier$plot(testpoints)$plot
+gaussian_classifier$plot()$plot
 ```
 
 
@@ -221,10 +221,7 @@ gaussian_classifier$plot(testpoints)$plot
 n <- 10
 X <- cbind(multivariate_normal(n, c(0.5,0.5), diag(c(0.1,0.1))), multivariate_normal(n, c(-0.5,-0.5), diag(c(0.1,0.1))))
 y <- rep(c(1,-1), each = n)
-kappa <- function(x,y) sqrexp(x,y,l=1)
-gaussian_classifier <- GPC$new(X, y, 1e-5, kappa)
-s <- seq(-1, 1, by = 0.1)
-testpoints <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
+gaussian_classifier <- GPC$new(X, y, 1e-5, function(x,y) sqrexp(x,y,l=1))
 gaussian_classifier$plot()$plot
 ```
 
