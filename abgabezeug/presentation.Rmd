@@ -36,13 +36,16 @@ n <- 10
 X <- cbind(multivariate_normal(n, c(0.5,0.5), diag(c(0.1,0.1))), multivariate_normal(n, c(-0.5,-0.5), diag(c(0.1,0.1))))
 y <- rep(c(1,-1), each = n)
 ggplot2::ggplot(data = data.frame(x = X[1, ], y = X[2, ], label = y), ggplot2::aes(x = x, y = y, shape = factor(label))) + ggplot2::theme_classic() +
- ggplot2::scale_y_continuous(expression("x_2")) +
- ggplot2::scale_x_continuous(expression("x_1")) +ggplot2::geom_point() + 
+ ggplot2::scale_y_continuous(expression(x[2])) +
+ ggplot2::scale_x_continuous(expression(x[1])) +ggplot2::geom_point() + 
   ggplot2::scale_shape_manual(values = c(4, 2)) + 
   ggplot2::guides(shape = ggplot2::guide_legend(title = "Testpoints"))
 ```
 
 ## Einführung zu Gaußschen Prozessen
+
+Ein Gaußscher Prozess ist ein stochastischer Prozess $(f_x)_{x \in X}$ wobei für jede endliche Teilmenge $Y \subset X$, $(f_x)_{x \in Y}$ multivariat normal verteilt ist.  
+$f(x) := f_x$, $(f_x)_{x \in X}$ wird aufgefasst als zufällige Funktion $f:X \to \mathbb{R}$.
 
 ## Anwendung
 
@@ -51,12 +54,41 @@ ggplot2::ggplot(data = data.frame(x = X[1, ], y = X[2, ], label = y), ggplot2::a
 
 ## Mathe zu GPR
 
+Mit vorgegebenen Datenpunkten $(X, f(X))$ und Testpunkten $X_*$ ist die gemeinsame Verteilung gegeben durch
+$$
+\begin{pmatrix}
+f(X) \\
+f(X_*)
+\end{pmatrix}
+ \sim \mathcal{N} \left( 0, 
+ \begin{pmatrix}
+ 	K & \mathbf{k_*} \\
+ 	\mathbf{k_*} & k(x_*, x_*)
+ \end{pmatrix}
+ \right)
+$$
+Die vorhergesagten Werte der Testpunkte erhalten wir aus der bedingten Verteilung
+$$
+f(X_*)|f(X), K, \mathbf{k_*}, k(x_*, x_*)
+$$
+
+durch ihren Erwartungswert
+$$
+  \mathbf{k_*} K^{-1} f(X)
+$$
+
 ## GPR
 `GPR$new(X, y, noise, cov_func)`
 
 - R6 Klasse
 - speichert Daten, vorberechnete Matrizen
 - Methoden `$predict`, `$plot`, `$plot_posterior_draws`, `$plot_posterior_variance`
+
+## predict Algorithmus
+
+Zusätzliche Annahme: noisy data  
+Daten werden mit Fehler $\varepsilon$ beobachtet, $y_i = f(x_i) + \varepsilon_i$
+$\varepsilon_i \overset{\text{iid}}{\sim} \mathcal{N}(0, \sigma_n^2)$
 
 ## predict Algorithmus
 <img src="https://trello-attachments.s3.amazonaws.com/5c1367e7bda778491a4a4fde/5c1b68f238a2808027971811/dd63ca23dffa380ebbbce68d2d931ae2/algorithm_2_1_clear.png"
@@ -161,8 +193,3 @@ set.seed(0)
 ```
 
 ## Shiny App
-
-## Incremental bullets
->- Use this format
->- to have bullets appear
->- one at a time (incrementally)
