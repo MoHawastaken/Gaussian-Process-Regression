@@ -1,4 +1,4 @@
-#'Simulation for Regression
+#'Simulation for Regression - Deterministic ground truth
 #'
 #'Simulates Regression problems with arbitrary regression function on a
 #'hyperrectangle of arbitrary dimension and analyzes the quality of the Gaussian
@@ -22,9 +22,11 @@
 #'the hyperrectangle. Before returning the \code{summary} of the absolute error
 #'in these test points, \code{simulate_regression} provides two plots. One of
 #'the absolute error over the predicted variance and one of the regression
-#'function \code{func} and the predictions of the Gaussian process. If \eqn{D >
-#'1}, the second plot is made with respect to the first dimension, with all
-#'other variables fixed at the middle of the their corresponding interval.
+#'function \code{func} and the predictions of the Gaussian process. For some
+#'inputs, the first plot may not be very informative. Setting \code{show_pred =
+#'FALSE}, the first plot is not shown. If \eqn{D > 1}, the second plot is made
+#'with respect to the first dimension, with all other variables fixed at the
+#'middle of the their corresponding interval.
 #'
 #'@usage \preformatted{simulate_regression(func, limits, training_points,
 #'  training_size = 10L, error = function(x) 0, test_size = 10000, ...) }
@@ -42,12 +44,15 @@
 #'@param test_size number of test points at which regression function and
 #'  Gaussian process are compared
 #'
+#'@param show_pred logical determining if plot of absolute prediction error over
+#'  predicted variance is to be shown
+#'
 #'@param ... arguments passed on to the constructor of the Gaussian process
 #'
 #'@return \code{summary} of the absolute error of the Gaussian process
 #'  predictions in the test points
-#' 
-#'@examples 
+#'
+#'@examples
 #'f <- function(x) 0.1 * x^3
 #'limits <- matrix(c(-6, 6), nrow = 1)
 #'X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
@@ -122,15 +127,75 @@ simulate_regression <- function(func, limits, training_points, training_size = 1
   return(summary(abs(residual)))
 }
 
-#' @export
-simulate_regression_gp <- function(actual_cov, limits, error = function(x) 0, test_size = 300, 
-                training_size = 10, random_training = TRUE, regression_noise = 0.1, show_pred = FALSE, ...) {
+#'Simulation for Regression - Random ground truth
+#'
+#'Simulates Regression problems on a hyperrectangle of arbitrary dimension with
+#'the ground truth drawn from a Gaussian process and analyzes the quality of the
+#'Gaussian process fit.
+#'
+#'\code{limits} should be a \eqn{D\times 2} matrix to model a Gaussian process
+#'in \eqn{\mathbb{R}^D}, the k-th line containing the lower and upper bound of
+#'the hyperrectangle in the k-th dimension. The ground truth value at the test
+#'points (an equispaced grid of \code{test_size} points in the hyperrectangle)
+#'is randomly drawn from a multivariate distribution with mean 0 and the
+#'covariance matrix determined by the covariance function \code{actual_cov}.
+#'Then \code{training_size} training points are drawn randomly from this grid of
+#'test points.
+#'
+#'The error function given in \code{error} determines the error which is added
+#'to the values of func at the training points before Gaussian process
+#'regression is done. When called with an integer n, error is supposed to return
+#'a random vector of length n. Suitable error functions can be created from
+#'standard distributions with \code{error_function}.
+#'
+#'The predictions of the Gaussian process at the test points are compared to the
+#'ground truth. Before returning the \code{summary} of the absolute error in
+#'these test points, \code{simulate_regression_gp} provides up to two plots. If
+#'\code{show_pred = TRUE}, one plot shows the absolute error over the
+#'predicted variance and, if \eqn{D = 1} another shows the ground truth GP and the
+#'predictions of the fitted GP.
+#'
+#'@usage \preformatted{simulate_regression_gp(actual_cov, limits, error =
+#'  function(x) 0, test_size = 300, training_size = 10, random_training = TRUE,
+#'  show_pred = FALSE, ...) }
+#'@param actual_cov covariance function with which ground truth GP is generated
+#'
+#'@param limits matrix containing the limits of the hyperrectangle
+#'
+#'@param error function to generate the error of the training data
+#'
+#'@param test_size integer, number of test points at which ground truth and
+#'  fitted Gaussian process are compared
+#'
+#'@param training_size integer, number of training points
+#'
+#'@param random_training logical; if TRUEtraining points are to be drawn from
+#'  the uniform distribution on the hyperrectangle instead of being chosen
+#'  equispaced
+#'
+#'@param show_pred logical; if TRUE the plot of the absolute prediction error
+#'  over the predicted variance is to be shown
+#'
+#'@param ... arguments passed on to the constructor of the Gaussian process
+#'
+#'@return \code{summary} of the absolute error of the Gaussian process
+#'  predictions in the test points
+#'
+#'@examples
+#'simulate_regression_gp(cov_func(sqrexp, l = 1), limits = c(-5, 5), training_size = 10)
+#'
+#'simulate_regression_gp(cov_func(rationalquadratic, alpha = 0.5, l = 1),
+#' limits = c(-10, 10), error = error_function(rnorm, 0.2), training_size = 50, noise = 0.2)
+#'
+#'@name simulate_regression_gp
+#'@export
+simulate_regression_gp <- function(actual_cov, limits, error = function(x) 0, test_size = 300L, 
+                training_size = 10L, random_training = TRUE, show_pred = FALSE, ...) {
   # Check correctness of inputs
   stopifnot(is.function(actual_cov), is.numeric(limits), length(limits) %% 2 == 0)
   stopifnot(is.function(error), is.numeric(test_size), test_size > 0)
   stopifnot(is.numeric(training_size), training_size > 0, training_size < test_size)
   stopifnot(is.logical(random_training))
-  stopifnot(is.numeric(regression_noise), regression_noise >= 0)
   if (!is.matrix(limits)) limits <- matrix(limits, ncol = 2, byrow = TRUE)
   
   # Draw Gaussian process f with covariance function actual_cov
@@ -145,15 +210,13 @@ simulate_regression_gp <- function(actual_cov, limits, error = function(x) 0, te
   else training_set <- (1:training_size)*floor(ncol(testpoints)/training_size)
   X <- testpoints[, training_set]
   y <- f[training_set] + error(training_size)
-  regression_GP <- GPR$new(X, y, noise = regression_noise, ...)
+  regression_GP <- GPR$new(X, y, ...)
   
   # Testing
   if (D == 1) {
     plot_l <- regression_GP$plot(drop(limits), test_size)
     residual <- plot_l$pred[, 1] - f
     variance <- plot_l$pred[, 2]
-    print(plot_l$plot + ggplot2::geom_line(data = data.frame(x = drop(testpoints), y = f),
-                                  ggplot2::aes(x = x, y = y), colour = "green"))
   } else {
     prediction <- regression_GP$predict(testpoints)
     residual <- prediction[, 1] - f
@@ -164,6 +227,8 @@ simulate_regression_gp <- function(actual_cov, limits, error = function(x) 0, te
          main = "Connection of absolute prediction error \n and predicted variance",
          xlab = "Variance", ylab = "Absolute Prediction Error", col = "blue")
   }
+  if (D == 1) print(plot_l$plot + ggplot2::geom_line(data = data.frame(x = drop(testpoints), y = f),
+                                                     ggplot2::aes(x = x, y = y), colour = "green"))
   message(paste("The mean absolute difference of predictions and ground truth",
       "in the considered limits is ", mean(abs(residual)), "\n"))
   return(summary(abs(residual)))
@@ -261,16 +326,16 @@ examples <- function() {
   
   # Regression for Gaussian processes
   simulate_regression_gp(cov_func(sqrexp, l = 1), limits = matrix(c(-5, 5), nrow = 1), 
-                         training_size = 10, random_training = TRUE, regression_noise = 0.1)
+                         training_size = 10, random_training = TRUE, noise = 0.1)
   
   simulate_regression_gp(cov_func(sqrexp, l = 0.1), limits = matrix(c(-5, 5), nrow = 1), 
-                         training_size = 10, random_training = TRUE, regression_noise = 0.1)
+                         training_size = 10, random_training = TRUE, noise = 0.1)
   
   simulate_regression_gp(cov_func(sqrexp, l = 1), limits = matrix(c(-5, 5), nrow = 1), 
-                         training_size = 10, random_training = TRUE, regression_noise = 1)
+                         training_size = 10, random_training = TRUE, noise = 1)
   
   simulate_regression_gp(cov_func(polynomial, sigma = 1, p = 3), limits = matrix(c(-5, 5), nrow = 1), 
-                         training_size = 10, random_training = TRUE, regression_noise = 1)
+                         training_size = 10, random_training = TRUE, noise = 1)
   
   # Classification
   # example 1
