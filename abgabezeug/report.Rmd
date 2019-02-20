@@ -39,6 +39,7 @@ Außerdem beinhaltet der Algorithmus wie bereits erwähnt das mehrfache Ausführ
 
 ## Klassifizierung
 
+Bei Klassifizierung sind wir ähnlich vorgegangen wie im Buch und wurden vor keine größeren Probleme gestellt. Jedoch war die im Buch vorgestellte Version durch das Lösen von Gleichungssystemen sehr Zeitaufwendig. Hier war dies ein deutlich größeres Problem als bei Regression, da wir mehr Punkte vorhersagen mussten. Daher haben wir uns entschieden, es zu vektorisieren und konnten so die Rechendauer um ca. 80% reduzieren. Dies haben wir dann nachträglich auch in Regression eingefügt.
 
 ## Plots
 
