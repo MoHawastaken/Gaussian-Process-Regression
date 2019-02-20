@@ -30,17 +30,24 @@ Als dritte Option haben wir die Möglichkeit implementiert, der Klasse eine List
 
 ## Optimierung der Hyperparameter
 
-Die Funktion zur Optimierung der Hyperparameter - im Folgenden als Fit-Funktion bezeichnet - beruht auf den Abschnitten zur Bayessian Model Selection durch die Marginal Likelihood. Wir haben uns für diese Methode entschieden, da in der Quelle  Cross-validation als das numerisch aufwendigere Verfahren beschrieben wurde. Insbesondere ist bei letzterem die Invertierung der Ableitungsmatrix komplizierter.
+Die Funktion zur Optimierung der Hyperparameter - im Folgenden als fit-Funktion bezeichnet - beruht auf den Abschnitten zur Bayessian Model Selection durch die Marginal Likelihood. Wir haben uns für diese Methode entschieden, da in der Quelle  Cross-validation als das numerisch aufwendigere Verfahren beschrieben wurde. Insbesondere ist bei letzterem die Invertierung der Ableitungsmatrix komplizierter.
 
 Allerdings mussten wir das Verfahren an einigen Stellen leicht anpassen um, wie bereits erwähnt, einige Probleme des Algorithmus abzufangen.
-Als erstes mussten wir uns mit den Eigenheiten der einzelnen Kovarianzfunktionen befassen. Bei konstanter und linearer Kovariarianz ist die Matrix der Ableitungen im Allgemeinen nicht invertierbar. Daher mussten wir hier die Optimierung anpassen und konnten nicht die Newton Methode mithilfe der Ableitung anwenden. 
-Außerdem mussten wir sicherstellen, dass bei polynomiellen Kovarianzfunktionen die Exponenten aus der Menge der natürlichen Zahlen gewählt werden und somit über diskrete und stetige Parmeter optimieren.
+Dazu war es notwendig, dass wir uns mit den Eigenheiten der einzelnen Kovarianzfunktionen befassen. Bei konstanter und linearer Kovarianz ist die Matrix der Ableitungen im Allgemeinen nicht invertierbar. Daher mussten wir hier die Optimierung anpassen und konnten nicht die Newton Methode mithilfe der Ableitung anwenden. 
+Außerdem mussten wir sicherstellen, dass bei polynomiellen Kovarianzfunktionen die Exponenten aus der Menge der natürlichen Zahlen gewählt werden und somit über diskrete und stetige Parmeter optimieren. Dies haben wir gelöst, indem wir uns für den Exponenten auf die Menge {1, ..., 10} beschränken und jeweils den besten Wert für den zweiten Parameter sigma bestimmen. Dann wird die beste Kombination von Werten zurückgegeben.
 Außerdem beinhaltet der Algorithmus wie bereits erwähnt das mehrfache Ausführen der Cholesky-Zerlegung innerhalb der Optimierung, welche leider nicht immer ausgeführt werden kann. Um dieses Problem zumindest einzugrenzen haben wir uns entschieden ein Error Handling einzubauen, das bei einem Fehler in einem Iterationsschritt die besten bisher berechneten Parameter zurückgibt zusammen mit einem Hinweis, dass eine weitere Berechnung nicht möglich ist.
 
 ## Klassifizierung
 
 
 ## Plots
+
+Für die Plot-Methoden der Klassen haben wir das Paket `ggplot2` verwendet, aufgrund seiner einfachen Struktur mehrere Plots zu überlagern. 
+
+### Shiny App
+
+Die Shiny App stellt die wesentlichen Features des Pakets anhand von Plots dar. Wir haben hierbei die Möglichkeiten von `shiny` genutzt, um sowohl für Regression als auch für Klassifikation eine Visualisierung anzuzeigen. Außerdem haben wir durch eine dynamische Änderung des Interface die Möglichkeit erstellt für verschiedene Kovarianzfunktionen verschiedene Parameter anzupassen. Um die Ergebnisse der fit-Funktion darzustellen besitzt die App auch die Option die berechneten optimalen Parameterwerte zu verwenden.  
+Der Plot zur Klassifikation lässt sich durch das manuelle Hinzufügen von Punkten verändern, um die Verschiebung der Entscheidungsregionen zu beobachten. Hierbei haben wir uns nur auf 2 dimensionale Probleme beschränkt, da deren Darstellung am anschaulichsten ist.
 
 
 ## Eigenanteil
