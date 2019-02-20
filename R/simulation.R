@@ -62,7 +62,7 @@
 #'@name simulate_regression
 #'@export
 simulate_regression <- function(func, limits, training_points, training_size = 10L, 
-                    error = function(x) 0, test_size = 10000, ...) {
+                    error = function(x) 0, test_size = 10000, show_pred = TRUE, ...) {
   # Check correctness of inputs
   stopifnot(is.function(func), is.numeric(limits), length(limits) %% 2 == 0)
   stopifnot(is.numeric(training_size), training_size > 0)
@@ -90,11 +90,12 @@ simulate_regression <- function(func, limits, training_points, training_size = 1
               "in the considered limits is ", mean(abs(residual)), "\n")
   
   # Plot error over predicted variance
-  variance <- predictions[, 2]
-  plot(variance, abs(residual), xlim = c(0, 1.1*variance[length(variance)]),
-       main = "Connection of absolute prediction error \n and predicted variance",
-       xlab = "Variance", ylab = "Absolute Prediction Error", col = "blue")
-  
+  if (show_pred){
+    variance <- predictions[, 2]
+    plot(variance, abs(residual), xlim = c(0, 1.1*variance[length(variance)]),
+         main = "Connection of absolute prediction error \n and predicted variance",
+         xlab = "Variance", ylab = "Absolute Prediction Error", col = "blue")
+  }
   # Plot regression function and estimated function.
   x <- seq(limits[1, 1], limits[1, 2], by = 0.05)
   if (D == 1) {
@@ -123,7 +124,7 @@ simulate_regression <- function(func, limits, training_points, training_size = 1
 
 #' @export
 simulate_regression_gp <- function(actual_cov, limits, error = function(x) 0, test_size = 300, 
-                training_size = 10, random_training = TRUE, regression_noise = 0.1, ...) {
+                training_size = 10, random_training = TRUE, regression_noise = 0.1, show_pred = FALSE, ...) {
   # Check correctness of inputs
   stopifnot(is.function(actual_cov), is.numeric(limits), length(limits) %% 2 == 0)
   stopifnot(is.function(error), is.numeric(test_size), test_size > 0)
@@ -158,11 +159,13 @@ simulate_regression_gp <- function(actual_cov, limits, error = function(x) 0, te
     residual <- prediction[, 1] - f
     variance <- prediction[, 2]
   }
-  plot(variance, abs(residual), xlim = c(0, 1.1*variance[length(variance)]),
-       main = "Connection of absolute prediction error \n and predicted variance",
-       xlab = "Variance", ylab = "Absolute Prediction Error", col = "blue")
-  cat("The mean absolute difference of predictions and ground truth",
-      "in the considered limits is ", mean(abs(residual)), "\n")
+  if (show_pred){
+    plot(variance, abs(residual), xlim = c(0, 1.1*variance[length(variance)]),
+         main = "Connection of absolute prediction error \n and predicted variance",
+         xlab = "Variance", ylab = "Absolute Prediction Error", col = "blue")
+  }
+  message(paste("The mean absolute difference of predictions and ground truth",
+      "in the considered limits is ", mean(abs(residual)), "\n"))
   return(summary(abs(residual)))
 }
 

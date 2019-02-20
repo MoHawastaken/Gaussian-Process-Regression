@@ -12,8 +12,8 @@ GPC$plot(X*)
 }
 }
 \description{
-Implements a gaussian process for classification and gives tools 
- to predict and plot its values for given testpoints
+Implements a Gaussian process for classification and gives tools 
+ to predict and plot its values for given test points
 }
 \section{Arguments}{
 
@@ -30,7 +30,7 @@ Implements a gaussian process for classification and gives tools
   
   \code{limits} a numeric vector with lower and upper bounds for the plot
   
-  \code{length.out} an integer indicating the number of points, which are getting plotted
+  \code{length.out} an integer indicating the number of points which are getting plotted
 }
 
 \section{Methods}{
@@ -47,7 +47,7 @@ all testpoints in a nice plot
 X <- matrix(seq(-1,1,by = 0.1), nrow = 1)
 y <- 2*as.integer(X > 0) - 1
 Gaussian_classifier <- GPC$new(X, y, 1e-5, function(x,y) exp(-3*(x - y)^2))
-Gaussian_classifier$plot()$plot
+Gaussian_classifier$plot()
 
 
 }
