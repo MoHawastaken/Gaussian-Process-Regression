@@ -13,41 +13,34 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Unser Paket implementiert Gaussian Process Regression (GPR), Classification (GPC) und eine Optimierungsfunktion der Hyperparameter für unser Regressionsmodell. Für die  Regression haben wir eine übersichtliche Methode zur Visualisierung der Ergebnisfunktion mit Konfidenzbereichen sowie Methoden zur Visualisierung des zugrundeliegenden Gaußschen Prozesses erstellt. Für die Klassifikation existiert auch eine Methode, die einen zweidimensionalen Plot mit den Entscheidungsgebieten erzeugt. Des Weiteren haben wir ausführliche Simulationsfunktionen, die vorgegebene wie beliebige Beispiele visualisieren, und eine Shiny-App geschrieben, die Plots für ein breites Feld an Eingaben ausgibt und einen intuitiven Umgang mit unserer Regressionsklasse ermöglicht.
 
-#### Paketstruktur
+#### Regression
 
-Wir haben uns dazu entschieden, eine R6-Klasse für die Regression anzulegen. Grund hierfür war die leichte Erstellung von schreibgeschützen Bereichen. Dies erschien sinnvoll, da die Algorithmen einige rechenaufwendige Schritte beinhalten, die nur einmal ausgeführt werden sollten (z.B. Cholesky Zerlegung) und somit beim Erstellen der Klasse ausgeführt werden müssen, wir aber den Nutzer davor schützen wollten beim Hinzufügen von Daten eine neue Berechnung der implizit genutzten Variablen in den Algorithmen zu vergessen. Obwohl unsere Klasse die Eingabe beliebiger Daten und Kovarianzfunktionen ermöglicht, besticht sie durch einfache und optimierte Nutzung, indem man nur die nötigen Inputs X, y und noise angibt. Eine Vektorisierung der Kovarianz -und Vorhersage-Funktionen hat die Effizienz dieser Methode und damit auch der Plots erheblich verbessert.
+Wir haben uns dazu entschieden, eine R6-Klasse für die Regression anzulegen. Grund hierfür war die leichte Erstellung von schreibgeschützen Bereichen. Dies erschien sinnvoll, da die Algorithmen einige rechenaufwendige Schritte beinhalten, die nur einmal ausgeführt werden sollten (z.B. Cholesky Zerlegung) und somit beim Erstellen der Klasse ausgeführt werden müssen, wir aber den Nutzer davor schützen wollten beim Hinzufügen von Daten eine neue Berechnung der implizit genutzten Variablen in den Algorithmen zu vergessen. Obwohl unsere Klasse die Eingabe beliebiger Daten und Kovarianzfunktionen ermöglicht, besticht sie durch einfache und optimierte Nutzung, indem man nur die nötigen Inputs X, y und noise angibt. Eine Vektorisierung der von uns implementierten Kovarianz-Funktionen sowie der Vorhersage-Methode hat die Effizienz dieser Methode und damit auch der Plots erheblich verbessert. Die Dokumentationen von GPR und fit erläutern die einfache Nutzung unseres Pakets mit Minimalbeispielen.
 
-Die Funktion fit(X ,y, noise, cov_names) bestimmt die optimale Kovarianzfunktion unter den in cov_names angegebenen durch Maximierung der log likelihood der a posteriori Verteilung des zugrundeliegenden Gaußschen Prozesses als Funktion der Hyperparameter. Dieses Verfahren ist erfordert weniger Rechenleistung als zum Beispiel ein Cross-Validation-Verfahren. Hier haben wir Metaprogrammierung genutzt, um Kovarianzfunktionen mit unterschiedlich vielen Parametern zu optimieren, außerdem mit error handlern die Fehleranfälligkeit der Choleskyzerlegung von möglicherweise singulären Matrizen abgefangen, sodass für jede Kovarianzfunktion der optimale Parameter bis zum ersten Fehler zurückgegeben wird. So erzeugt fit stabile Ergebnisse, vor allem für noise > 0.
 
-Unsere Visualisierungsfunktionen sprechen für sich. Die Dokumentationen von GPR und fit erläutern die einfache Nutzung unseres Pakets mit Minimalbeispielen.
-  
-  
-## Regression
-
-Wie bereits erwähnt haben wir uns in diesem Teil für die Implementierung mit R6 Klassen entschieden. Uns erschien es als sinnvoll, dass der Nutzer einerseits einige Möglichkeiten für häufig genutzte Kovarianzfunktionen zur Verfügung hat, bei welchen er nurnoch die von ihm erwarteten Parameter eingeben muss, aber andererseits auch die Möglichkeit hat, der Klasse eine beliebige eigene Kovarianzfunktion übergeben kann. Hier muss allerdings erwähnt werden, dass für die Funktionsfähigkeit des Algorithmus eine positiv definite Kovarianzmatrix nötig ist, sodass in Wahrheit nur geeignete Funktionen eine Regression liefern können.
-
-Als dritte Option haben wir die Möglichkeit implementiert, der Klasse eine Liste von Kovarianzfunktionen zu übergeben, sodass vor der Vorhersage durch Optimierung der Hyperparameter automatisch die am besten geeignete Kovarianzfunktion auswählt wird.
 
 ## Optimierung der Hyperparameter
 
-Die Funktion zur Optimierung der Hyperparameter - im Folgenden als fit-Funktion bezeichnet - beruht auf den Abschnitten zur Bayessian Model Selection durch die Marginal Likelihood. Wir haben uns für diese Methode entschieden, da in der Quelle  Cross-validation als das numerisch aufwendigere Verfahren beschrieben wurde. Insbesondere ist bei letzterem die Invertierung der Ableitungsmatrix komplizierter.
+Die Funktion zur Optimierung der Hyperparameter fit(X ,y, noise, cov_names) bestimmt die optimale Kovarianzfunktion unter den in cov_names als Liste Angegebenen.
+Sie beruht auf den Abschnitten zur Bayessian Model Selection durch die Marginal Likelihood und maximiert die Log Marginal Likelihood der a posteriori Verteilung des zugrundeliegenden Gaußschen Prozesses als Funktion der Hyperparameter. Wir haben uns für diese Methode entschieden, da in der Quelle  Cross-validation als das numerisch aufwendigere Verfahren beschrieben wurde. Insbesondere ist bei letzterem die Invertierung der Ableitungsmatrix komplizierter.
 
-Allerdings mussten wir das Verfahren an einigen Stellen leicht anpassen um, wie bereits erwähnt, einige Probleme des Algorithmus abzufangen.
-Dazu war es notwendig, dass wir uns mit den Eigenheiten der einzelnen Kovarianzfunktionen befassen. Bei konstanter und linearer Kovarianz ist die Matrix der Ableitungen im Allgemeinen nicht invertierbar. Daher mussten wir hier die Optimierung anpassen und konnten nicht die Newton Methode mithilfe der Ableitung anwenden. 
+Hier haben wir Metaprogrammierung genutzt, um Kovarianzfunktionen mit unterschiedlich vielen Parametern zu optimieren.
+Die Möglichkeit, dass die zu invertierende Matrix K(X,X) + noise * diag(n) singulär sein kann, wird in unserer Quelle nicht behandelt. Daher haben wir mit error handlern die Fehleranfälligkeit der Choleskyzerlegung von möglicherweise singulären Matrizen abgefangen, sodass für jede Kovarianzfunktion der optimale Parameter bis zum ersten Fehler zurückgegeben wird. So erzeugt fit stabile Ergebnisse, vor allem für noise > 0 und Kovarianzfunktionen, die positiv definite Kovarianzmatrizen erzeugen.
+
 Außerdem mussten wir sicherstellen, dass bei polynomiellen Kovarianzfunktionen die Exponenten aus der Menge der natürlichen Zahlen gewählt werden und somit über diskrete und stetige Parmeter optimieren. Dies haben wir gelöst, indem wir uns für den Exponenten auf die Menge {1, ..., 10} beschränken und jeweils den besten Wert für den zweiten Parameter sigma bestimmen. Dann wird die beste Kombination von Werten zurückgegeben.
-Außerdem beinhaltet der Algorithmus wie bereits erwähnt das mehrfache Ausführen der Cholesky-Zerlegung innerhalb der Optimierung, welche leider nicht immer ausgeführt werden kann. Um dieses Problem zumindest einzugrenzen haben wir uns entschieden ein Error Handling einzubauen, das bei einem Fehler in einem Iterationsschritt die besten bisher berechneten Parameter zurückgibt zusammen mit einem Hinweis, dass eine weitere Berechnung nicht möglich ist.
+
 
 ## Klassifizierung
 
-Bei Klassifizierung sind wir ähnlich vorgegangen wie im Buch und wurden vor keine größeren Probleme gestellt. Jedoch war die im Buch vorgestellte Version durch das Lösen von Gleichungssystemen sehr Zeitaufwendig. Hier war dies ein deutlich größeres Problem als bei Regression, da wir mehr Punkte vorhersagen mussten. Daher haben wir uns entschieden, es zu vektorisieren und konnten so die Rechendauer um ca. 80% reduzieren. Dies haben wir dann nachträglich auch in Regression eingefügt.
+Bei Klassifizierung sind wir ähnlich vorgegangen wie im Buch und wurden vor keine größeren Probleme gestellt. Jedoch war die im Buch vorgestellte Version durch das Lösen von Gleichungssystemen sehr rechenlastig. Hier war dies ein deutlich größeres Problem als bei der Regression, da wir mehr Punkte vorhersagen mussten. An dieser Stelle haben wir uns also entschieden, unsere Funktionen zu vektorisieren und konnten so die Rechendauer um ca. 80% reduzieren. Dies haben wir dann nachträglich auch in Regression eingefügt.
 
 ## Plots
 
-Für die Plot-Methoden der Klassen haben wir das Paket `ggplot2` verwendet, aufgrund seiner einfachen Struktur mehrere Plots zu überlagern. 
+Für die Plot-Methoden der Klassen haben wir das Paket `ggplot2` verwendet. Damit lassen sich leicht mehrere Plots überlagern. Unsere Visualisierungen sprechen für sich. Sie erscheinen uns übersichtlich und vollständig.
 
 ### Shiny App
 
-Die Shiny App stellt die wesentlichen Features des Pakets anhand von Plots dar. Wir haben hierbei die Möglichkeiten von `shiny` genutzt, um sowohl für Regression als auch für Klassifikation eine Visualisierung anzuzeigen. Außerdem haben wir durch eine dynamische Änderung des Interface die Möglichkeit erstellt für verschiedene Kovarianzfunktionen verschiedene Parameter anzupassen. Um die Ergebnisse der fit-Funktion darzustellen besitzt die App auch die Option die berechneten optimalen Parameterwerte zu verwenden.  
+Die Shiny App stellt die wesentlichen Features des Pakets anhand von Plots dar. Wir haben hierbei die Möglichkeiten von `shiny` genutzt, um sowohl für Regression als auch für Klassifikation eine Visualisierung anzuzeigen. Außerdem haben wir durch eine dynamische Änderung des Interface die Möglichkeit erstellt für verschiedene Kovarianzfunktionen verschiedene Parameter anzupassen. Um die Ergebnisse der fit-Funktion darzustellen besitzt die App auch die Option die berechneten optimalen Parameterwerte zu verwenden. Durch Meta-Programmierung lassen sich beliebige Funktionen mit analytisch angebbarem Ausdruck verwenden.
 Der Plot zur Klassifikation lässt sich durch das manuelle Hinzufügen von Punkten verändern, um die Verschiebung der Entscheidungsregionen zu beobachten. Hierbei haben wir uns nur auf 2 dimensionale Probleme beschränkt, da deren Darstellung am anschaulichsten ist.
 
 
