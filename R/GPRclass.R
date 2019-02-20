@@ -1,6 +1,8 @@
 #'  Predictions and Plots for Gaussian Process Regression
 #'
-#'  Implements gaussian processes and gives tools for gaussian process regression problems for given testpoints including clear plots of the results and optimization of hyperparameters.
+#'  Implements gaussian processes and gives tools for gaussian process
+#'  regression problems for given testpoints including clear plots of the
+#'  results and optimization of hyperparameters.
 #' 
 #' @usage 
 #' \preformatted{gpr_object <- GPR$new(X, y, noise = 0, k = fit(X, y, noise, cov_names)$func, cov_names = names(cov_dict))
@@ -14,45 +16,55 @@
 
 #' @section Arguments:
 #' 
-#'   \code{X} matrix of inputs
+#'   \code{X}          matrix of inputs
 #'
-#'   \code{y} numeric vector of targets
+#'   \code{y}          numeric vector of targets
 #'   
-#'   \code{noise} the inflicted noise of the observations
+#'   \code{noise}      the inflicted noise of the observations
 #' 
-#'   \code{cov_fun} the chosen covariance function of the gaussian process (optional)
+#'   \code{cov_fun}    the chosen covariance function of the gaussian process (optional)
 #'   
-#'   \code{cov_names} a list of given covariance functions to optimize over; relevant if \code{cov_fun} is not given (optional)
+#'   \code{cov_names}  a list of given covariance functions to optimize over; relevant if \code{cov_fun} is not given (optional)
 #' 
-#'   \code{X_star} a matrix of test inputs, where each column is interpreted as one observation
+#'   \code{X_star}     a matrix of test inputs, where each column is interpreted as one observation
 #' 
-#'   \code{limits} a vector of length 2, giving the lower and upper bound of the plot; the default is the extended range of X
+#'   \code{limits}     a vector of length 2, giving the lower and upper bound of the plot; the default is the extended range of X
 #'   
 #'   \code{length.out} the number of subdivisions for the plots
 #'   
 #' @section Methods:
-#' \code{$predict(X_star, pointwise_var = TRUE)} returns a matrix of the expected value of the underlying function f and its variance for the testpoints. If the input is a vector of length n, predict will interpret it as n testpoints. Otherwise each column of the input matrix is interpreted as a testpoint. 
-#' For \code{pointwise_var = FALSE} , predict will return the predicted covariance matrix cov(X_star, X_star) instead of only its diagonal.
+#' \code{$predict(X_star, pointwise_var = TRUE)}  
+#' returns a matrix of the expected value of the underlying function f and its variance for the
+#' testpoints. If the input is a vector of length n, predict will interpret it
+#' as n testpoints. Otherwise each column of the input matrix is interpreted as
+#' a testpoint. For \code{pointwise_var = FALSE} , predict will return the
+#' predicted covariance matrix cov(X_star, X_star) instead of only its diagonal.
 #' 
-#' \code{$plot(limits, length.out = 200L)} displays the results of the \code{predict} function on the interval given by \code{limits} and confidence regions of two standard deviations in a transparent plot
+#' \code{$plot(limits, length.out = 200L)}
+#' displays the results of the \code{predict} function on the interval given by \code{limits} and confidence
+#' regions of two standard deviations in a transparent plot
 #' 
-#' \code{$plot_posterior_draws(n = 5, limits, length.out = 200L)} plots n random functions drawn from the posterior distribution of the underlying Gaussian process on the interval given by \code{limits}
+#' \code{$plot_posterior_draws(n = 5, limits, length.out = 200L)}
+#' plots n random functions drawn from the posterior distribution of the underlying Gaussian
+#' process on the interval given by \code{limits}
 #' 
-#' \code{$plot_posterior_variance(where, limits, length.out = 200L)} visualizes the posterior covariance of the Gaussian process with specified points \code{where}
+#' \code{$plot_posterior_variance(where, limits, length.out = 200L)}
+#' visualizes the posterior covariance of the Gaussian process with specified points
+#' \code{where}
 #'
 #' @section Subclasses:
 #'
 #' GPR has several subclasses where a covariance function k(x,y) is given. The following subclasses are implemented:
 #' 
-#' \code{GPR <- GPR.constant$new(X, y, noise, c)} with \code{k(x,y) = c}
+#' \code{GPR <- GPR.constant$new(X, y, noise, c)}                 with \code{k(x,y) = c}
 #' 
-#' \code{GPR <- GPR.linear$new(X, y, noise, sigma)} with \code{k(x,y) = sum(sigma * x * y)}
+#' \code{GPR <- GPR.linear$new(X, y, noise, sigma)}               with \code{k(x,y) = sum(sigma * x * y)}
 #' 
-#' \code{GPR <- GPR.polynomial$new(X, y, noise, sigma, p)} with \code{k(x,y) = (x \%*\% y + sigma)^p}
+#' \code{GPR <- GPR.polynomial$new(X, y, noise, sigma, p)}        with \code{k(x,y) = (x \%*\% y + sigma)^p}
 #'
-#' \code{GPR <- GPR.sqrexp$new(X, y, noise, l)} with \code{k(x,y) = exp(-dist(rbind(x, y))^2/(2 * l^2))}
+#' \code{GPR <- GPR.sqrexp$new(X, y, noise, l)}                   with \code{k(x,y) = exp(-dist(rbind(x, y))^2/(2 * l^2))}
 #'
-#' \code{GPR <- GPR.gammaexp$new(X, y, noise, gamma, l)} with \code{k(x,y) = exp(-(dist(rbind(x, y)) / l) ^ gamma)}
+#' \code{GPR <- GPR.gammaexp$new(X, y, noise, gamma, l)}          with \code{k(x,y) = exp(-(dist(rbind(x, y)) / l) ^ gamma)}
 #'
 #' \code{GPR <- GPR.rationalquadratic$new(X, y, noise, alpha, l)} with \code{k(x,y) = (1 + dist(rbind(x, y))^2 / (2 * alpha * l^2))^(-alpha)}
 #' 
@@ -61,14 +73,26 @@
 #' @importFrom R6 R6Class
 #' @name GPR
 #' @section Details:
-#' If own covariance functions are used with GPR, they need to be vectorized. The plot functions are only implemented for one dimensional data.  
-#' This class allows customary use with its amount of optional parameters. Standard use 
+#' If own covariance functions are used with GPR, they need to be vectorized.
+#' The plot functions are only implemented for one dimensional data. Although
+#' this class allows customary use with its amount of optional parameters, since
+#' the default values are set by the optimal choice of hyperparameters and
+#' preimplemented covariance functions, the class is designed for well fitted
+#' and easy use by only giving the necessary inputs \code{X, y, noise}.
 #' 
 #' @examples
 #' X <- matrix(seq(-5,5,by = 1), nrow = 1)
 #' y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
-#' #optimizing hyperparameters over all covariance functions
+#' 
+#' #using optimal parameters for gammaexp
 #' Gaussian <- GPR.gammaexp$new(X, y, noise = 0.1)
+#' # == GPR$new(X, y, noise = 0.1, cov_names = "gammaexp")
+#' Gaussian$plot()
+#' Gaussian$plot_posterior_draws()
+#' Gaussian$plot_posterior_variance(seq(-5, 5, by = 3))
+#' 
+#' #optimizing hyperparameters over all covariance functions
+#' Gaussian <- GPR$new(X, y, noise = 0.1)
 #' Gaussian$plot()
 #' Gaussian$plot_posterior_draws()
 #' Gaussian$plot_posterior_variance(seq(-5, 5, by = 3))
@@ -76,10 +100,11 @@
 #' X <- matrix(seq(-5,5, by = 1), nrow = 1)
 #' noise <- 0
 #' y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
-#' Gaussian <- GPR.sqrexp$new(X, y, 0, 0.5)
-#' Gaussian$plot(seq(-6,6, by = 0.1))
-#' Gaussian$plot_posterior_draws(3, seq(-6,6, by = 0.2))
-#' Gaussian$plot_posterior_variance(seq(-5,5, by = 3))
+#' # explicit use of squared exponential with l = 0.5
+#' Gaussian <- GPR.sqrexp$new(X, y, l = 0.5, noise = 0.5)
+#' Gaussian$plot()
+#' Gaussian$plot_posterior_draws(3)
+#' Gaussian$plot_posterior_variance(seq(-5, 5, by = 3))
 #'
 #' @references Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
 NULL
