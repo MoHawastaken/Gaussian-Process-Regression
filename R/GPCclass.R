@@ -106,16 +106,18 @@ GPC <- R6::R6Class("GPC",
        sapply(1:length(Vfs), function(i) integrate(function(z) 
                 private$.sigmoid(z) * dnorm(z, mean = fs_bar[i, 1], sd = Vfs[i]), -Inf, Inf)$value)
      },
-     plot = function(limits = c(expand_range(self$X)[1], expand_range(self$X)[2]), length.out = 100L){
-       if(nrow(self$X) == 1){
-         testpoints <- seq(limits[1], limits[2] , length.out = length.out)
-       } else if(nrow(self$X) == 2){
-         s <- seq(limits[1], limits[2], length.out = length.out)
-         testpoints <- matrix(c(rep(s, each = length.out), rep(s, length.out)), nrow = 2, byrow = TRUE)
-       }
-       if (nrow(self$X) > 2) {
-         warning("Plot function not available for this dimension")
-         return
+     plot = function(limits = c(expand_range(self$X)[1], expand_range(self$X)[2]), length.out = 100L, testpoints = NULL){
+       if (missing(testpoints)){
+         if(nrow(self$X) == 1){
+           testpoints <- seq(limits[1], limits[2] , length.out = length.out)
+         } else if(nrow(self$X) == 2){
+           s <- seq(limits[1], limits[2], length.out = length.out)
+           testpoints <- matrix(c(rep(s, each = length.out), rep(s, length.out)), nrow = 2, byrow = TRUE)
+         }
+         if (nrow(self$X) > 2) {
+           warning("Plot function not available for this dimension")
+           return
+         }
        }
        if (is.vector(testpoints)) dim(testpoints) <- c(1, length(testpoints))
        predictions <- self$predict_class(testpoints)
