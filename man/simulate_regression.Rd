@@ -4,16 +4,68 @@
 \alias{simulate_regression}
 \title{Simulation for Regression}
 \usage{
-\preformatted{simulate_regression(func, limits, training_points, num_data = 10, 
-noise = 0, error = function(x) 0, cov_names = names(cov_dict))
-}
+\preformatted{simulate_regression(func, limits, training_points,
+ training_size = 10L, error = function(x) 0, test_size = 10000, ...) }
 }
 \arguments{
-\item{func}{}
+\item{func}{regression function}
+
+\item{limits}{matrix containing the limits of the hyperrectangle}
+
+\item{training_points}{matrix of points inside the hyperrectangle; optional}
+
+\item{training_size}{number of training points; unnecessary if training_points
+are given}
+
+\item{error}{function to generate the error of the training data}
+
+\item{test_size}{number of test points at which regression function and
+Gaussian process are compared}
+
+\item{...}{arguments passed on to the constructor of the Gaussian process}
+}
+\value{
+\code{summary} of the absolute error of the Gaussian process
+ predictions in the test points
 }
 \description{
-Simulates data for Regression problems, which can then be analyzed via a Gaussian process
+Simulates Regression problems with arbitrary regression function on a
+hyperrectangle of arbitrary dimension and analyzes the quality of the Gaussian
+process fit.
+}
+\details{
+If the argument \code{training_points} is missing, \code{training_size}
+training points are drawn randomly from the uniform distribution on the
+hyperrectangle determined by limits. When the regression function \code{func}
+is defined on \eqn{\mathbb{R}^D}, limits has to be a \eqn{D\times 2} matrix
+where the k-th line contains the lower and upper bound of the hyperrectangle
+in the k-th dimension.
+
+The error function given in \code{error} determines the error which is added
+to the values of func at the training points before Gaussian process
+regression is done. When called with an integer n, error is supposed to return
+a random vector of length n. Suitable error functions can be created from
+standard distributions with \code{error_function}.
+
+The predictions of the Gaussian process are compared to the ground truth
+(function values of func) on an equispaced grid of \code{test_size} points in
+the hyperrectangle. Before returning the \code{summary} of the absolute error
+in these test points, \code{simulate_regression} provides two plots. One of
+the absolute error over the predicted variance and one of the regression
+function \code{func} and the predictions of the Gaussian process. If \eqn{D >
+1}, the second plot is made with respect to the first dimension, with all
+other variables fixed at the middle of the their corresponding interval.
 }
 \examples{
+f <- function(x) 0.1*x^3
+limits <- matrix(c(-6, 6), nrow = 1)
+X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
+error <- error_function(rnorm, sd = 2)
+simulate_regression(f, limits, X, error = error)
+
+f <- function(x) sum(x)^2
+limits <- c(-1, 1, -1, 1, -1, 1)
+error <- error_function(rcauchy)
+simulate_regression(f, limits, training_size = 10, error = error)
 
 }

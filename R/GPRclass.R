@@ -83,8 +83,8 @@
 #' preimplemented covariance functions.
 #' 
 #' @examples
-#' X <- matrix(seq(-5,5,by = 1), nrow = 1)
-#' y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
+#' X <- matrix(seq(-5, 5, by = 1), nrow = 1)
+#' y <- c(0.1 * X^3 + rnorm(length(X), 0, 1))
 #' 
 #' #using optimal parameters for gammaexp
 #' Gaussian <- GPR.gammaexp$new(X, y, noise = 0.1)
@@ -99,9 +99,9 @@
 #' Gaussian$plot_posterior_draws()
 #' Gaussian$plot_posterior_variance(seq(-5, 5, by = 3))
 #' 
-#' X <- matrix(seq(-5,5, by = 1), nrow = 1)
+#' X <- matrix(seq(-5, 5, by = 1), nrow = 1)
 #' noise <- 0
-#' y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
+#' y <- c(0.1 * X^3 + rnorm(length(X), 0, 1))
 #' # explicit use of squared exponential with l = 0.5
 #' Gaussian <- GPR.sqrexp$new(X, y, noise = 0.5, l = 0.5)
 #' Gaussian$plot()
@@ -136,10 +136,6 @@ GPR <- R6::R6Class("GPR",
                  private$.noise <- noise
                  n <- ncol(X)
                  K <- covariance_matrix(X, X, k)
-                 #Pruefe, ob alle Hauptminoren positiv sind.
-                 #if (min(sapply(1:n, function(i) det((K + noise * diag(n))[1:i, 1:i, drop = F]))) <= 0) {
-                #   stop("Inputs lead to non positive definite covariance matrix. Try using a larger noise or a smaller lengthscale.")
-                 #}
                  if(class(try(solve(K + noise * diag(n)),silent=T)) != "matrix"){
                    stop("K(X,X) + noise * I is not invertible, the algorithm is not defined for this case.")
                  }
@@ -201,10 +197,9 @@ GPR <- R6::R6Class("GPR",
                    ggplot2::scale_y_continuous("Random functions drawn from posterior") +
                    ggplot2::geom_line() +
                    ggplot2::geom_ribbon(inherit.aes = F, data = dat, mapping = ggplot2::aes(x = testpoints, 
-                                    ymin = y.1 - 2*sqrt(pmax(y.2,0)), ymax = y.1 + 2*sqrt(pmax(y.2,0))), alpha = 0.3) +
+                                    ymin = y.1 - 2 * sqrt(pmax(y.2, 0)), 
+                                    ymax = y.1 + 2 * sqrt(pmax(y.2, 0))), alpha = 0.3) +
                    ggplot2::guides(colour = FALSE)
-                   #ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
-                  #               mapping = ggplot2::aes(x = xpoints, y = ypoints))
               },
               plot_posterior_variance = function(where, limits = c(expand_range(self$X)[1], expand_range(self$X)[2]),
                                                                          length.out = 200L) {
@@ -214,7 +209,8 @@ GPR <- R6::R6Class("GPR",
                 }
                 testpoints <- seq(limits[[1]], limits[[2]], length.out = length.out)
                 len <- length(where)
-                y <- self$predict(c(where, testpoints), pointwise_var = FALSE)[[2]][(len + 1):(len + length(testpoints)), 1:len]
+                y <- self$predict(c(where, testpoints), 
+                                  pointwise_var = FALSE)[[2]][(len + 1):(len + length(testpoints)), 1:len]
                 dat <- data.frame(x = testpoints, y = y)
                 names(dat) <- c("x", as.character(where))
                 dat <- tidyr::gather(dat, -x, key = "z", value = "value")
@@ -281,7 +277,7 @@ GPR <- R6::R6Class("GPR",
 GPR.constant <- R6::R6Class("GPR.constant",
                           inherit = GPR,
                           public = list(
-                            initialize = function(X, y, noise, c = fit(X,y,noise,"constant")$par){
+                            initialize = function(X, y, noise, c = fit(X, y, noise, "constant")$par){
                               stopifnot(is.numeric(c), c > 0)
                               k <- function(x, y) constant(x, y, c)
                               super$initialize(X, y, noise, k)
@@ -292,7 +288,7 @@ GPR.constant <- R6::R6Class("GPR.constant",
 #' @export
 GPR.linear <- R6::R6Class("GPR.linear", inherit = GPR,
                           public = list(
-                            initialize = function(X, y, noise, sigma = fit(X,y,noise,"linear")$par){
+                            initialize = function(X, y, noise, sigma = fit(X, y, noise, "linear")$par){
                               stopifnot(length(sigma) == nrow(X))
                               k <- function(x, y) linear(x, y, sigma)
                               super$initialize(X, y, noise, k)
@@ -303,7 +299,8 @@ GPR.linear <- R6::R6Class("GPR.linear", inherit = GPR,
 #' @export
 GPR.polynomial <- R6::R6Class("GPR.polynomial", inherit = GPR,
                               public = list(
-                                initialize = function(X, y, noise, sigma = fit(X,y,noise,"polynomial")$par[[1]], p = fit(X,y,noise,"polynomial")$par[[2]]){
+                                initialize = function(X, y, noise, sigma = fit(X, y, noise, "polynomial")$par[[1]], 
+                                                      p = fit(X, y, noise, "polynomial")$par[[2]]){
                                   stopifnot(length(sigma) == 1, length(p) == 1)
                                   k <- function(x, y) polynomial(x, y, sigma, p)
                                   super$initialize(X, y, noise, k)
@@ -326,7 +323,8 @@ GPR.sqrexp <-  R6::R6Class("GPR.sqrexp", inherit = GPR,
 #' @export
 GPR.gammaexp <- R6::R6Class("GPR.gammaexp", inherit = GPR,
                           public = list(
-                            initialize = function(X, y, noise, gamma = fit(X,y,noise,"gammaexp")$par[[1]], l = fit(X,y,noise,"gammaexp")$par[[2]]){
+                            initialize = function(X, y, noise, gamma = fit(X, y, noise, "gammaexp")$par[[1]], 
+                                                  l = fit(X, y, noise, "gammaexp")$par[[2]]){
                               stopifnot(length(gamma) == 1, length(l) == 1)
                               k <- function(x, y) gammaexp(x, y, l, gamma)
                               super$initialize(X, y, noise, k)
@@ -337,7 +335,8 @@ GPR.gammaexp <- R6::R6Class("GPR.gammaexp", inherit = GPR,
 #' @export
 GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
                             public = list(
-                              initialize = function(X, y, noise, alpha = fit(X,y,noise,"rationalquadratic")$par[[1]], l = fit(X,y,noise,"rationalquadratic")$par[[2]]){
+                              initialize = function(X, y, noise, alpha = fit(X, y, noise, "rationalquadratic")$par[[1]], 
+                                                    l = fit(X, y, noise, "rationalquadratic")$par[[2]]){
                                 stopifnot(length(alpha) == 1, length(l) == 1)
                                 k <- function(x, y) rationalquadratic(x, y, l, alpha)
                                 super$initialize(X, y, noise, k)

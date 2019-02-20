@@ -3,7 +3,7 @@ cov_dict <- list(
   sqrexp = list(func = sqrexp, display = "Squared Exponential",
                 deriv = function(x, y, l){
                   r <- sqrt(sum((x - y)^2))
-                  r^2/l^3*exp(-r^2/(l^2*2))
+                  r^2/l^3 * exp(-r^2/(l^2 * 2))
                 }, start = c(1)
   ),
   gammaexp = list(func = gammaexp, display = "Gamma Exponential",
@@ -25,10 +25,10 @@ cov_dict <- list(
                            deriv = function(x, y, alpha, l){
                               if (is.vector(x)) r <- sum((x - y)^2)
                               else r <- colSums((x - y)^2)
-                              c(((r/(2*l^2*alpha) + 1)^(-alpha) * (r - (2*l^2*alpha + r) * log(r/(2 * l^2*alpha) 
-                                                                                               + 1)))/(2*l^2*alpha + r),
-                                (r*(r/(2*l^2*alpha) + 1)^(-alpha - 1))/(l^3))
-                           }, start = c(1,1)
+                              c(((r/(2 * l^2 * alpha) + 1)^(-alpha) * (r - (2*l^2*alpha + r) * log(r/(2 * l^2*alpha) 
+                                                                                               + 1)))/(2 * l^2*alpha + r),
+                                (r * (r/(2 * l^2 * alpha) + 1)^(-alpha - 1))/(l^3))
+                           }, start = c(1, 1)
   )
 )
 cov_df <- data.frame(list(name = "sqrexp", display = "Squared Exponential", start = I(list(1)), 
@@ -56,8 +56,8 @@ optim_until_error <- function(start, f, ...) {
   opt <- tryCatch(error = function(cond) return(NULL), optim(start, f_new, ...))
   if (is.null(opt)) {
     which_best <- which.max(l[2*(1:(length(l)/2))])
-    par <- l[2*which_best - 1]
-    return(list(par = par, value = l[2*which_best]))
+    par <- l[2 * which_best - 1]
+    return(list(par = par, value = l[2 * which_best]))
   } else {
     return(opt)
   }
@@ -82,7 +82,7 @@ optim_until_error <- function(start, f, ...) {
 #' @param noise the inflicted noise of the observations
 #' 
 #' @param cov_names a list of names of covariance functions; if no list is given, all implemented functions are used
-#' ("sqrexp","gammaexp", "constant", "linear", polynomial", "rationalquadratic")
+#' ("sqrexp", "gammaexp", "constant", "linear", polynomial", "rationalquadratic")
 #' 
 #' @return A list of outputs:
 #' \describe{
@@ -166,8 +166,8 @@ fit <-  function(X, y, noise, cov_names = as.list(cov_df$name)){
 
 #section for testing:
 
-X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
-y <- c(0.15*X^3 + rnorm(length(X), 0, 1))
+X <- matrix(seq(-5, 5,by = 0.2), nrow = 1)
+y <- c(0.15 * X^3 + rnorm(length(X), 0, 1))
 z <- fit(X, y, noise = 1)
 Gaussian <- GPR$new(X, y, noise = 1, z$func)
 Gaussian$plot()$plot

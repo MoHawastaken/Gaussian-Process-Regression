@@ -221,7 +221,7 @@ gaussian_classifier$plot()$plot
 n <- 10
 X <- cbind(multivariate_normal(n, c(0.5,0.5), diag(c(0.1,0.1))), multivariate_normal(n, c(-0.5,-0.5), diag(c(0.1,0.1))))
 y <- rep(c(1,-1), each = n)
-gaussian_classifier <- GPC$new(X, y, 1e-5, function(x,y) sqrexp(x,y,l=1))
+gaussian_classifier <- GPC$new(X, y, 1e-5, function(x,y) sqrexp(x,y,l = 1))
 gaussian_classifier$plot()$plot
 ```
 
@@ -236,7 +236,7 @@ simulate_regression(func, limits, training_points, num_data = 10,
 ```
 
 ```{r eval=FALSE}
-simulate_classification(func, training_points, limits, k, num_data = 10)
+simulate_classification(func, training_points, limits, k, training_size = 10)
 ```
 
 
@@ -251,7 +251,7 @@ simulate_classification(func, training_points, limits, k, num_data = 10)
   }
   limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
   k <- function(x, y) sqrexp(x, y, 1)
-  simulate_classification(func = f, limits = limits, k = k, num_data = 600)
+  s <- simulate_classification(func = f, limits = limits, k = k, training_size = 600)
 ```
 
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=TRUE}
@@ -272,9 +272,13 @@ simulate_classification(func, training_points, limits, k, num_data = 10)
   
   limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
   k <- function(x, y) sqrexp(x, y, 1)
-  simulate_classification(func = f, limits = limits, k = k, num_data = 600)
+  s <- simulate_classification(func = f, limits = limits, k = k, training_size = 600)
 ```
   
+```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=TRUE}
+s <- simulate_regression_gp(cov_func(sqrexp, l = 1), limits = matrix(c(-5,5), nrow = 1), 
+                         training_size = 10, random_training = TRUE, regression_noise = 0.01, error = error_function(rnorm, sd = 0.01), show_pred = FALSE)
+``` 
   
   
 ## GPplot
