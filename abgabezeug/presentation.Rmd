@@ -44,13 +44,21 @@ ggplot2::ggplot(data = data.frame(x = X[1, ], y = X[2, ], label = y), ggplot2::a
 
 ## Einführung zu Gaußschen Prozessen
 
-Ein Gaußscher Prozess ist ein stochastischer Prozess $(f_x)_{x \in X}$ wobei für jede endliche Teilmenge $Y \subset X$, $(f_x)_{x \in Y}$ multivariat normal verteilt ist.  
+- Stochastiser Prozess: $f:\Omega \times X \rightarrow Z$, $(\omega,x) \mapsto f_x(\omega)$ wobei $f_x(\omega)$ messbar in $\omega$ für alle $x\in X$.     
+
+>- Anschaulich: Stochastischer Prozess ist Zufallsvariable mit Werten $f_x$ in Funktionenraum
+
+>- Ein Gaußscher Prozess ist ein stochastischer Prozess $(f_x)_{x \in X}$ wobei für jede endliche Teilmenge $Y \subset X$, $(f_x)_{x \in Y}$ multivariat normal verteilt ist.  
 $f(x) := f_x$, $(f_x)_{x \in X}$ wird aufgefasst als zufällige Funktion $f:X \to \mathbb{R}$.
+
+>- Wird charakterisiert über $m(x)=\erw{f(x)}$ und $k(x,x')=\text{Cov}(f(x),f(x'))$. 
 
 ## Anwendung
 
-- Regression
-- Klassifikation
+1. Regression: Vorhersage des Prozesses zu anderen Zeitpunkten
++  Reale Anwendungen?
+2. Klassifikation: Vorhersage der Zugehörigkeit von Beobachtungen zu verschiedenen Klassen
++  Reale Anwendungen?
 
 ## Mathe zu GPR
 
@@ -92,7 +100,10 @@ $\varepsilon_i \overset{\text{iid}}{\sim} \mathcal{N}(0, \sigma_n^2)$
 
 ## predict Algorithmus
 
-Inputs: X (inputs), y (targets), $\sigma_n^2$ (noise), k(covariance funtion), $X_*$ (test input)
+Zusätzliche Annahme: noisy data  
+Daten werden mit Fehler $\varepsilon$ beobachtet, $y_i = f(x_i) + \varepsilon_i$
+
+Inputs: $X$ (inputs), $y$ (targets), $\sigma_n^2$ (noise), $k$ (covariance funtion), $X_*$ (test input)
 
 1. $L=\text{cholesky}(K(X,X)+\sigma_n^2 I)$
 2. $\alpha=\text{solve}(L^T,\text{solve}(L,y))$
@@ -121,8 +132,16 @@ Gaussian$plot(seq(-6,6, by = 0.05))$plot
 
 ## Optimierung der Hyperparameter
 
-- Maximierung der Marginal Log-Likelihood
+- Ziel: Suchen Prozess, aus dem die Beobachteten Daten am wahrscheinlichsten Entstehen
+- Idee: Bestimmung einer passenden Kovarianzfunktion
+
+Methode:
+Hier noch was ergänzen
+
+- Maximierung der Marginal Log-Likelihood 
 - Newton Methode, `optim()`
+
+Marginal Log-Likelihood: Wahrscheinlichkeit für diese Beobachtungen gegeben eine bestimmte Kovarianzfunktion
 
 ## fit()
 
@@ -132,6 +151,8 @@ Gaussian$plot(seq(-6,6, by = 0.05))$plot
 - Findet für jede Kovarianzfunktion in `cov_names` die optimalen Parameter
 - Gibt die beste Kovarianzfunktion mit optimalen Parametern zurück
 - error handling bei nicht invertierbaren / nicht positiv definiten Matrizen
+
+Feature: Übergibt man Regression eine Liste von Kovarianzfunktionen, wird fit automatisch ausgeführt.
 
 ## Gewählte Kovarianzfunktion
 
