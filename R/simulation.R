@@ -1,6 +1,3 @@
-#limits D x 2 Matrix, X D x N
-max_predict <- 10000
-
 #' Simulation for Regression
 #' 
 #' Simulates data for Regression problems, which can then be analyzed via a Gaussian process
@@ -14,19 +11,26 @@ max_predict <- 10000
 #' 
 #' @name simulate_regression
 #' @export
-simulate_regression <- function(func, limits, training_points, num_data = 10, 
-                                noise = 0, error = function(x) 0, cov_names = names(cov_dict)) {
+simulate_regression <- function(func, limits, training_points, num_data = 10L, 
+                    noise = 0, error = function(x) 0, test_size = 10000, ...) {
+  # Check correctness of inputs
+  stopifnot(is.function(func), is.numeric(limits), length(limits) %% 2 == 0)
+  stopifnot(is.numeric(num_data), num_data > 0)
+  stopifnot(is.numeric(noise), noise >= 0, is.function(error))
+  stopifnot(is.numeric(test_size), test_size > 0)
+  if (!is.matrix(limits)) limits <- matrix(limits, ncol = 2, byrow = TRUE)
+  
+  # Training. Constructor uses fit to get best Gaussian model
   D <- nrow(limits)
   if (missing(training_points)) {
     training_points <- t(sapply(1:D, function(i) runif(num_data, limits[i,1], limits[i,2])))
   } else stopifnot(nrow(limits) == nrow(training_points))
-  
-  # Use fit to get best Gaussian model
   y <- apply(training_points, 2, func) + error(ncol(training_points))
-  Gaussian <- GPR$new(training_points, y, noise = noise, cov_names = cov_names)
+  Gaussian <- GPR$new(training_points, y, noise = noise, ...)
   
-  # Test the model on a large set of test points (size max_predict)
-  test_points <- combine_all(lapply(1:D, function(i) seq(limits[i, 1], limits[i, 2], length.out = max_predict^(1/D))))
+  # Test the model on a large set of test points (size test_size)
+  test_points <- combine_all(lapply(1:D, 
+                  function(i) seq(limits[i, 1], limits[i, 2], length.out = test_size^(1/D))))
   predictions <- Gaussian$predict(test_points, pointwise_var = TRUE)
   residual <- predictions[, 1] - apply(test_points, 2, func)
   cat("The mean absolute difference of predictions and ground truth",
@@ -34,8 +38,7 @@ simulate_regression <- function(func, limits, training_points, num_data = 10,
   
   # Plot error over predicted variance
   variance <- predictions[, 2]
-  resid <- abs(residual)
-  plot(variance, resid, xlim = c(0, 1.1*variance[length(variance)]),
+  plot(variance, abs(residual), xlim = c(0, 1.1*variance[length(variance)]),
        main = "Connection of absolute prediction error \n and predicted variance",
        xlab = "Variance", ylab = "Absolute Prediction Error", col = "blue")
   
@@ -62,38 +65,59 @@ simulate_regression <- function(func, limits, training_points, num_data = 10,
         mapping = ggplot2::aes(x = x, ymin = regression - 2*sqrt(pmax(variance,0)),
                               ymax = regression + 2*sqrt(pmax(variance, 0))), 
         alpha = 0.3))
+  return(summary(abs(residual)))
 }
 
-max_set <- 300
 #' @export
-simulate_regression_gp <- function(actual_cov, noise, limits, n_training_data = 10, 
-                                   random_training = TRUE, regression_noise = noise,...) {
-  if (!is.matrix(limits)) dim(limits) <- c(length(limits) / 2, 2)
+simulate_regression_gp <- function(actual_cov, limits, error = function(x) 0, test_size = 300, 
+                training_size = 10, random_training = TRUE, regression_noise = 0.1, ...) {
+  # Check correctness of inputs
+  stopifnot(is.function(actual_cov), is.numeric(limits), length(limits) %% 2 == 0)
+  stopifnot(is.function(error), is.numeric(test_size), test_size > 0)
+  stopifnot(is.numeric(training_size), training_size > 0, training_size < test_size)
+  stopifnot(is.logical(random_training))
+  stopifnot(is.numeric(regression_noise), regression_noise >= 0)
+  if (!is.matrix(limits)) limits <- matrix(limits, ncol = 2, byrow = TRUE)
+  
+  # Draw Gaussian process f with covariance function actual_cov
   D <- nrow(limits)
   testpoints <- combine_all(lapply(1:D, function(i) seq(limits[i, 1], limits[i, 2], 
-                                                         length.out = max_set^(1/D))))
+                                                         length.out = test_size^(1/D))))
   K <- covariance_matrix(testpoints, testpoints, actual_cov)
   f <- multivariate_normal(1, rep(0, nrow(K)), K)
-  actual_GP <- GPR$new(testpoints, drop(f), noise = 0.1, k = actual_cov)
   
-  if (random_training) X <- t(sapply(1:D, function(i) runif(n_training_data, limits[i,1], limits[i,2])))
-  else X <- combine_all(lapply(1:D, function(i) seq(limits[i, 1], limits[i, 2], 
-                                                    length.out = n_training_data^(1/D))))
-  y <- actual_GP$predict(X)[, 1] + rnorm(n_training_data, 0, noise)
+  # Training
+  if (random_training) training_set <- sample.int(ncol(testpoints), training_size)
+  else training_set <- (1:training_size)*floor(ncol(testpoints)/training_size)
+  X <- testpoints[, training_set]
+  y <- f[training_set] + error(training_size)
   regression_GP <- GPR$new(X, y, noise = regression_noise, ...)
-  if (D == 1) {
-    lst <- regression_GP$plot(drop(limits), max_set)
-    lst$plot + ggplot2::geom_line(data = data.frame(x = drop(testpoints), y = f),
-                                  ggplot2::aes(x = x, y = y), colour = "green")
-  }
   
+  # Testing
+  if (D == 1) {
+    plot_l <- regression_GP$plot(drop(limits), test_size)
+    residual <- plot_l$pred[, 1] - f
+    variance <- plot_l$pred[, 2]
+    print(plot_l$plot + ggplot2::geom_line(data = data.frame(x = drop(testpoints), y = f),
+                                  ggplot2::aes(x = x, y = y), colour = "green"))
+  } else {
+    prediction <- regression_GP$predict(testpoints)
+    residual <- prediction[, 1] - f
+    variance <- prediction[, 2]
+  }
+  plot(variance, abs(residual), xlim = c(0, 1.1*variance[length(variance)]),
+       main = "Connection of absolute prediction error \n and predicted variance",
+       xlab = "Variance", ylab = "Absolute Prediction Error", col = "blue")
+  cat("The mean absolute difference of predictions and ground truth",
+      "in the considered limits is ", mean(abs(residual)), "\n")
+  return(summary(abs(residual)))
 }
 
 #' Simulation for Classification
 #' 
 #' Simulates data for Classification problems, which can then be analyzed via a Gaussian process
 #' 
-#' @usage \preformatted{simulate_classification(func, training_points, limits, k, num_data = 10)
+#' @usage \preformatted{simulate_classification(func, training_points, limits, k, training_size = 10)
 #'}
 #' @param func A function for the simulation of data points
 #' @param training_points A vector of training points
@@ -103,22 +127,33 @@ simulate_regression_gp <- function(actual_cov, noise, limits, n_training_data = 
 #' 
 #' @name simulate_classification
 #' @export
-simulate_classification <- function(func, training_points, limits, k, num_data = 10) {
+simulate_classification <- function(func, training_points, limits, k, 
+                                    training_size = 10, test_size = 10000) {
+  # Check correctness of inputs
+  stopifnot(is.function(func), is.numeric(limits), length(limits) %% 2 == 0)
+  stopifnot(is.function(k), is.numeric(training_size), training_size > 0)
+  if (!is.matrix(limits)) limits <- matrix(limits, ncol = 2, byrow = TRUE)
+  
+  # Training
   D <- nrow(limits)
   if (missing(training_points)) {
-    training_points <- t(sapply(1:nrow(limits), function(i) runif(num_data, limits[i,1], limits[i,2])))
+    training_points <- t(sapply(1:nrow(limits), 
+                        function(i) runif(training_size, limits[i,1], limits[i,2])))
   } else stopifnot(nrow(limits) == nrow(training_points))
-  test_points <- combine_all(lapply(1:D, function(i) seq(limits[i, 1], limits[i, 2], length.out = max_predict^(1/D))))
   y <- apply(training_points, 2, func)
   Gaussian <- GPC$new(training_points, y, 1e-5, k)
-  plot_l <- Gaussian$plot(test_points)
+  
+  # Testing
+  test_points <- combine_all(lapply(1:D, 
+                        function(i) seq(limits[i, 1], limits[i, 2], length.out = test_size^(1/D))))
+  plot_l <- Gaussian$plot(testpoints = test_points)
   predictions <- plot_l$pred
   residual <- 2*as.integer(predictions >= 0.5) - 1 - apply(test_points, 2, func)
   message(paste("Proportion of misclassified test points.", mean(abs(residual))/2, "\n"))
   print(plot_l$plot)
+  return(summary(abs(residual)))
 }
  
-#' @export
 combine_all <- function(lst) {
   l <- length(lst)
   lengths <- sapply(lst, length)
@@ -133,19 +168,16 @@ combine_all <- function(lst) {
 }
 
 #' @export
-normal <- function(sd, mean = 0) {
-  function(k) rnorm(k, mean = mean, sd = sd)
+error_function <- function(distribution, ...) {
+  force(distribution)
+  function(k) distribution(k, ...)
+}
+#' @export
+cov_func <- function(func, ...) {
+  force(func)
+  function(x, y) func(x, y, ...)
 }
 
-#' @export
-exp_distr <- function(rate) {
-  function(k) rexp(k, rate)
-}
-
-#' @export
-beta_distr <- function(shape1, shape2, ncp = 0){
-  function(k) rbeta(k, shape1, shape2, ncp)
-}
 
 #' @export
 examples <- function() {
@@ -154,36 +186,48 @@ examples <- function() {
   f <- function(x) 0.1*x^3
   limits <- matrix(c(-6, 6), nrow = 1)
   X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
-  error <- normal(2)
+  error <- error_function(rnorm, sd = 2)
   simulate_regression(f, limits, X, noise = 1, error = error)
   
   # example 2: beta distributed error
   f <- function(x) sin(10*x)
   limits <- matrix(c(0, 1), nrow = 1)
   X <- matrix(seq(0,1,by = 0.05), nrow = 1)
-  error <- beta_distr(2,3)
+  error <- error_function(rcauchy)
   simulate_regression(f, limits, X, noise = 1, error = error)
   
   # example 3: two-dimensional
   f <- function(x) 0.1*sum(x^2)
   limits <- matrix(c(-5.5, 5.5, -5.5, 5.5), nrow = 2, byrow = TRUE)
   X <- combine_all(list(seq(-5,5,by = 1), seq(-5,5,by = 1)))
-  error <- normal(1)
+  error <- error_function(rnorm, sd = 1)
   simulate_regression(f, limits, X, noise = 1, error = error)
-
+  
+  # Regression for Gaussian processes
+  simulate_regression_gp(cov_func(sqrexp, l = 1), limits = matrix(c(-5,5), nrow = 1), 
+                         training_size = 10, random_training = TRUE, regression_noise = 0.1)
+  
+  simulate_regression_gp(cov_func(sqrexp, l = 0.1), limits = matrix(c(-5,5), nrow = 1), 
+                         training_size = 10, random_training = TRUE, regression_noise = 0.1)
+  
+  simulate_regression_gp(cov_func(sqrexp, l = 1), limits = matrix(c(-5,5), nrow = 1), 
+                         training_size = 10, random_training = TRUE, regression_noise = 1)
+  
+  simulate_regression_gp(cov_func(polynomial, sigma = 1, p = 3), limits = matrix(c(-5,5), nrow = 1), 
+                         training_size = 10, random_training = TRUE, regression_noise = 1)
   
   # Classification
   # example 1
   f <- function(x) (x < - 2) + (x > 2) - (-2 <= x && x <= 2)
   limits <- matrix(c(-4, 4), nrow = 1, byrow = TRUE)
   k <- function(x, y) sqrexp(x, y, 1)
-  simulate_classification(func = f, limits = limits, k = k, num_data = 20)
+  simulate_classification(func = f, limits = limits, k = k, training_size = 20)
   
   # example 2
   f <- function(x) (sum(abs(x)) > 2.5) - (!(sum(abs(x)) > 2.5))
   limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
   k <- function(x, y) sqrexp(x, y, 1)
-  simulate_classification(func = f, limits = limits, k = k, num_data = 50)
+  simulate_classification(func = f, limits = limits, k = k, training_size = 50)
   
   # Haus
   f <- function(x) {
@@ -195,7 +239,7 @@ examples <- function() {
   }
   limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
   k <- function(x, y) sqrexp(x, y, 1)
-  simulate_classification(func = f, limits = limits, k = k, num_data = 600)
+  simulate_classification(func = f, limits = limits, k = k, training_size = 600)
   
   # Example R
   g <- function(x){
@@ -214,5 +258,5 @@ examples <- function() {
   
   limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
   k <- function(x, y) sqrexp(x, y, 1)
-  simulate_classification(func = f, limits = limits, k = k, num_data = 600)
+  simulate_classification(func = f, limits = limits, k = k, training_size = 600)
 }

@@ -158,6 +158,7 @@ fit <-  function(X, y, noise, cov_names = as.list(cov_df$name)){
   }
   name <- cov_names[[which.max(score)]]
   par <- param[[which.max(score)]]
+  message(sprintf("The optimal covariance function is %s, with parameters %s", name, paste(par, collapse = ", ")))
   return(list(par = par, cov = name, score = score, 
               func = function(x,y) do.call(cov_df[name, ]$func[[1]], append(list(x, y), par))))
 }

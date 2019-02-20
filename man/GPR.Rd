@@ -109,7 +109,7 @@ X <- matrix(seq(-5,5, by = 1), nrow = 1)
 noise <- 0
 y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
 # explicit use of squared exponential with l = 0.5
-Gaussian <- GPR.sqrexp$new(X, y, l = 0.5, noise = 0.5)
+Gaussian <- GPR.sqrexp$new(X, y, noise = 0.5, l = 0.5)
 Gaussian$plot()
 Gaussian$plot_posterior_draws(3)
 Gaussian$plot_posterior_variance(seq(-5, 5, by = 3))
