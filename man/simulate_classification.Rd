@@ -4,7 +4,7 @@
 \alias{simulate_classification}
 \title{Simulation for Classification}
 \usage{
-\preformatted{simulate_classification(func, training_points, limits, k, num_data = 10)
+\preformatted{simulate_classification(func, training_points, limits, k, training_size = 10)
 }
 }
 \arguments{
