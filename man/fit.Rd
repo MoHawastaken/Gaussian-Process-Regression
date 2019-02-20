@@ -13,7 +13,7 @@
 
 \item{noise}{the inflicted noise of the observations}
 
-\item{cov_names}{a list of names of covariance functions ("linear",
+\item{cov_names}{a list of names of covariance functions, if no list is given all implemented functions are used ("linear",
 "constant","polynomial","sqrexp","gammaexp","rationalquadratic")}
 }
 \value{
@@ -27,6 +27,12 @@ A list of outputs:
 }
 \description{
 Applies optimization methods to find optimal parameters of the covariance function for a given set of datapoints
+}
+\examples{
+X <- matrix(seq(-5, 5, by = 0.2), nrow = 1)
+y <- c(0.1 * X^3 + rnorm(length(X), 0, 1))
+fit(X, y, noise = 1, cov_names = list("linear","polynomial","sqrexp")
+
 }
 \references{
 Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning

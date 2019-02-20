@@ -75,7 +75,7 @@ optim_until_error <- function(start, f, ...) {
 #' 
 #' @param noise the inflicted noise of the observations
 #' 
-#' @param cov_names a list of names of covariance functions ("linear",
+#' @param cov_names a list of names of covariance functions, if no list is given all implemented functions are used ("linear",
 #'         "constant","polynomial","sqrexp","gammaexp","rationalquadratic")
 #' @return A list of outputs:
 #' \describe{
@@ -85,9 +85,13 @@ optim_until_error <- function(start, f, ...) {
 #'   \item{func}{The optimal covariance function}
 #' }
 #' 
+#' @examples X <- matrix(seq(-5, 5, by = 0.2), nrow = 1)
+#' y <- c(0.1 * X^3 + rnorm(length(X), 0, 1))
+#' fit(X, y, noise = 1, cov_names = list("linear","polynomial","sqrexp")
+#' 
 #' @references Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
 #' @export
-fit <-  function(X, y, noise, cov_names){
+fit <-  function(X, y, noise, cov_names = as.list(cov_df$name)){
   param <- list()
   score <- c()
   for (cov in cov_names){
@@ -151,10 +155,9 @@ fit <-  function(X, y, noise, cov_names){
 #section for testing:
 
 X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
-y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
-
-z <- fit(X, y, noise = 1, cov_names = names(cov_dict))
+ y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
+ z <- fit(X, y, noise = 1)
 
 #print(z)
-#Gaussian <- GPR$new(X, y, noise = 1, function(x,y) do.call(cov_df[z$cov, ]$func[[1]], append(list(x, y), z$par)))
+#Gaussian <- GPR$new(X, y, noise = 1, z$func)
 #Gaussian$plot(seq(-5, 5, by = 0.1))$plot
