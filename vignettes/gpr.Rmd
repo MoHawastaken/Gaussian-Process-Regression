@@ -277,5 +277,6 @@ simulate_classification(func, training_points, limits, k, num_data = 10)
   
   
   
-## Shiny App
+## GPplot
 
+The function `GPplot` opens a webapp, which has been generated using the package `shiny`. It shows plots for both regression and classification and has many ways to adjust the computed Gaussian process. Most features of the package are displayed there, as you can select a covariance function, change its parameters or compute the optimal ones.
