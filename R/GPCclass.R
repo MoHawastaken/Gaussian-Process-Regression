@@ -37,9 +37,9 @@
 #' 
 #' 
 #' @examples
-#' X <- matrix(seq(-1,1,by = 0.1), nrow = 1)
-#' y <- 2*as.integer(X > 0) - 1
-#' Gaussian_classifier <- GPC$new(X, y, 1e-5, function(x,y) exp(-3*(x - y)^2))
+#' X <- matrix(seq(-1, 1, by = 0.1), nrow = 1)
+#' y <- 2 * as.integer(X > 0) - 1
+#' Gaussian_classifier <- GPC$new(X, y, 1e-5, function(x,y) exp(-3 * (x - y)^2))
 #' Gaussian_classifier$plot()
 #'
 #'
@@ -138,12 +138,12 @@ GPC <- R6::R6Class("GPC",
            ggplot2::guides(fill = ggplot2::guide_legend(title = "Labels")) +
            ggplot2::scale_fill_manual(values = c("red", "blue")) +
            ggplot2::geom_line() +
-           ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = pmax(0,self$y)), 
+           ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = pmax(0, self$y)), 
                                mapping = ggplot2::aes(x = xpoints, y = ypoints, shape = 4)) +
            ggplot2::scale_shape_identity()
        }
        else if(nrow(self$X) == 2){
-         dat <- data.frame(x.1 = testpoints[1,], x.2 = testpoints[2,], y = 2*as.integer(predictions >= 0.5) - 1)
+         dat <- data.frame(x.1 = testpoints[1,], x.2 = testpoints[2,], y = 2 * as.integer(predictions >= 0.5) - 1)
           g <- ggplot2::ggplot(dat, inherit.aes = F, ggplot2::aes(x = x.1, y = x.2, fill = factor(y))) +
            ggplot2::theme_classic() +
            ggplot2::scale_y_continuous(expression(x[2])) +

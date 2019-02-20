@@ -48,7 +48,7 @@
 #'  predictions in the test points
 #' 
 #'@examples 
-#'f <- function(x) 0.1*x^3
+#'f <- function(x) 0.1 * x^3
 #'limits <- matrix(c(-6, 6), nrow = 1)
 #'X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
 #'error <- error_function(rnorm, sd = 2)
@@ -92,7 +92,7 @@ simulate_regression <- function(func, limits, training_points, training_size = 1
   # Plot error over predicted variance
   if (show_pred){
     variance <- predictions[, 2]
-    plot(variance, abs(residual), xlim = c(0, 1.1*variance[length(variance)]),
+    plot(variance, abs(residual), xlim = c(0, 1.1 * variance[length(variance)]),
          main = "Connection of absolute prediction error \n and predicted variance",
          xlab = "Variance", ylab = "Absolute Prediction Error", col = "blue")
   }
@@ -160,7 +160,7 @@ simulate_regression_gp <- function(actual_cov, limits, error = function(x) 0, te
     variance <- prediction[, 2]
   }
   if (show_pred){
-    plot(variance, abs(residual), xlim = c(0, 1.1*variance[length(variance)]),
+    plot(variance, abs(residual), xlim = c(0, 1.1 * variance[length(variance)]),
          main = "Connection of absolute prediction error \n and predicted variance",
          xlab = "Variance", ylab = "Absolute Prediction Error", col = "blue")
   }
@@ -194,7 +194,7 @@ simulate_classification <- function(func, training_points, limits, k,
   D <- nrow(limits)
   if (missing(training_points)) {
     training_points <- t(sapply(1:nrow(limits), 
-                        function(i) runif(training_size, limits[i,1], limits[i,2])))
+                        function(i) runif(training_size, limits[i, 1], limits[i, 2])))
   } else stopifnot(nrow(limits) == nrow(training_points))
   y <- apply(training_points, 2, func)
   Gaussian <- GPC$new(training_points, y, 1e-5, k)
@@ -204,7 +204,7 @@ simulate_classification <- function(func, training_points, limits, k,
                         function(i) seq(limits[i, 1], limits[i, 2], length.out = test_size^(1/D))))
   plot_l <- Gaussian$plot(testpoints = test_points)
   predictions <- plot_l$pred
-  residual <- 2*as.integer(predictions >= 0.5) - 1 - apply(test_points, 2, func)
+  residual <- 2 * as.integer(predictions >= 0.5) - 1 - apply(test_points, 2, func)
   message(paste("Proportion of misclassified test points.", mean(abs(residual))/2, "\n"))
   print(plot_l$plot)
   return(summary(abs(residual)))
@@ -239,37 +239,37 @@ cov_func <- function(func, ...) {
 examples <- function() {
   # Regression
   # example 1: one-dimensional
-  f <- function(x) 0.1*x^3
+  f <- function(x) 0.1 * x^3
   limits <- matrix(c(-6, 6), nrow = 1)
-  X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
+  X <- matrix(seq(-5, 5, by = 0.2), nrow = 1)
   error <- error_function(rnorm, sd = 2)
   simulate_regression(f, limits, X, noise = 1, error = error)
   
   # example 2: cauchy distributed error
-  f <- function(x) sin(10*x)
+  f <- function(x) sin(10 * x)
   limits <- matrix(c(0, 1), nrow = 1)
-  X <- matrix(seq(0,1,by = 0.05), nrow = 1)
+  X <- matrix(seq(0, 1, by = 0.05), nrow = 1)
   error <- error_function(rcauchy)
   simulate_regression(f, limits, X, noise = 1, error = error)
   
   # example 3: two-dimensional
-  f <- function(x) 0.1*sum(x^2)
+  f <- function(x) 0.1 * sum(x^2)
   limits <- matrix(c(-5.5, 5.5, -5.5, 5.5), nrow = 2, byrow = TRUE)
-  X <- combine_all(list(seq(-5,5,by = 1), seq(-5,5,by = 1)))
+  X <- combine_all(list(seq(-5, 5, by = 1), seq(-5 ,5, by = 1)))
   error <- error_function(rnorm, sd = 1)
   simulate_regression(f, limits, X, noise = 1, error = error)
   
   # Regression for Gaussian processes
-  simulate_regression_gp(cov_func(sqrexp, l = 1), limits = matrix(c(-5,5), nrow = 1), 
+  simulate_regression_gp(cov_func(sqrexp, l = 1), limits = matrix(c(-5, 5), nrow = 1), 
                          training_size = 10, random_training = TRUE, regression_noise = 0.1)
   
-  simulate_regression_gp(cov_func(sqrexp, l = 0.1), limits = matrix(c(-5,5), nrow = 1), 
+  simulate_regression_gp(cov_func(sqrexp, l = 0.1), limits = matrix(c(-5, 5), nrow = 1), 
                          training_size = 10, random_training = TRUE, regression_noise = 0.1)
   
-  simulate_regression_gp(cov_func(sqrexp, l = 1), limits = matrix(c(-5,5), nrow = 1), 
+  simulate_regression_gp(cov_func(sqrexp, l = 1), limits = matrix(c(-5, 5), nrow = 1), 
                          training_size = 10, random_training = TRUE, regression_noise = 1)
   
-  simulate_regression_gp(cov_func(polynomial, sigma = 1, p = 3), limits = matrix(c(-5,5), nrow = 1), 
+  simulate_regression_gp(cov_func(polynomial, sigma = 1, p = 3), limits = matrix(c(-5, 5), nrow = 1), 
                          training_size = 10, random_training = TRUE, regression_noise = 1)
   
   # Classification

@@ -1,6 +1,7 @@
 #'@export
 GPplot <- function(){
-
+  #print(cov_df)
+  print(cov_df$display)
 library(shiny)
 
 `%then%` <- shiny:::`%OR%`
@@ -20,8 +21,10 @@ ui <- fluidPage(tabsetPanel(tabPanel("Regression",
       sliderInput("noise", "Noise", min = 0, max = 1, value = 0),
       sliderInput("gennoise", "Generating noise", min = 0, max = 1, value = 0),
       numericInput("n", "Number of training points", min = 1, value = 10),
-      div(style="display: inline-block;vertical-align:top; width: 300px;", checkboxInput("drawrand", "Choose training points at random")),
-      div(style="display: inline-block;vertical-align:top; width: 50px;", actionButton("refrng", "", icon = icon("sync"))),
+      div(style="display: inline-block;vertical-align:top; width: 300px;", 
+          checkboxInput("drawrand", "Choose training points at random")),
+      div(style="display: inline-block;vertical-align:top; width: 50px;", 
+          actionButton("refrng", "", icon = icon("sync"))),
       checkboxInput("drawtrue", "Draw true function"),
       sliderInput("xlim", "Data Boundaries", min = -10, max = 10, value = c(-5, 5))
       )),
@@ -44,7 +47,7 @@ ui <- fluidPage(tabsetPanel(tabPanel("Regression",
     column(width = 6, wellPanel(
       h4("Datapoints"),
       textOutput("info"),
-      radioButtons("label","Label of added points", choices = c(-1,1), inline = T),
+      radioButtons("label", "Label of added points", choices = c(-1, 1), inline = T),
       actionButton("refresh", "Refresh data boundaries", icon = icon("sync"))
     ))),
     fluidRow(column(width = 12, plotOutput("plot2", click = "plot_click")))
@@ -159,7 +162,10 @@ server <- function(input, output, session){
       })
     X_points <- reactive(seq(input$xlim[1], input$xlim[2], by = 0.1))
     p <- Gaussian()$plot()$plot
-    if (input$drawtrue) p <- p + ggplot2::geom_line(data = data.frame(x = X_points(), y = sapply(X_points(), f())), ggplot2::aes(x = x, y = y), linetype = "dashed")
+    if (input$drawtrue){
+      p <- p + ggplot2::geom_line(data = data.frame(x = X_points(), y = sapply(X_points(), f())), 
+                                  ggplot2::aes(x = x, y = y), linetype = "dashed")
+    }
     p
   })
   #Classification Panel
@@ -172,17 +178,17 @@ server <- function(input, output, session){
   
   X_c <- eventReactive(input$refresh, {
     set.seed(0)
-    cbind(cbind(multivariate_normal(input$n2, c(0.5,0.5), diag(c(0.1,0.1))), 
-                multivariate_normal(input$n2, c(-0.5,-0.5), diag(c(0.1,0.1)))), t(as.matrix(rv$m[,1:2])))
+    cbind(cbind(multivariate_normal(input$n2, c(0.5, 0.5), diag(c(0.1, 0.1))), 
+                multivariate_normal(input$n2, c(-0.5, -0.5), diag(c(0.1, 0.1)))), t(as.matrix(rv$m[, 1:2])))
   }, ignoreNULL = FALSE)
-  y_c <- eventReactive(input$refresh,{
-    c(rep(c(1,-1), each = input$n2), rv$m$label)
+  y_c <- eventReactive(input$refresh, {
+    c(rep(c(1, -1), each = input$n2), rv$m$label)
   }, ignoreNULL = FALSE)
   output$info <- renderText({
     paste0(input$plot_click$x, input$plot_click$y)
   })
   dat <- eventReactive(c(input$refresh,input$n2),{
-    kappa <- function(x,y) sqrexp(x, y, l = 1)
+    kappa <- function(x, y) sqrexp(x, y, l = 1)
     gaussian_classifier <- GPC$new(X_c(), y_c(), 1e-5, kappa)
     s <- seq(min(X_c()), max(X_c()), by = 0.1)
     testpoints <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
