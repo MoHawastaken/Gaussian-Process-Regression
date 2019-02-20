@@ -81,10 +81,12 @@ simulate_regression_gp <- function(actual_cov, noise, limits, n_training_data = 
                                                     length.out = n_training_data^(1/D))))
   y <- actual_GP$predict(X)[, 1] + rnorm(n_training_data, 0, noise)
   regression_GP <- GPR$new(X, y, noise = regression_noise, ...)
-  testpoints <- drop(testpoints)
-  lst <- regression_GP$plot(testpoints)
-  lst$plot + ggplot2::geom_line(data = data.frame(x = testpoints, y = f),
-                         ggplot2::aes(x = x, y = y), colour = "green")
+  if (D == 1) {
+    lst <- regression_GP$plot(drop(limits), max_set)
+    lst$plot + ggplot2::geom_line(data = data.frame(x = drop(testpoints), y = f),
+                                  ggplot2::aes(x = x, y = y), colour = "green")
+  }
+  
 }
 
 #' Simulation for Classification
