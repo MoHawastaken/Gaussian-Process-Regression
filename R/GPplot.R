@@ -66,6 +66,7 @@ switchrenderUI <- function(i, session, min_noise, act_noise, kdesc, ...){
 }
 
 server <- function(input, output, session){
+  #refresh random generator with button
   seed <- eventReactive(input$refrng, {
      round(as.integer(runif(1, 0, 100)))
   }, ignoreNULL = FALSE)

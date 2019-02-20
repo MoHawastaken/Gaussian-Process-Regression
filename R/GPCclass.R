@@ -1,7 +1,7 @@
 #'  Predictions and Plots for Gaussian process classification
 #'
-#'  Implements a gaussian process for classification and gives tools 
-#'  to predict and plot its values for given testpoints
+#'  Implements a Gaussian process for classification and gives tools 
+#'  to predict and plot its values for given test points
 #' 
 #'
 #' @usage \preformatted{GPC <- GPC$new(X, y, noise, cov_fun)
@@ -205,16 +205,3 @@ GPC <- R6::R6Class("GPC",
      }
    )
 )
-
-"
-#section for testing:
-f <- function(x) (sum(abs(x)) > 2.5) - (!(sum(x) > 2.5))
-limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
-k <- function(x, y) sqrexp(x, y, 1)
-#1-dim testpoints
-testpoints <- seq(min(self$X),max(self$X), length.out = 150)
-#2-dim testpoints
-len <- 50
-s <- seq(min(self$X),max(self$X),length.out = len)
-testpoints <- matrix(c(rep(s,each = len), rep(s, len)), nrow = 2, byrow = TRUE)
-"

@@ -134,10 +134,6 @@ GPR <- R6::R6Class("GPR",
                  private$.noise <- noise
                  n <- ncol(X)
                  K <- covariance_matrix(X, X, k)
-                 #Pruefe, ob alle Hauptminoren positiv sind.
-                 #if (min(sapply(1:n, function(i) det((K + noise * diag(n))[1:i, 1:i, drop = F]))) <= 0) {
-                #   stop("Inputs lead to non positive definite covariance matrix. Try using a larger noise or a smaller lengthscale.")
-                 #}
                  if(class(try(solve(K + noise * diag(n)),silent=T)) != "matrix"){
                    stop("K(X,X) + noise * I is not invertible, the algorithm is not defined for this case.")
                  }
@@ -201,8 +197,6 @@ GPR <- R6::R6Class("GPR",
                    ggplot2::geom_ribbon(inherit.aes = F, data = dat, mapping = ggplot2::aes(x = testpoints, 
                                     ymin = y.1 - 2*sqrt(pmax(y.2,0)), ymax = y.1 + 2*sqrt(pmax(y.2,0))), alpha = 0.3) +
                    ggplot2::guides(colour = FALSE)
-                   #ggplot2::geom_point(data = data.frame(xpoints = c(self$X), ypoints = self$y), 
-                  #               mapping = ggplot2::aes(x = xpoints, y = ypoints))
               },
               plot_posterior_variance = function(where, limits = c(expand_range(self$X)[1], expand_range(self$X)[2]),
                                                                          length.out = 200L) {
