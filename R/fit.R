@@ -64,7 +64,13 @@ optim_until_error <- function(start, f, ...) {
 }
 #' Optimization of hyperparameters
 #' 
-#' Applies optimization methods to find optimal parameters of the covariance function for a given set of datapoints
+#' Applies optimization methods to find optimal parameters of given covariance functions for a given set of datapoints
+#' 
+#' \code{fit()} maximizes the log likelihood of the posterior distribution as a function of the hyperparameters.
+#' Depending on the covariance function and the inflicted noise, the matrix K + noise * diag(n) - where K is the covariance matrix
+#' of X - may be singular, so that the needed Cholesky decomposition is not posible. In this case \code{optim()} stops for the
+#' actual covariance function and the best hyperparameters up that point are saved. This behaviour may be responsible for a bad fit,
+#' especially with noise = 0 or small enough.
 #' 
 #' @usage 
 #' \preformatted{fit(X, y, noise, cov_names)}
@@ -75,19 +81,24 @@ optim_until_error <- function(start, f, ...) {
 #' 
 #' @param noise the inflicted noise of the observations
 #' 
-#' @param cov_names a list of names of covariance functions, if no list is given all implemented functions are used ("linear",
-#'         "constant","polynomial","sqrexp","gammaexp","rationalquadratic")
+#' @param cov_names a list of names of covariance functions; if no list is given, all implemented functions are used
+#' ("sqrexp","gammaexp", "constant", "linear", polynomial", "rationalquadratic")
+#' 
 #' @return A list of outputs:
 #' \describe{
-#'   \item{par}{The optimal parameters}
-#'   \item{cov}{The name of the optimal covariance function}
-#'   \item{score}{The scores for the different covariance functions in \code{cov_names}}
-#'   \item{func}{The optimal covariance function}
+#'   \item{$par}{The optimal parameters}
+#'   \item{$cov}{The name of the optimal covariance function}
+#'   \item{$score}{The scores for the different covariance functions in \code{cov_names}}
+#'   \item{$func}{The optimal covariance function}
 #' }
 #' 
 #' @examples X <- matrix(seq(-5, 5, by = 0.2), nrow = 1)
-#' y <- c(0.1 * X^3 + rnorm(length(X), 0, 1))
-#' fit(X, y, noise = 1, cov_names = list("linear","polynomial","sqrexp")
+#' y <- c(0.15 * X^3 + rnorm(length(X), 0, 1))
+#' fit(X, y, noise = 1, cov_names = list("linear","polynomial","sqrexp"))
+#' 
+#' z <- fit(X, y, noise = 1)
+#' Gaussian <- GPR$new(X, y, noise = 1, z$func)
+#' Gaussian$plot()$plot
 #' 
 #' @references Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
 #' @export
@@ -147,6 +158,7 @@ fit <-  function(X, y, noise, cov_names = as.list(cov_df$name)){
   }
   name <- cov_names[[which.max(score)]]
   par <- param[[which.max(score)]]
+  message(sprintf("The optimal covariance function is %s, with parameters %s", name, paste(par, collapse = ", ")))
   return(list(par = par, cov = name, score = score, 
               func = function(x,y) do.call(cov_df[name, ]$func[[1]], append(list(x, y), par))))
 }
@@ -155,9 +167,7 @@ fit <-  function(X, y, noise, cov_names = as.list(cov_df$name)){
 #section for testing:
 
 X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
- y <- c(0.1*X^3 + rnorm(length(X), 0, 1))
- z <- fit(X, y, noise = 1)
-
-#print(z)
-#Gaussian <- GPR$new(X, y, noise = 1, z$func)
-#Gaussian$plot(seq(-5, 5, by = 0.1))$plot
+y <- c(0.15*X^3 + rnorm(length(X), 0, 1))
+z <- fit(X, y, noise = 1)
+Gaussian <- GPR$new(X, y, noise = 1, z$func)
+Gaussian$plot()$plot

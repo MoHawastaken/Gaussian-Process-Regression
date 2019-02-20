@@ -171,7 +171,7 @@ The class `GPC` solves binary classification problems by using a Gaussian proces
 GPC$new(X, y, noise, cov_func)
 ```
 
-The `$predict` function uses the Laplace approximation
+The `$predict` function returns the predicted values for a vector of test points.
 
 > "The fact that data science exists as a field is a colossal failure of statistics. To me, that is what statistics is all about." -- Hadley Wickham
 [via](https://priceonomics.com/hadley-wickham-the-man-who-revolutionized-r/)
@@ -275,3 +275,8 @@ simulate_classification(func, training_points, limits, k, num_data = 10)
   simulate_classification(func = f, limits = limits, k = k, num_data = 600)
 ```
   
+  
+  
+## GPplot
+
+The function `GPplot` opens a webapp, which has been generated using the package `shiny`. It shows plots for both regression and classification and has many ways to adjust the computed Gaussian process. Most features of the package are displayed there, as you can select a covariance function, change its parameters or compute the optimal ones.

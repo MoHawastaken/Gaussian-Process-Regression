@@ -1,3 +1,6 @@
+#'@export
+GPplot <- function(){
+
 library(shiny)
 
 `%then%` <- shiny:::`%OR%`
@@ -124,7 +127,6 @@ server <- function(input, output, session){
   observeEvent(input$opthyp,{
     z <- fit(X(), y(), input$noise + 0.1, list(cov_df$name[cov_df$display == input$cov]))
     for (i in seq_along(z$par)) updateSliderInput(session, sprintf("par%s", i), value = z$par[i])
-    print(paste("Optimal parameter: ", z$par))
   })
   output$plot1 <- renderPlot({
     #standard plot if nothing is selected:
@@ -155,7 +157,7 @@ server <- function(input, output, session){
         Gaussian <- reactive(GPR.rationalquadratic$new(X(), y(), input$noise, input$par1, input$par2))
       })
     X_points <- reactive(seq(input$xlim[1], input$xlim[2], by = 0.1))
-    p <- Gaussian()$plot(X_points())$plot
+    p <- Gaussian()$plot()$plot
     if (input$drawtrue) p <- p + ggplot2::geom_line(data = data.frame(x = X_points(), y = sapply(X_points(), f())), ggplot2::aes(x = x, y = y), linetype = "dashed")
     p
   })
@@ -205,5 +207,6 @@ server <- function(input, output, session){
 }
 
 shinyApp(ui, server)
+}
 
 
