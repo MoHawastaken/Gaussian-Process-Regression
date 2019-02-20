@@ -146,7 +146,7 @@ simulate_classification <- function(func, training_points, limits, k,
   # Testing
   test_points <- combine_all(lapply(1:D, 
                         function(i) seq(limits[i, 1], limits[i, 2], length.out = test_size^(1/D))))
-  plot_l <- Gaussian$plot(test_points)
+  plot_l <- Gaussian$plot(testpoints = test_points)
   predictions <- plot_l$pred
   residual <- 2*as.integer(predictions >= 0.5) - 1 - apply(test_points, 2, func)
   message(paste("Proportion of misclassified test points.", mean(abs(residual))/2, "\n"))
@@ -193,7 +193,7 @@ examples <- function() {
   f <- function(x) sin(10*x)
   limits <- matrix(c(0, 1), nrow = 1)
   X <- matrix(seq(0,1,by = 0.05), nrow = 1)
-  error <- error_function(rbeta, shape1 = 2, shape2 = 3)
+  error <- error_function(rcauchy)
   simulate_regression(f, limits, X, noise = 1, error = error)
   
   # example 3: two-dimensional

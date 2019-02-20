@@ -1,3 +1,4 @@
+#'@export
 GPplot <- function(){
 
 library(shiny)
