@@ -1,6 +1,8 @@
 #'  Predictions and Plots for Gaussian Process Regression
 #'
-#'  Implements gaussian processes and gives tools for gaussian process regression problems for given testpoints including clear plots of the results and optimization of hyperparameters.
+#'  Implements gaussian processes and gives tools for gaussian process
+#'  regression problems for given testpoints including clear plots of the
+#'  results and optimization of hyperparameters.
 #' 
 #' @usage 
 #' \preformatted{gpr_object <- GPR$new(X, y, noise = 0, k = fit(X, y, noise, cov_names)$func, cov_names = names(cov_dict))
@@ -31,14 +33,24 @@
 #'   \code{length.out} the number of subdivisions for the plots
 #'   
 #' @section Methods:
-#' \code{$predict(X_star, pointwise_var = TRUE)} returns a matrix of the expected value of the underlying function f and its variance for the testpoints. If the input is a vector of length n, predict will interpret it as n testpoints. Otherwise each column of the input matrix is interpreted as a testpoint. 
-#' For \code{pointwise_var = FALSE} , predict will return the predicted covariance matrix cov(X_star, X_star) instead of only its diagonal.
+#' \code{$predict(X_star, pointwise_var = TRUE)} returns a matrix of the
+#' expected value of the underlying function f and its variance for the
+#' testpoints. If the input is a vector of length n, predict will interpret it
+#' as n testpoints. Otherwise each column of the input matrix is interpreted as
+#' a testpoint. For \code{pointwise_var = FALSE} , predict will return the
+#' predicted covariance matrix cov(X_star, X_star) instead of only its diagonal.
 #' 
-#' \code{$plot(limits, length.out = 200L)} displays the results of the \code{predict} function on the interval given by \code{limits} and confidence regions of two standard deviations in a transparent plot
+#' \code{$plot(limits, length.out = 200L)} displays the results of the
+#' \code{predict} function on the interval given by \code{limits} and confidence
+#' regions of two standard deviations in a transparent plot
 #' 
-#' \code{$plot_posterior_draws(n = 5, limits, length.out = 200L)} plots n random functions drawn from the posterior distribution of the underlying Gaussian process on the interval given by \code{limits}
+#' \code{$plot_posterior_draws(n = 5, limits, length.out = 200L)} plots n random
+#' functions drawn from the posterior distribution of the underlying Gaussian
+#' process on the interval given by \code{limits}
 #' 
-#' \code{$plot_posterior_variance(where, limits, length.out = 200L)} visualizes the posterior covariance of the Gaussian process with specified points \code{where}
+#' \code{$plot_posterior_variance(where, limits, length.out = 200L)} visualizes
+#' the posterior covariance of the Gaussian process with specified points
+#' \code{where}
 #'
 #' @section Subclasses:
 #'
@@ -61,8 +73,12 @@
 #' @importFrom R6 R6Class
 #' @name GPR
 #' @section Details:
-#' If own covariance functions are used with GPR, they need to be vectorized. The plot functions are only implemented for one dimensional data.  
-#' This class allows customary use with its amount of optional parameters. Standard use 
+#' If own covariance functions are used with GPR, they need to be vectorized.
+#' The plot functions are only implemented for one dimensional data. Although
+#' this class allows customary use with its amount of optional parameters, since
+#' the default values are set by the optimal choice of hyperparameters and
+#' preimplemented covariance functions, the class is designed for well fitted
+#' and easy use by only giving the necessary inputs \code{X, y, noise}.
 #' 
 #' @examples
 #' X <- matrix(seq(-5,5,by = 1), nrow = 1)
