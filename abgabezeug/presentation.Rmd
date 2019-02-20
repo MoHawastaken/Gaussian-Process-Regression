@@ -91,6 +91,19 @@ Daten werden mit Fehler $\varepsilon$ beobachtet, $y_i = f(x_i) + \varepsilon_i$
 $\varepsilon_i \overset{\text{iid}}{\sim} \mathcal{N}(0, \sigma_n^2)$
 
 ## predict Algorithmus
+
+Inputs: X (inputs), y (targets), $\sigma_n^2$ (noise), k(covariance funtion), $X_*$ (test input)
+
+1. $L=\text{cholesky}(K(X,X)+\sigma_n^2 I)$
+2. $\alpha=\text{solve}(L^T,\text{solve}(L,y))$
+3. $\bar{f}(X_*)=K(X,X_*)^T\cdot\alpha$
+4. $v=\text{solve}(L,K(X,X_*))$
+5. $\bar{\text{V}}(\bar{f}(X_*))=k(X_*,X_*)-v^Tv$
+
+return: $\bar{f}(X_*)$, $\bar{\text{V}}(f(X_*))$
+
+
+## predict Algorithmus
 <img src="https://trello-attachments.s3.amazonaws.com/5c1367e7bda778491a4a4fde/5c1b68f238a2808027971811/dd63ca23dffa380ebbbce68d2d931ae2/algorithm_2_1_clear.png"
      alt="algorithm1"
      style="width:800px;" />
