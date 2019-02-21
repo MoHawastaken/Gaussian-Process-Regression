@@ -14,28 +14,29 @@ gpr_object$plot_posterior_variance(where, limits, length.out = 200L)
 }
 }
 \description{
-Implements gaussian processes and gives tools for gaussian process
+Implements Gaussian processes and gives tools for Gaussian process
  regression problems for given testpoints including clear plots of the
  results and optimization of hyperparameters.
 }
 \section{Arguments}{
 
+\describe{
+  \item{\code{X}}{matrix of inputs}
 
-  \code{X}          matrix of inputs
-
-  \code{y}          numeric vector of targets
+  \item{\code{y}}{numeric vector of targets}
   
-  \code{noise}      the inflicted noise of the observations
+  \item{\code{noise}}{the inflicted noise of the observations}
 
-  \code{cov_fun}    the chosen covariance function of the gaussian process (optional)
+  \item{\code{cov_fun}}{the chosen covariance function of the gaussian process (optional)}
   
-  \code{cov_names}  a list of given covariance functions to optimize over; relevant if \code{cov_fun} is not given (optional)
+  \item{\code{cov_names}}{a list of given covariance functions to optimize over; relevant if \code{cov_fun} is not given (optional)}
 
-  \code{X_star}     a matrix of test inputs, where each column is interpreted as one observation
+  \item{\code{X_star}}{a matrix of test inputs, where each column is interpreted as one observation}
 
-  \code{limits}     a vector of length 2, giving the lower and upper bound of the plot; the default is the extended range of X
+  \item{\code{limits}}{a vector of length 2, giving the lower and upper bound of the plot; the default is the extended range of X}
   
-  \code{length.out} the number of subdivisions for the plots
+  \item{\code{length.out}}{the number of subdivisions for the plots}
+  }
 }
 
 \section{Methods}{

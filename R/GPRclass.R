@@ -15,22 +15,23 @@
 #'}
 
 #' @section Arguments:
-#' 
-#'   \code{X}          matrix of inputs
+#'\describe{
+#'   \item{\code{X}}{matrix of inputs}
 #'
-#'   \code{y}          numeric vector of targets
+#'   \item{\code{y}}{numeric vector of targets}
 #'   
-#'   \code{noise}      the inflicted noise of the observations
+#'   \item{\code{noise}}{the inflicted noise of the observations}
 #' 
-#'   \code{cov_fun}    the chosen covariance function of the gaussian process (optional)
+#'   \item{\code{cov_fun}}{the chosen covariance function of the gaussian process (optional)}
 #'   
-#'   \code{cov_names}  a list of given covariance functions to optimize over; relevant if \code{cov_fun} is not given (optional)
+#'   \item{\code{cov_names}}{a list of given covariance functions to optimize over; relevant if \code{cov_fun} is not given (optional)}
 #' 
-#'   \code{X_star}     a matrix of test inputs, where each column is interpreted as one observation
+#'   \item{\code{X_star}}{a matrix of test inputs, where each column is interpreted as one observation}
 #' 
-#'   \code{limits}     a vector of length 2, giving the lower and upper bound of the plot; the default is the extended range of X
+#'   \item{\code{limits}}{a vector of length 2, giving the lower and upper bound of the plot; the default is the extended range of X}
 #'   
-#'   \code{length.out} the number of subdivisions for the plots
+#'   \item{\code{length.out}}{the number of subdivisions for the plots}
+#'   }
 #'   
 #' @section Methods:
 #' \code{$predict(X_star, pointwise_var = TRUE)}  
