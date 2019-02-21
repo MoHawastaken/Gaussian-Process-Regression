@@ -133,15 +133,21 @@ GPR <- R6::R6Class("GPR",
                  private$.X <- X
                  private$.y <- y
                  private$.k <- k
-                 private$.noise <- noise
                  n <- ncol(X)
                  K <- covariance_matrix(X, X, k)
-                 if(class(try(solve(K + noise * diag(n)),silent=T)) != "matrix"){
-                   stop("K(X,X) + noise * I is not invertible, the algorithm is not defined for this case.")
+                 #Adjust noise if chol() can't be computed
+                 new_noise <- noise
+                 for (i in 0:10){
+                   L <- tryCatch(t(chol(K + new_noise * diag(n))), error = function(cond){NULL})
+                   if(is.matrix(L)){
+                     if(i > 0) warning(sprintf("Noise got changed to %s to avoid errors in cholesky decomposition", new_noise))
+                     break()
+                   }
+                   new_noise <- (0.01 * 2^i + noise)
                  }
-                 private$.L <- tryCatch(t(chol(K + noise * diag(n))), error = function(cond){
-                   stop("Inputs lead to non positive definite covariance matrix. Try using a larger noise or a smaller lengthscale.")
-                 })
+                 if(!is.matrix(L)) stop("Inputs lead to non positive definite covariance matrix. Try using a larger noise or a smaller lengthscale.")
+                 private$.L <- L
+                 private$.noise <- new_noise
                  private$.alpha <- solve(t(self$L), solve(self$L, y))
                  private$.logp <- -0.5 * self$y %*% self$alpha - sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
                },
@@ -356,7 +362,7 @@ multivariate_normal <- function(n, mean, covariance, tol = 1e-6) {
   if (is.null(L)) {
     eig <- eigen(covariance, symmetric = TRUE)
     eigval <- eig$values
-    stopifnot(all(eigval > - tol*abs(eigval[1])))
+    stopifnot(all(eigval > -tol * abs(eigval[1])))
     L <- eig$vectors %*% diag(sqrt(pmax(eigval,0)))
   }
   drop(mean) + L %*% matrix(rnorm(n*length(mean), 0, 1), nrow = length(mean))
@@ -365,13 +371,12 @@ multivariate_normal <- function(n, mean, covariance, tol = 1e-6) {
 expand_range <- function(x) {
   r <- range(x)
   m <- mean(r)
-  c(m - 1.2*(m - r[1]), m + 1.2*(m = r[2]))
+  c(m - 1.2 * (m - r[1]), m + 1.2 * (m = r[2]))
 }
 
-# Implementation von Matrixversionen der Kovarianzfunktionen, um Effizienz zu erhöhen
-# Bei Eingabe zweier Matrizen gleicher Dimension, soll die Funktion auf die jeweils i-ten Spalten
-# für i = 1,...,ncol angewendet werden.
-# stopifnots für Dimension einfügen ?!
+# Implementation of matrix versions of the covariance functions to increase efficiency
+# For an input of two matrices with the same dimensions the used covariance function has 
+# to return the values from the application to their ith column for i = 1,...,ncol.
 constant <- function(x, y, c) UseMethod("constant")
 constant.matrix <- function(x, y, c) rep(c, ncol(x))
 constant.numeric <- function(x, y, c) c

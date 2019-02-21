@@ -1,7 +1,5 @@
 #'@export
 GPplot <- function(){
-  #print(cov_df)
-  print(cov_df$display)
 library(shiny)
 
 `%then%` <- shiny:::`%OR%`
@@ -94,7 +92,7 @@ server <- function(input, output, session){
     },
     "Linear" = {
       output$selectors <- switchrenderUI(3, session, 0.1, input$noise,
-                 "c \\cdot \\sum_{d=1}^D x_d x_d'",
+                 "c \\cdot \\sum_{d=1}^D x_d y_d'",
                  sliderInput("par1", "c", min = 0, max = 10, value = 1.2, step = 0.1))
     },
     "Polynomial" = {
@@ -161,6 +159,7 @@ server <- function(input, output, session){
         Gaussian <- reactive(GPR.rationalquadratic$new(X(), y(), input$noise, input$par1, input$par2))
       })
     X_points <- reactive(seq(input$xlim[1], input$xlim[2], by = 0.1))
+    updateSliderInput(session, "noise", value = Gaussian()$noise)
     p <- Gaussian()$plot()$plot
     if (input$drawtrue){
       p <- p + ggplot2::geom_line(data = data.frame(x = X_points(), y = sapply(X_points(), f())), 
