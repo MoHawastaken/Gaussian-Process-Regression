@@ -277,7 +277,7 @@ simulate_classification(func, training_points, limits, k, training_size = 10)
   
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=TRUE}
 s <- simulate_regression_gp(cov_func(sqrexp, l = 1), limits = matrix(c(-5,5), nrow = 1), 
-                         training_size = 10, random_training = TRUE, regression_noise = 0.01, error = error_function(rnorm, sd = 0.01), show_pred = FALSE)
+                         training_size = 10, random_training = TRUE, error = error_function(rnorm, sd = 0.01), show_pred = FALSE, noise = 0.01)
 ``` 
   
   

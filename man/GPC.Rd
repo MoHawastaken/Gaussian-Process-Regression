@@ -44,9 +44,9 @@ all testpoints in a nice plot
 }
 
 \examples{
-X <- matrix(seq(-1,1,by = 0.1), nrow = 1)
-y <- 2*as.integer(X > 0) - 1
-Gaussian_classifier <- GPC$new(X, y, 1e-5, function(x,y) exp(-3*(x - y)^2))
+X <- matrix(seq(-1, 1, by = 0.1), nrow = 1)
+y <- 2 * as.integer(X > 0) - 1
+Gaussian_classifier <- GPC$new(X, y, 1e-5, function(x,y) exp(-3 * (x - y)^2))
 Gaussian_classifier$plot()
 
 

@@ -32,8 +32,8 @@ cov_dict <- list(
   )
 )
 cov_df <- data.frame(list(name = "sqrexp", display = "Squared Exponential", start = I(list(1)), 
-                          func = I(list(cov_dict[["sqrexp"]]$func)), deriv = I(list(cov_dict[["sqrexp"]]$deriv)))
-                     , stringsAsFactors = FALSE )
+                          func = I(list(cov_dict[["sqrexp"]]$func)), deriv = I(list(cov_dict[["sqrexp"]]$deriv))), 
+                     stringsAsFactors = FALSE )
 
 for (name in names(cov_dict)[-1]){
   d1 <- list(name = name, display = cov_dict[[name]]$display, 
@@ -163,11 +163,3 @@ fit <-  function(X, y, noise, cov_names = as.list(cov_df$name)){
               func = function(x,y) do.call(cov_df[name, ]$func[[1]], append(list(x, y), par))))
 }
 
-
-#section for testing:
-
-X <- matrix(seq(-5, 5,by = 0.2), nrow = 1)
-y <- c(0.15 * X^3 + rnorm(length(X), 0, 1))
-z <- fit(X, y, noise = 1)
-Gaussian <- GPR$new(X, y, noise = 1, z$func)
-Gaussian$plot()$plot
