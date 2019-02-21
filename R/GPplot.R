@@ -159,6 +159,7 @@ server <- function(input, output, session){
         Gaussian <- reactive(GPR.rationalquadratic$new(X(), y(), input$noise, input$par1, input$par2))
       })
     X_points <- reactive(seq(input$xlim[1], input$xlim[2], by = 0.1))
+    updateSliderInput(session, "noise", value = Gaussian()$noise)
     p <- Gaussian()$plot()$plot
     if (input$drawtrue){
       p <- p + ggplot2::geom_line(data = data.frame(x = X_points(), y = sapply(X_points(), f())), 
