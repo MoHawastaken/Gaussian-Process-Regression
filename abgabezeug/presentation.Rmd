@@ -25,7 +25,8 @@ k <- 50 #DPI Anzahl, setze niedrig, um schneller zu rendern
 set.seed(0)
 X <- seq(-8, 8, by = 0.4)
 y <- (X^3 + 2*sin(3*X))*exp(-abs(X)) + rnorm(length(X), sd = 0.1)
-ggplot2::ggplot(data = data.frame(x = X, y = y), ggplot2::aes(x = x, y = y)) + ggplot2::theme_classic() + ggplot2::geom_point()
+ggplot2::ggplot(data = data.frame(x = X, y = y), ggplot2::aes(x = x, y = y, shape = 4)) +
+                   ggplot2::scale_shape_identity() + ggplot2::theme_classic() + ggplot2::geom_point() + ggplot2::ylim(-2.2,2.2) + ggplot2::xlim(-10, 10)
 ```
 
 ## Regression und Klassifikation
@@ -130,17 +131,19 @@ return: $\bar{f}(X_*)$, $\overline{\text{V}}(\bar{f}(X_*))$
 set.seed(0)
 X <- seq(-8, 8, by = 0.4)
 y <- (X^3 + 2*sin(3*X))*exp(-abs(X)) + rnorm(length(X), sd = 0.1)
-ggplot2::ggplot(data = data.frame(x = X, y = y), ggplot2::aes(x = x, y = y)) + ggplot2::theme_classic() + ggplot2::geom_point()
+ggplot2::ggplot(data = data.frame(x = X, y = y), ggplot2::aes(x = x, y = y, shape = 4)) +
+                   ggplot2::scale_shape_identity() + ggplot2::theme_classic() + ggplot2::geom_point() + ggplot2::ylim(-2.2,2.2) + ggplot2::xlim(-10, 10)
 ```
 
 ## Regression
 
-```{r dpi=k, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62}
+```{r dpi=k, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE}
 set.seed(0)
 X <- seq(-8, 8, by = 0.4)
 y <- (X^3 + 2*sin(3*X))*exp(-abs(X)) + rnorm(length(X), sd = 0.1)
 Gaussian <- GPR.sqrexp$new(X, y, noise = 0.01, l = 0.5)
-Gaussian$plot()$plot
+g <- Gaussian$plot()$plot
+g + ggplot2::ylim(-2.2,2.2) + ggplot2::xlim(-10, 10) + ggplot2::scale_y_continuous("y")
 ```
 
 
