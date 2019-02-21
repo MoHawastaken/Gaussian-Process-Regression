@@ -47,17 +47,22 @@ row.names(cov_df) <- cov_df$name
 optim_until_error <- function(start, f, ...) {
   l <- list()
   f_new <- function(...) {
-    out <- tryCatch(error = function(cond) return(-1000), f(...))
-    if (!(out == -1000)) {
+    out <- tryCatch(error = function(cond) return(-10000), f(...))
+    if (!(out == -10000)) {
       rlang::env_bind(rlang::env_parent(), l = append(l, list(c(...), out)))
     }
     return(out)
   }
   opt <- tryCatch(error = function(cond) return(NULL), optim(start, f_new, ...))
   if (is.null(opt)) {
-    which_best <- which.max(l[2*(1:(length(l)/2))])
-    par <- l[2 * which_best - 1]
-    return(list(par = par, value = l[2 * which_best]))
+    if (length(l) == 0) {
+      value <- tryCatch(error = function(cond) return(-10000), f(start))
+      return(list(par = start, value = value))
+    } else {
+      which_best <- which.max(l[2*(1:(length(l)/2))])
+      par <- l[[2 * which_best - 1]]
+      return(list(par = par, value = l[[2 * which_best]]))
+    }
   } else {
     return(opt)
   }

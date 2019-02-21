@@ -118,7 +118,7 @@ simulate_regression <- function(func, limits, training_points, training_size = 1
     predictions <- Gaussian$predict(x, pointwise_var = TRUE)
     ground_truth <- sapply(x, func)
   } else {
-    print("Plot with respect to first variable with all others fixed.")
+    message("Plot with respect to first variable with all others fixed.")
     plot_points <- rbind(x, matrix(apply(limits, 1, mean)[-1], 
                                           nrow = D - 1, ncol = length(x)))
     ground_truth <- apply(plot_points, 2, func)
