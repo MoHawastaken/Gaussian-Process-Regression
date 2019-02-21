@@ -4,26 +4,29 @@
 #'and plot its values for given test points
 #'
 #'
-#'@usage \preformatted{GPC <- GPC$new(X, y, cov_fun, epsilon)
+#'@usage \preformatted{ GPC <- GPC$new(X, y, cov_fun, epsilon)
 #'
-#'  GPC$predict_class(X*) GPC$plot(limits, length.out) GPC$plot(X*) }
+#'  GPC$predict_class(X*)
+#'  GPC$plot(limits, length.out)
+#'  GPC$plot(X*) }
 #'@section Arguments:
+#'\describe{
+#'  \item{\code{X}}{matrix of inputs}
 #'
-#'  \code{X} matrix of inputs
+#'  \item{\code{y}}{numeric vector of targets with values in \{-1,1\}}
 #'
-#'  \code{y} numeric vector of targets with values in \{-1,1\}
+#'  \item{\code{cov_fun}}{the chosen covariance function of the Gaussian process}
 #'
-#'  \code{cov_fun} the chosen covariance function of the gaussian process
+#'  \item{\code{epsilon}}{constant determining the threshold for the necessary
+#'  optimization}
 #'
-#'  \code{epsilon} constant determining the threshold for the necessary
-#'  optimization
+#'  \item{\code{X*}}{a numeric vector as the test input}
 #'
-#'  \code{X*} a numeric vector as the test input
+#'  \item{\code{limits}}{a numeric vector with lower and upper bounds for the plot}
 #'
-#'  \code{limits} a numeric vector with lower and upper bounds for the plot
-#'
-#'  \code{length.out} an integer indicating the number of points which are
-#'  getting plotted
+#'  \item{\code{length.out}}{an integer indicating the number of points which are
+#'  getting plotted}
+#'  }
 #'
 #'@section Methods:
 #'
