@@ -14,7 +14,7 @@
 \item{noise}{the inflicted noise of the observations}
 
 \item{cov_names}{a list of names of covariance functions; if no list is given, all implemented functions are used
-("sqrexp","gammaexp", "constant", "linear", polynomial", "rationalquadratic")}
+("sqrexp", "gammaexp", "constant", "linear", polynomial", "rationalquadratic")}
 }
 \value{
 A list of outputs:

@@ -2,7 +2,7 @@
 % Please edit documentation in R/simulation.R
 \name{simulate_regression}
 \alias{simulate_regression}
-\title{Simulation for Regression}
+\title{Simulation for Regression - Deterministic ground truth}
 \usage{
 \preformatted{simulate_regression(func, limits, training_points,
  training_size = 10L, error = function(x) 0, test_size = 10000, ...) }
@@ -21,6 +21,9 @@ are given}
 
 \item{test_size}{number of test points at which regression function and
 Gaussian process are compared}
+
+\item{show_pred}{logical determining if plot of absolute prediction error over
+predicted variance is to be shown}
 
 \item{...}{arguments passed on to the constructor of the Gaussian process}
 }
@@ -52,12 +55,14 @@ The predictions of the Gaussian process are compared to the ground truth
 the hyperrectangle. Before returning the \code{summary} of the absolute error
 in these test points, \code{simulate_regression} provides two plots. One of
 the absolute error over the predicted variance and one of the regression
-function \code{func} and the predictions of the Gaussian process. If \eqn{D >
-1}, the second plot is made with respect to the first dimension, with all
-other variables fixed at the middle of the their corresponding interval.
+function \code{func} and the predictions of the Gaussian process. For some
+inputs, the first plot may not be very informative. Setting \code{show_pred =
+FALSE}, the first plot is not shown. If \eqn{D > 1}, the second plot is made
+with respect to the first dimension, with all other variables fixed at the
+middle of the their corresponding interval.
 }
 \examples{
-f <- function(x) 0.1*x^3
+f <- function(x) 0.1 * x^3
 limits <- matrix(c(-6, 6), nrow = 1)
 X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
 error <- error_function(rnorm, sd = 2)
