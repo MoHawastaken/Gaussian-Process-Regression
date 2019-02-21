@@ -229,6 +229,8 @@ Decision regions are chosen with a threshold of 0.5, as the decison function map
 
 ## Simulation
 
+The three simulation functions `simulate_regression`, `simulate_regression_gp` and `simulate_classification` are wrappers for central features of our package and return plots and an error summary offering a comfortable overview over strengths and weaknesses of the implemented algorithms. They have lots of parameters to adjust specific circumstances, but allow easy use by just demanding `func, limits` (and `actual_cov` in `simulate_regression_gp`).
+
 ```{r eval=FALSE}
 simulate_regression(func, limits, training_points, num_data = 10, 
                                 noise = 0, error = function(x) 0, cov_names = names(cov_dict))
