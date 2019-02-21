@@ -117,8 +117,8 @@ server <- function(input, output, session){
   })
   X <- reactive({validate(need(input$n, "Number of datapoints can't be empty"))
     if (input$drawrand){
-    set.seed(seed()) #keep the randomly generated datapoints fixed so changing other parameter doesn't change them
-    matrix(runif(input$n, input$xlim[1], input$xlim[2]), nrow = 1)
+      set.seed(seed()) #keep the randomly generated datapoints fixed so changing other parameter doesn't change them
+    matrix(runif(input$n, input$xlim[1], input$xlim[2]), nrow = 1) #select points randomly in interval
   }
   else{
     matrix(seq(input$xlim[1],input$xlim[2], by = (input$xlim[2] - input$xlim[1])/input$n), nrow = 1)
@@ -126,6 +126,7 @@ server <- function(input, output, session){
   #generate datapoints using function f
   y <- reactive({set.seed(seed())
     c(f()(X()) + rnorm(length(X()), 0, sqrt(input$gennoise)))})
+  #Optimise Hyperparameters
   observeEvent(input$opthyp,{
     z <- fit(X(), y(), input$noise + 0.1, list(cov_df$name[cov_df$display == input$cov]))
     for (i in seq_along(z$par)) updateSliderInput(session, sprintf("par%s", i), value = z$par[i])
@@ -161,6 +162,7 @@ server <- function(input, output, session){
     X_points <- reactive(seq(input$xlim[1], input$xlim[2], by = 0.1))
     updateSliderInput(session, "noise", value = Gaussian()$noise)
     p <- Gaussian()$plot()$plot
+    #Add underlying function to the plot
     if (input$drawtrue){
       p <- p + ggplot2::geom_line(data = data.frame(x = X_points(), y = sapply(X_points(), f())), 
                                   ggplot2::aes(x = x, y = y), linetype = "dashed")
@@ -168,8 +170,9 @@ server <- function(input, output, session){
     p
   })
   #Classification Panel
+  #Save points that are added via click on plot
   click_saved <- reactiveValues(singleclick = NULL)
-  rv = reactiveValues(m=data.frame(x = 0, y = 0, label = -1))
+  rv = reactiveValues(m = data.frame(x = 0, y = 0, label = -1))
   observeEvent(input$plot_click,{
     click_saved$singleclick <- input$plot_click
     rv$m <- rbind(rv$m, c(input$plot_click$x, input$plot_click$y, as.double(input$label)))
@@ -183,9 +186,7 @@ server <- function(input, output, session){
   y_c <- eventReactive(input$refresh, {
     c(rep(c(1, -1), each = input$n2), rv$m$label)
   }, ignoreNULL = FALSE)
-  output$info <- renderText({
-    paste0(input$plot_click$x, input$plot_click$y)
-  })
+  #Only compute new GPC object if button is clicked
   dat <- eventReactive(c(input$refresh,input$n2),{
     kappa <- function(x, y) sqrexp(x, y, l = 1)
     gaussian_classifier <- GPC$new(X_c(), y_c(), kappa)
