@@ -14,7 +14,7 @@ gpr_object$plot_posterior_variance(where, limits, length.out = 200L)
 }
 }
 \description{
-Implements gaussian processes and gives tools for gaussian process
+Implements Gaussian processes and gives tools for Gaussian process
  regression problems for given testpoints including clear plots of the
  results and optimization of hyperparameters.
 }

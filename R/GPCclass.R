@@ -1,41 +1,40 @@
-#'  Predictions and Plots for Gaussian process classification
+#'Predictions and Plots for Gaussian process classification
 #'
-#'  Implements a Gaussian process for classification and gives tools 
-#'  to predict and plot its values for given test points
-#' 
+#'Implements a Gaussian process for classification and gives tools to predict
+#'and plot its values for given test points
 #'
-#' @usage \preformatted{GPC <- GPC$new(X, y, noise, cov_fun)
 #'
-#' GPC$predict(X*)
-#' GPC$plot(limits, length.out)
-#' GPC$plot(X*)
-#'}
-#' @section Arguments:
-#' 
-#'   \code{X} matrix of inputs
+#'@usage \preformatted{GPC <- GPC$new(X, y, cov_fun, epsilon)
 #'
-#'   \code{y} numeric vector of targets with values in \{-1,1\}
-#' 
-#'   \code{cov_fun} the chosen covariance function of the gaussian process
-#' 
-#'   \code{noise} the inflicted noise of the observations
-#' 
-#'   \code{X*} a numeric vector as the test input
-#'   
-#'   \code{limits} a numeric vector with lower and upper bounds for the plot
-#'   
-#'   \code{length.out} an integer indicating the number of points which are getting plotted
-#'   
-#' @section Methods:
-#' 
-#' \code{$predict()} returns a numeric vector of the expected value of the underlying 
-#' function f
-#' 
-#' \code{$plot()} displays the results of the predict function for a number of points between limits or for 
-#' all testpoints in a nice plot
+#'  GPC$predict_class(X*) GPC$plot(limits, length.out) GPC$plot(X*) }
+#'@section Arguments:
 #'
-#' 
-#' 
+#'  \code{X} matrix of inputs
+#'
+#'  \code{y} numeric vector of targets with values in \{-1,1\}
+#'
+#'  \code{cov_fun} the chosen covariance function of the gaussian process
+#'
+#'  \code{epsilon} constant determining the threshold for the necessary
+#'  optimization
+#'
+#'  \code{X*} a numeric vector as the test input
+#'
+#'  \code{limits} a numeric vector with lower and upper bounds for the plot
+#'
+#'  \code{length.out} an integer indicating the number of points which are
+#'  getting plotted
+#'
+#'@section Methods:
+#'
+#'  \code{$predict_class()} returns a numeric vector with the predicted
+#'  posterior probabilities of class 1
+#'
+#'  \code{$plot()} displays the results of the predict function for a number of
+#'  points between limits or for all testpoints in a nice plot
+#'
+#'
+#'
 #' @examples
 #' X <- matrix(seq(-1, 1, by = 0.1), nrow = 1)
 #' y <- 2 * as.integer(X > 0) - 1
@@ -43,9 +42,10 @@
 #' Gaussian_classifier$plot()
 #'
 #'
-#' @importFrom R6 R6Class
-#' @name GPC
-#' @references Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
+#'@importFrom R6 R6Class
+#'@name GPC
+#'@references Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian
+#'  processes for machine learning
 NULL
 
 #' @export
