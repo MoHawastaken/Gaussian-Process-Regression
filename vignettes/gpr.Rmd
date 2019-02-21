@@ -101,7 +101,7 @@ Gaussian$plot()
 ```
 
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62}
-X <- seq(-8, 8, by = 0.1)
+X <- seq(-8, 8, by = 0.4)
 y <- (X^3 + 2*sin(3*X))*exp(-abs(X)) + rnorm(length(X), sd = 0.1)
 Gaussian <- GPR.sqrexp$new(X, y, noise = 0.01, l = 1)
 Gaussian$plot()$plot
@@ -113,7 +113,7 @@ plot_posterior_draws(n = 5, limits = c(expand_range(self$X)[1], expand_range(sel
 ```
 
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62}
-X <- seq(-8, 8, by = 0.1)
+X <- seq(-8, 8, by = 0.4)
 y <- (X^3 + 2*sin(3*X))*exp(-abs(X)) + rnorm(length(X), sd = 0.1)
 Gaussian <- GPR.sqrexp$new(X, y, noise = 0.01, l = 1)
 Gaussian$plot_posterior_draws(3)
@@ -126,7 +126,7 @@ plot_posterior_variance(where, limits = c(min(self$X), max(self$X)), subdivision
 ```
 
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62}
-X <- seq(-8, 8, by = 0.1)
+X <- seq(-8, 8, by = 0.4)
 y <- (X^3 + 2*sin(3*X))*exp(-abs(X)) + rnorm(length(X), sd = 0.1)
 Gaussian <- GPR.sqrexp$new(X, y, noise = 0.01, l = 1)
 Gaussian$plot_posterior_variance(c(-6, 0, 3))
