@@ -137,9 +137,9 @@ Gaussian$plot_posterior_variance(c(-6, 0, 3))
 [via](http://bulletin.imstat.org/2014/09/data-science-how-is-it-different-to-statistics%E2%80%89/)
 
 For a given set of data points the `fit()` function can select the optimal hyperparameters of the covariance function and choose the best covariance function from a given list. `X` and `y` have to be data from a regression problem with assumed `noise` and `cov_names` is a list of names of covariance functions. Then the maximum of the marginal log likelihood (given by the formula from the `$predict` function) is calculated over the parameter region. 
-$$ \log(y| X, \theta) = - \frac{1}{2} y^\top K^{-1} y - \frac{1}{2} \log |K| - \frac{n}{2}\log 2 \pi $$
+$$ \log p(y| X, \theta) = - \frac{1}{2} y^\top K^{-1} y - \frac{1}{2} \log |K| - \frac{n}{2}\log 2 \pi $$
 This is done by using the derivative of the likelihood and the `optim` function.
-$$ \frac{\partial}{\partial \theta_j} \log(y| X, \theta) = \frac{1}{2} \text{tr} \left( (\alpha \alpha^\top - K^{-1}) \frac{\partial K}{\partial \theta_j} \right) \; \text{ where } \alpha = K^{-1}y$$
+$$ \frac{\partial}{\partial \theta_j} \log p(y| X, \theta) = \frac{1}{2} \text{tr} \left( (\alpha \alpha^\top - K^{-1}) \frac{\partial K}{\partial \theta_j} \right) \; \text{ where } \alpha = K^{-1}y$$
 ```{r, eval=FALSE}
 fit(X, y, noise, cov_names)
 ```
@@ -275,6 +275,13 @@ simulate_classification(func, training_points, limits, k, training_size = 10)
   s <- simulate_classification(func = f, limits = limits, k = k, training_size = 600)
 ```
   
+Simulating a random function with little noise, randomly drawn training data and covariance function squared exponential and its fit with `simulate_regression_gp` may look like this:
+
+```{r eval=FALSE}
+simulate_regression_gp(actual_cov, limits, error = function(x) 0, test_size = 300L, 
+                training_size = 10L, random_training = TRUE, show_pred = FALSE, ...)
+```
+
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=TRUE}
 s <- simulate_regression_gp(cov_func(sqrexp, l = 1), limits = matrix(c(-5,5), nrow = 1), 
                          training_size = 10, random_training = TRUE, error = error_function(rnorm, sd = 0.01), show_pred = FALSE, noise = 0.01)
@@ -283,4 +290,4 @@ s <- simulate_regression_gp(cov_func(sqrexp, l = 1), limits = matrix(c(-5,5), nr
   
 ## GPplot
 
-The function `GPplot` opens a webapp, which has been generated using the package `shiny`. It shows plots for both regression and classification and has many ways to adjust the computed Gaussian process. Most features of the package are displayed there, as you can select a covariance function, change its parameters or compute the optimal ones.
+The function `GPplot` opens a webapp, which has been generated using the package `shiny`. It shows plots for both regression and classification and has many ways to adjust the computed Gaussian process. Most features of the package are displayed there, as you can select a covariance function, change its parameters or compute the optimal ones. Note that the needed Cholesky decomposition of `K(X,X) + noise * diag(n)` may fail for some inputs. In that case `noise` is automatically increased and you should expect suboptimal results.
