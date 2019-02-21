@@ -92,7 +92,7 @@ server <- function(input, output, session){
     },
     "Linear" = {
       output$selectors <- switchrenderUI(3, session, 0.1, input$noise,
-                 "c \\cdot \\sum_{d=1}^D x_d x_d'",
+                 "c \\cdot \\sum_{d=1}^D x_d y_d'",
                  sliderInput("par1", "c", min = 0, max = 10, value = 1.2, step = 0.1))
     },
     "Polynomial" = {
