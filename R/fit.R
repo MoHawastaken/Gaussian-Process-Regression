@@ -67,8 +67,8 @@ optim_until_error <- function(start, f, ...) {
 #' Applies optimization methods to find optimal parameters of given covariance functions for a given set of datapoints
 #' 
 #' \code{fit()} maximizes the log likelihood of the posterior distribution as a function of the hyperparameters.
-#' Depending on the covariance function and the inflicted noise, the matrix K + noise * diag(n) - where K is the covariance matrix
-#' of X - may be singular, so that the needed Cholesky decomposition is not posible. In this case \code{optim()} stops for the
+#' Depending on the covariance function and the inflicted noise, the matrix \code{K + noise * diag(n)} - where K is the covariance matrix
+#' of X - may close to singular, so that the needed Cholesky decomposition is not posible. In this case \code{optim()} stops for the
 #' actual covariance function and the best hyperparameters up that point are saved. This behaviour may be responsible for a bad fit,
 #' especially with noise = 0 or small enough.
 #' 
