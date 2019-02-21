@@ -4,7 +4,7 @@
 \alias{GPR}
 \title{Predictions and Plots for Gaussian Process Regression}
 \usage{
-\preformatted{gpr_object <- GPR$new(X, y, noise = 0, k = fit(X, y, noise, cov_names)$func, cov_names = names(cov_dict))
+\preformatted{ gpr_object <- GPR$new(X, y, noise = 0, k = fit(X, y, noise, cov_names)$func, cov_names = names(cov_dict))
 
 
 gpr_object$predict(X_star, pointwise_var = TRUE)

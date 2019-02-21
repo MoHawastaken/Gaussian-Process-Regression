@@ -5,13 +5,13 @@
 #'  results and optimization of hyperparameters.
 #' 
 #' @usage 
-#' \preformatted{gpr_object <- GPR$new(X, y, noise = 0, k = fit(X, y, noise, cov_names)$func, cov_names = names(cov_dict))
+#' \preformatted{ gpr_object <- GPR$new(X, y, noise = 0, k = fit(X, y, noise, cov_names)$func, cov_names = names(cov_dict))
 #'
 #'
-#' gpr_object$predict(X_star, pointwise_var = TRUE)
-#' gpr_object$plot(limits, length.out = 200L)
-#' gpr_object$plot_posterior_draws(n = 5, limits, length.out = 200L)
-#' gpr_object$plot_posterior_variance(where, limits, length.out = 200L)
+#'  gpr_object$predict(X_star, pointwise_var = TRUE)
+#'  gpr_object$plot(limits, length.out = 200L)
+#'  gpr_object$plot_posterior_draws(n = 5, limits, length.out = 200L)
+#'  gpr_object$plot_posterior_variance(where, limits, length.out = 200L)
 #'}
 
 #' @section Arguments:
