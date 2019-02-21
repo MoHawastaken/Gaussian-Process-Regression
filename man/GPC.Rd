@@ -4,43 +4,42 @@
 \alias{GPC}
 \title{Predictions and Plots for Gaussian process classification}
 \usage{
-\preformatted{GPC <- GPC$new(X, y, noise, cov_fun)
+\preformatted{GPC <- GPC$new(X, y, cov_fun, epsilon)
 
-GPC$predict(X*)
-GPC$plot(limits, length.out)
-GPC$plot(X*)
-}
+ GPC$predict_class(X*) GPC$plot(limits, length.out) GPC$plot(X*) }
 }
 \description{
-Implements a Gaussian process for classification and gives tools 
- to predict and plot its values for given test points
+Implements a Gaussian process for classification and gives tools to predict
+and plot its values for given test points
 }
 \section{Arguments}{
 
 
-  \code{X} matrix of inputs
+ \code{X} matrix of inputs
 
-  \code{y} numeric vector of targets with values in \{-1,1\}
+ \code{y} numeric vector of targets with values in \{-1,1\}
 
-  \code{cov_fun} the chosen covariance function of the gaussian process
+ \code{cov_fun} the chosen covariance function of the gaussian process
 
-  \code{noise} the inflicted noise of the observations
+ \code{epsilon} constant determining the threshold for the necessary
+ optimization
 
-  \code{X*} a numeric vector as the test input
-  
-  \code{limits} a numeric vector with lower and upper bounds for the plot
-  
-  \code{length.out} an integer indicating the number of points which are getting plotted
+ \code{X*} a numeric vector as the test input
+
+ \code{limits} a numeric vector with lower and upper bounds for the plot
+
+ \code{length.out} an integer indicating the number of points which are
+ getting plotted
 }
 
 \section{Methods}{
 
 
-\code{$predict()} returns a numeric vector of the expected value of the underlying 
-function f
+ \code{$predict_class()} returns a numeric vector with the predicted
+ posterior probabilities of class 1
 
-\code{$plot()} displays the results of the predict function for a number of points between limits or for 
-all testpoints in a nice plot
+ \code{$plot()} displays the results of the predict function for a number of
+ points between limits or for all testpoints in a nice plot
 }
 
 \examples{
@@ -52,5 +51,6 @@ Gaussian_classifier$plot()
 
 }
 \references{
-Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian processes for machine learning
+Rasmussen, Carl E.; Williams, Christopher K. I. (2006).	Gaussian
+ processes for machine learning
 }
