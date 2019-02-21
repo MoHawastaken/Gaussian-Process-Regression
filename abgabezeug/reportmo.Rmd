@@ -15,7 +15,7 @@ Unser Paket implementiert Gaussian Process Regression (GPR), Classification (GPC
 
 #### Regression
 
-Wir haben uns dazu entschieden, eine R6-Klasse für die Regression anzulegen. Grund hierfür war die leichte Erstellung von schreibgeschützen Bereichen. Dies erschien sinnvoll, da die Algorithmen einige rechenaufwendige Schritte beinhalten, die nur einmal ausgeführt werden sollten (z.B. Cholesky Zerlegung) und somit beim Erstellen der Klasse ausgeführt werden müssen, wir aber den Nutzer davor schützen wollten beim Hinzufügen von Daten eine neue Berechnung der implizit genutzten Variablen in den Algorithmen zu vergessen. Obwohl unsere Klasse die Eingabe beliebiger Daten und Kovarianzfunktionen ermöglicht, besticht sie durch einfache und optimierte Nutzung, indem man nur die nötigen Inputs X, y und noise angibt. Eine Vektorisierung der von uns implementierten Kovarianz-Funktionen sowie der Vorhersage-Methode hat die Effizienz dieser Methode und damit auch der Plots erheblich verbessert. Die Dokumentationen von GPR und fit erläutern die einfache Nutzung unseres Pakets mit Minimalbeispielen.
+Wir haben uns dazu entschieden, eine R6-Klasse für die Regression anzulegen. Grund hierfür war die leichte Erstellung von schreibgeschützen Bereichen. Dies erschien sinnvoll, da die Algorithmen einige rechenaufwendige Schritte beinhalten, die nur einmal ausgeführt werden sollten (z.B. Cholesky Zerlegung) und somit beim Erstellen der Klasse ausgeführt werden müssen, wir aber den Nutzer davor schützen wollten beim Hinzufügen von Daten eine neue Berechnung der implizit genutzten Variablen in den Algorithmen zu vergessen. Obwohl unsere Klasse die Eingabe beliebiger Daten und Kovarianzfunktionen ermöglicht, besticht sie durch einfache und optimierte Nutzung, indem man nur die nötigen Inputs X, y und noise angibt. Eine Vektorisierung der von uns implementierten Kovarianz-Funktionen sowie der Vorhersage-Methode hat die Effizienz dieser Methode und damit auch der Plots erheblich verbessert. Die Dokumentationen von GPR und fit erläutern die einfache Nutzung unseres Pakets mit Minimalbeispielen. Die Unterklassen von GPR wurden im Laufe des Projekts überflüssig; ihre Nutzung ist Geschmackssache und bietet sich an, wenn man eine der vorimplementierten Kovarianzfunktionen mit bestimmten Parametern nutzen will.
 
 ## Optimierung der Hyperparameter
 
@@ -45,7 +45,5 @@ Der Plot zur Klassifikation lässt sich durch das manuelle Hinzufügen von Punkt
 
 
 ## Abschließende Bemerkungen
-**Was zur Teamarbeit**
-Insgesamt war es ein spannendes Projekt, auch wenn R manchmal das Maschinentourette in einem neu erwecken kann.
-
+Das Projekt war sehr zeitaufwendig. Dafür bin ich zufrieden mit unseren Ergebnissen und dass wir die meisten Inhalte der Vorlesung darin umsetzen und festigen konnten. Das Thema war spannend und unsere Gruppe hatte eine sehr konstruktive Arbeitsatmosphäre.
 
