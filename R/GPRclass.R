@@ -138,13 +138,13 @@ GPR <- R6::R6Class("GPR",
                  K <- covariance_matrix(X, X, k)
                  #Adjust noise if chol() can't be computed
                  new_noise <- noise
-                 for (i in 0:10){
+                 for (i in 1:10){
                    L <- tryCatch(t(chol(K + new_noise * diag(n))), error = function(cond){NULL})
                    if(is.matrix(L)){
                      if(i > 0) warning(sprintf("Noise got changed to %s to avoid errors in cholesky decomposition", new_noise))
                      break()
                    }
-                   new_noise <- (0.01 * 2^i + noise)
+                   new_noise <- (0.01 * i + noise)
                  }
                  if(!is.matrix(L)) stop("Inputs lead to non positive definite covariance matrix. Try using a larger noise or a smaller lengthscale.")
                  private$.L <- L
