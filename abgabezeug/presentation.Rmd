@@ -55,10 +55,10 @@ $f(x) := f_x$, $(f_x)_{x \in X}$ wird aufgefasst als zufällige Funktion $f:X \t
 
 ## Anwendung
 
-1. Regression: Vorhersage des Prozesses zu anderen Zeitpunkten
-+  Reale Anwendungen?
-2. Klassifikation: Vorhersage der Zugehörigkeit von Beobachtungen zu verschiedenen Klassen
-+  Reale Anwendungen?
+- Regression: Vorhersage des Prozesses zu anderen Zeitpunkten
+
+- Klassifikation: Vorhersage der Zugehörigkeit von Beobachtungen zu verschiedenen Klassen
+
 
 ## Mathe zu GPR
 
@@ -94,13 +94,9 @@ $$
 - Unterklassen für häufig auftretende Kovarianzfunktionen die lediglich Parametereingabe erfordern
 
 
-## predict Algorithmus
-
-Daten werden mit Fehler $\varepsilon$ beobachtet, $y_i = f(x_i) + \varepsilon_i$ $\varepsilon_i \overset{\text{iid}}{\sim} \mathcal{N}(0, \sigma_n)$
-
 
 ## predict Algorithmus
-Daten werden mit Fehler $\varepsilon$ beobachtet, $y_i = f(x_i) + \varepsilon_i$ $\varepsilon_i \overset{\text{iid}}{\sim} \mathcal{N}(0, \sigma_n^2)$
+Annahme: $y_i = f(x_i) + \varepsilon_i$, $\varepsilon_i \overset{\text{iid}}{\sim} \mathcal{N}(0, \sigma_n^2)$
 
 Inputs: $X$ (inputs), $y$ (targets), $\sigma_n^2$ (noise), $k$ (covariance funtion), $X_*$ (test input)
 
@@ -151,12 +147,13 @@ Achtung: Funktioniert nur über eingespeicherte Kovarianzfunktionen
 
 ## Gewählte Kovarianzfunktion
 
-```{r dpi=k, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62}
+```{r dpi=k, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=TRUE}
 X <- matrix(seq(-5,5,by = 0.5), nrow = 1)
 noise <- 0.5
 y <- c(0.1*X^3 + rnorm(length(X), 0, noise))
 Gaussian <- GPR.sqrexp$new(X, y, noise, 1)
 Gaussian$plot()$plot
+message("The chosen covariance function is sqr.exp")
 ```
 
 ## Optimierte Kovarianzfunktion
@@ -177,11 +174,19 @@ message(sprintf("The optimal covariance function is %s",z$cov))
 - Modellierung der posterior Wahrscheinlichkeit $\mathbb{P}(g = +1|x)$ durch $\sigma(f(x))$
 - $f(x)$ ist ein Gaußscher Prozess
 - $\sigma$ ist die Sigmoid Funktion $\sigma : \mathbb{R} \rightarrow [0,1]$, $z \mapsto \frac{1}{1 + \exp(-z)}$
+- Bestimmen $$\hat{g}(x) = \left\{
+\begin{array}{ll}
+1 & \sigma(f(x)) \geq 0.5 \\
+-1 & \, \sigma(f(x)) < 0.5 \\
+\end{array}
+\right. $$ 
+Stimmt das?
 
 ## GPC
 
 - R6 Klasse
 - Methoden `$predict`, `$plot`
+- ?Effizienz durch Vektorisierung?
 
 ## Simulation
 
