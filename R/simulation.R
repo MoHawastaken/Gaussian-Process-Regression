@@ -62,7 +62,7 @@
 #'@name simulate_regression
 #'@export
 simulate_regression <- function(func, limits, training_points, training_size = 10L, 
-                    error = function(x) 0, test_size = 10000, show_pred = TRUE, ...) {
+                    error = function(x) 0, test_size = 10000L, show_pred = TRUE, ...) {
   # Check correctness of inputs
   stopifnot(is.function(func), is.numeric(limits), length(limits) %% 2 == 0)
   stopifnot(is.numeric(training_size), training_size > 0)
@@ -123,8 +123,8 @@ simulate_regression <- function(func, limits, training_points, training_size = 1
 }
 
 #' @export
-simulate_regression_gp <- function(actual_cov, limits, error = function(x) 0, test_size = 300, 
-                training_size = 10, random_training = TRUE, regression_noise = 0.1, show_pred = FALSE, ...) {
+simulate_regression_gp <- function(actual_cov, limits, error = function(x) 0, test_size = 300L, 
+                training_size = 10L, random_training = TRUE, regression_noise = 0.1, show_pred = FALSE, ...) {
   # Check correctness of inputs
   stopifnot(is.function(actual_cov), is.numeric(limits), length(limits) %% 2 == 0)
   stopifnot(is.function(error), is.numeric(test_size), test_size > 0)

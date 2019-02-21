@@ -1,7 +1,5 @@
 #'@export
 GPplot <- function(){
-  #print(cov_df)
-  print(cov_df$display)
 library(shiny)
 
 `%then%` <- shiny:::`%OR%`

@@ -133,15 +133,26 @@ GPR <- R6::R6Class("GPR",
                  private$.X <- X
                  private$.y <- y
                  private$.k <- k
-                 private$.noise <- noise
                  n <- ncol(X)
                  K <- covariance_matrix(X, X, k)
-                 if(class(try(solve(K + noise * diag(n)),silent=T)) != "matrix"){
-                   stop("K(X,X) + noise * I is not invertible, the algorithm is not defined for this case.")
+                 #if(class(try(solve(K + noise * diag(n)),silent=T)) != "matrix"){
+                 #  stop("K(X,X) + noise * I is not invertible, the algorithm is not defined for this case.")
+                 #}
+                 #private$.L <- tryCatch(t(chol(K + noise * diag(n))), error = function(cond){
+                 #  stop("Inputs lead to non positive definite covariance matrix. Try using a larger noise or a smaller lengthscale.")
+                 #})
+                 new_noise <- noise
+                 for (i in 0:10){
+                   L <- tryCatch(t(chol(K + new_noise * diag(n))), error = function(cond){NULL})
+                   if(is.matrix(L)){
+                     if(i > 0) warning(sprintf("Noise got changed to %s to avoid errors in cholesky decomposition", new_noise))
+                     break()
+                   }
+                   new_noise <- (0.01 * 2^i + noise)
                  }
-                 private$.L <- tryCatch(t(chol(K + noise * diag(n))), error = function(cond){
-                   stop("Inputs lead to non positive definite covariance matrix. Try using a larger noise or a smaller lengthscale.")
-                 })
+                 if(!is.matrix(L)) stop("Inputs lead to non positive definite covariance matrix. Try using a larger noise or a smaller lengthscale.")
+                 private$.L <- L
+                 private$.noise <- new_noise
                  private$.alpha <- solve(t(self$L), solve(self$L, y))
                  private$.logp <- -0.5 * self$y %*% self$alpha - sum(log(diag(self$L))) - ncol(self$X) / 2 * log(2 * pi)
                },
