@@ -85,6 +85,7 @@ ggplot2::ggplot(data = data.frame(x = training_points[1, ], y = training_points[
 ## Einführung zu Gaußschen Prozessen
 Im Folgenden: $X = \mathbb{R}^d$ und $m(x) = 0$  
 Beispiel für k: $k(x,y) = \exp \left(-\frac{(x-y)^2}{2\ell}\right)$
+
 3 Beobachtungen eines Gausschen Prozess' mit dieser Covarianzfunktion (l = 1)
 
 ```{r dpi=k, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=TRUE}
@@ -126,6 +127,7 @@ f(X_*)
  \right)
 $$
 $K(X,X)_{i,j} = k(X_i, X_j)$  
+
 Bedingte Verteilung:
 $$
 f(X_*)|f(X), X, X_* \sim \mathcal{N}(\mu, \Sigma)
@@ -138,7 +140,7 @@ $$
 $$
 
 ## predict Algorithmus
-Annahme: $y_i = f(x_i) + \varepsilon_i$, $\varepsilon_i \overset{\text{iid}}{\sim} \mathcal{N}(0, \sigma_n^2)$
+Annahme: $$y_i = f(x_i) + \varepsilon_i, \varepsilon_i \overset{\text{iid}}{\sim} \mathcal{N}(0, \sigma_n^2)$$
 
 Inputs: $X$ (inputs), $y$ (targets), $\sigma_n^2$ (noise),  
 $K$ (covariance funtion), $X_*$ (test input)
@@ -152,7 +154,7 @@ $K$ (covariance funtion), $X_*$ (test input)
 return: $\bar{f}(X_*)$, $\overline{\text{V}}(\bar{f}(X_*))$
 
 ## predict Algorithmus
-Annahme: $y_i = f(x_i) + \varepsilon_i$, $\varepsilon_i \overset{\text{iid}}{\sim} \mathcal{N}(0, \sigma_n^2)$
+Annahme: $$y_i = f(x_i) + \varepsilon_i, \varepsilon_i \overset{\text{iid}}{\sim} \mathcal{N}(0, \sigma_n^2)$$
 
 Inputs: $X$ (inputs), $y$ (targets), $\sigma_n^2$ (noise),  
 $K$ (covariance funtion), $X_*$ (test input)
