@@ -189,7 +189,7 @@ server <- function(input, output, session){
   #Only compute new GPC object if button is clicked
   dat <- eventReactive(c(input$refresh,input$n2),{
     kappa <- function(x, y) sqrexp(x, y, l = 1)
-    gaussian_classifier <- GPC$new(X_c(), y_c(), 1e-5, kappa)
+    gaussian_classifier <- GPC$new(X_c(), y_c(), kappa)
     s <- seq(min(X_c()), max(X_c()), by = 0.1)
     testpoints <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
     predictions <- gaussian_classifier$predict_class(testpoints)
