@@ -12,10 +12,19 @@ header-includes:
 knitr::opts_chunk$set(echo = FALSE)
 library(gprc)
 #Copy function definitions, since they aren't being exported by the package
-multivariate_normal <- function(n, mean, covariance) {
-  stopifnot(is.numeric(mean), is.numeric(covariance), length(mean) == nrow(covariance))
-  L <- t(chol(covariance))
-  c(mean) + L %*% matrix(rnorm(n*length(mean), 0, 1), nrow = length(mean))
+covariance_matrix <- function(A, B, covariance_function) {
+  outer(1:ncol(A), 1:ncol(B), function(i, j) covariance_function(A[, i, drop = F], B[, j, drop = F]))
+}
+multivariate_normal <- function(n, mean, covariance, tol = 1e-6) {
+  stopifnot(length(mean) == nrow(covariance))
+  L <- tryCatch(error = function(cond) return(NULL), t(chol(covariance)))
+  if (is.null(L)) {
+    eig <- eigen(covariance, symmetric = TRUE)
+    eigval <- eig$values
+    stopifnot(all(eigval > -tol * abs(eigval[1])))
+    L <- eig$vectors %*% diag(sqrt(pmax(eigval,0)))
+  }
+  drop(mean) + L %*% matrix(rnorm(n*length(mean), 0, 1), nrow = length(mean))
 }
 sqrexp <- function(x, y, l) UseMethod("sqrexp")
 sqrexp.matrix <- function(x, y, l) exp(-colSums((x - y)^2)/(2 * l^2))
@@ -71,10 +80,35 @@ ggplot2::ggplot(data = data.frame(x = training_points[1, ], y = training_points[
 
 >- Ein Gaußscher Prozess ist ein stochastischer Prozess $(f_x)_{x \in X}$ wobei für jede endliche Teilmenge $Y \subset X$, $(f_x)_{x \in Y}$ multivariat normal verteilt ist.  
 
->- Wird charakterisiert durch $m(x)=\mathbb{E}({f(x)})$ und $k(x,x')=\text{Cov}(f(x),f(x'))$  
+>- Wird charakterisiert durch $m(x)=\mathbb{E}({f(x)})$ und $k(x,x')=\text{Cov}(f(x),f(x'))$
+
+## Einführung zu Gaußschen Prozessen
 Im Folgenden: $X = \mathbb{R}^d$ und $m(x) = 0$  
 Beispiel für k: $k(x,y) = \exp \left(-\frac{(x-y)^2}{2\ell}\right)$
+3 Beobachtungen eines Gausschen Prozess' mit dieser Covarianzfunktion (l = 1)
 
+```{r dpi=k, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=TRUE}
+set.seed(0)
+X <- matrix(seq(-10, 10, length.out = 1000), nrow = 1)
+K <- covariance_matrix(X, X, cov_func(sqrexp, l = 2))
+f <- multivariate_normal(3, rep(0, nrow(K)), K)
+dat <- data.frame(x = drop(X), f = f)
+dat1 <- tidyr::gather(dat, -x, key = "observation", value = "value")
+ggplot2::ggplot(dat1, ggplot2::aes(x = x, y = value, colour = observation)) +
+  ggplot2::theme_classic() +
+  ggplot2::scale_y_continuous("Random functions drawn from GP") +
+  ggplot2::geom_line()
+```
+
+## Einführung zu Gaußschen Prozessen
+3 Beobachtungen eines Gausschen Prozess' mit dieser Covarianzfunktion (l = 1),$
+bedingt auf die Datenpunkte (-5,0), (0,3), (7, -3)
+
+```{r dpi=k, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=TRUE}
+set.seed(0)
+Gaussian <- GPR.sqrexp$new(c(-5, 0, 7), c(0, 3, -3), noise = 0, l = 1)
+Gaussian$plot_posterior_draws(5, c(-10, 10), 1000L)
+```
 
 ## Theorie zu Regression
 
