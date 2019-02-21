@@ -4,18 +4,21 @@
 #'hyperrectangle of arbitrary dimension and analyzes the quality of the Gaussian
 #'process fit.
 #'
-#'If the argument \code{training_points} is missing, \code{training_size}
-#'training points are drawn randomly from the uniform distribution on the
-#'hyperrectangle determined by limits. When the regression function \code{func}
-#'is defined on \eqn{\mathbb{R}^D}, limits has to be a \eqn{D\times 2} matrix
-#'where the k-th line contains the lower and upper bound of the hyperrectangle
-#'in the k-th dimension.
+#'When the regression function \code{func} is defined on a hyperrectangle in
+#'\eqn{R^D}, limits has to be a \eqn{D x 2} matrix where the k-th line contains
+#'the lower and upper bound of the hyperrectangle in the k-th dimension. If the
+#'argument \code{training_points} is used, it should be a \eqn{D x n} matrix
+#'with each column representing a training point. If \code{training_points} is
+#'missing, \code{training_size} training points are drawn randomly from the
+#'uniform distribution on the hyperrectangle determined by limits.
 #'
-#'The error function given in \code{error} determines the error which is added
-#'to the values of func at the training points before Gaussian process
-#'regression is done. When called with an integer n, error is supposed to return
-#'a random vector of length n. Suitable error functions can be created from
-#'standard distributions with \code{error_function}.
+#'The noise function given in \code{observation_noise} determines the noise
+#'which is added to the values of func at the training points before Gaussian
+#'process regression is done. When called with the matrix of training points,
+#'\code{observation_noise} is supposed to return a vector of length n,
+#'containing the error. Suitable iid. noise functions can be created from
+#'standard distributions with \code{iid_noise}. See the examples for an example
+#'of non iid. noise.
 #'
 #'The predictions of the Gaussian process are compared to the ground truth
 #'(function values of func) on an equispaced grid of \code{test_size} points in
@@ -29,7 +32,8 @@
 #'middle of the their corresponding interval.
 #'
 #'@usage \preformatted{simulate_regression(func, limits, training_points,
-#'  training_size = 10L, error = function(x) 0, test_size = 10000, ...) }
+#'  training_size = 10L, observation_noise = function(x) 0, test_size = 10000L,
+#'  ...) }
 #'@param func regression function
 #'
 #'@param limits matrix containing the limits of the hyperrectangle
@@ -39,7 +43,7 @@
 #'@param training_size number of training points; unnecessary if training_points
 #'  are given
 #'
-#'@param error function to generate the error of the training data
+#'@param observation_noise function to generate the noise of the training data
 #'
 #'@param test_size number of test points at which regression function and
 #'  Gaussian process are compared
@@ -56,22 +60,29 @@
 #'f <- function(x) 0.1 * x^3
 #'limits <- matrix(c(-6, 6), nrow = 1)
 #'X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
-#'error <- error_function(rnorm, sd = 2)
-#'simulate_regression(f, limits, X, error = error)
+#'observation_noise <- iid_noise(rnorm, sd = 2)
+#'simulate_regression(f, limits, X, observation_noise = observation_noise)
 #'
 #'f <- function(x) sum(x)^2
 #'limits <- c(-1, 1, -1, 1, -1, 1)
-#'error <- error_function(rcauchy)
-#'simulate_regression(f, limits, training_size = 10, error = error)
+#'observation_noise <- iid_noise(rcauchy)
+#'simulate_regression(f, limits, training_size = 10, observation_noise = observation_noise)
+#'
+#'f <- function(x) 0.1 * sum(x^3)
+#'limits <- matrix(c(-5, 5, -5, 5, -5, 5), ncol = 2, byrow = TRUE)
+#'observation_noise <- function(X) {
+#'  multivariate_normal(1, rep(0, ncol(X)), covariance_matrix(X, X, cov_func(sqrexp, l = 0.1)))
+#'}
+#'simulate_regression(f, limits, training_size = 10, observation_noise = observation_noise, noise = 1)
 #'
 #'@name simulate_regression
 #'@export
 simulate_regression <- function(func, limits, training_points, training_size = 10L, 
-                    error = function(x) 0, test_size = 10000, show_pred = TRUE, ...) {
+                    observation_noise = function(x) 0, test_size = 10000L, show_pred = TRUE, ...) {
   # Check correctness of inputs
   stopifnot(is.function(func), is.numeric(limits), length(limits) %% 2 == 0)
   stopifnot(is.numeric(training_size), training_size > 0)
-  stopifnot(is.function(error), is.numeric(test_size), test_size > 0)
+  stopifnot(is.function(observation_noise), is.numeric(test_size), test_size > 0)
   if (!is.matrix(limits)) limits <- matrix(limits, ncol = 2, byrow = TRUE)
   
   # Training. Constructor uses fit to get best Gaussian model
@@ -83,8 +94,8 @@ simulate_regression <- function(func, limits, training_points, training_size = 1
     stopifnot(all(training_points >= limits[, 1]), 
               all(training_points <= limits[, 2]))
   }
-  y <- apply(training_points, 2, func) + error(ncol(training_points))
-  Gaussian <- GPR$new(training_points, y, ...)
+  y <- apply(training_points, 2, func) + observation_noise(training_points)
+  Gaussian <- GPR$new(training_points, drop(y), ...)
   
   # Test the model on a large set of test points (size test_size)
   test_points <- combine_all(lapply(1:D, 
@@ -133,7 +144,7 @@ simulate_regression <- function(func, limits, training_points, training_size = 1
 #'the ground truth drawn from a Gaussian process and analyzes the quality of the
 #'Gaussian process fit.
 #'
-#'\code{limits} should be a \eqn{D\times 2} matrix to model a Gaussian process
+#'\code{limits} should be a \eqn{D x 2} matrix to model a Gaussian process
 #'in \eqn{\mathbb{R}^D}, the k-th line containing the lower and upper bound of
 #'the hyperrectangle in the k-th dimension. The ground truth value at the test
 #'points (an equispaced grid of \code{test_size} points in the hyperrectangle)
@@ -142,27 +153,29 @@ simulate_regression <- function(func, limits, training_points, training_size = 1
 #'Then \code{training_size} training points are drawn randomly from this grid of
 #'test points.
 #'
-#'The error function given in \code{error} determines the error which is added
-#'to the values of func at the training points before Gaussian process
-#'regression is done. When called with an integer n, error is supposed to return
-#'a random vector of length n. Suitable error functions can be created from
-#'standard distributions with \code{error_function}.
+#'The noise function given in \code{observation_noise} determines the noise
+#'which is added to the ground truth values at the training points before
+#'Gaussian process regression is done. When called with the matrix of training
+#'points, \code{observation_noise} is supposed to return a vector of length n,
+#'containing the error. Suitable iid. noise functions can be created from
+#'standard distributions with \code{iid_noise}. See the examples for an example
+#'of non iid. noise.
 #'
 #'The predictions of the Gaussian process at the test points are compared to the
 #'ground truth. Before returning the \code{summary} of the absolute error in
 #'these test points, \code{simulate_regression_gp} provides up to two plots. If
-#'\code{show_pred = TRUE}, one plot shows the absolute error over the
-#'predicted variance and, if \eqn{D = 1} another shows the ground truth GP and the
+#'\code{show_pred = TRUE}, one plot shows the absolute error over the predicted
+#'variance and, if \eqn{D = 1} another shows the ground truth GP and the
 #'predictions of the fitted GP.
 #'
-#'@usage \preformatted{simulate_regression_gp(actual_cov, limits, error =
-#'  function(x) 0, test_size = 300, training_size = 10, random_training = TRUE,
-#'  show_pred = FALSE, ...) }
+#'@usage \preformatted{simulate_regression_gp(actual_cov, limits,
+#'  observation_noise = function(x) 0, test_size = 300, training_size = 10,
+#'  random_training = TRUE, show_pred = FALSE, ...) }
 #'@param actual_cov covariance function with which ground truth GP is generated
 #'
 #'@param limits matrix containing the limits of the hyperrectangle
 #'
-#'@param error function to generate the error of the training data
+#'@param observation_noise function to generate the noise of the training data
 #'
 #'@param test_size integer, number of test points at which ground truth and
 #'  fitted Gaussian process are compared
@@ -184,16 +197,23 @@ simulate_regression <- function(func, limits, training_points, training_size = 1
 #'@examples
 #'simulate_regression_gp(cov_func(sqrexp, l = 1), limits = c(-5, 5), training_size = 10)
 #'
-#'simulate_regression_gp(cov_func(rationalquadratic, alpha = 0.5, l = 1),
-#' limits = c(-10, 10), error = error_function(rnorm, 0.2), training_size = 50, noise = 0.2)
+#'simulate_regression_gp(cov_func(rationalquadratic, alpha = 0.5, l = 1), 
+#'  limits = c(-10, 10), observation_noise = iid_noise(rnorm, 0.2), 
+#'   training_size = 50, noise = 0.2)
 #'
+#'observation_noise <- function(X) {
+#'  multivariate_normal(1, rep(0, ncol(X)),
+#'         covariance_matrix(X, X, function(x,y) sqrexp(x, y, 0.1)))
+#'}
+#'simulate_regression_gp(cov_func(sqrexp, l = 1), limits = c(-5, 5), training_size = 10,
+#'  observation_noise = observation_noise)
 #'@name simulate_regression_gp
 #'@export
-simulate_regression_gp <- function(actual_cov, limits, error = function(x) 0, test_size = 300L, 
+simulate_regression_gp <- function(actual_cov, limits, observation_noise = function(x) 0, test_size = 300L, 
                 training_size = 10L, random_training = TRUE, show_pred = FALSE, ...) {
   # Check correctness of inputs
   stopifnot(is.function(actual_cov), is.numeric(limits), length(limits) %% 2 == 0)
-  stopifnot(is.function(error), is.numeric(test_size), test_size > 0)
+  stopifnot(is.function(observation_noise), is.numeric(test_size), test_size > 0)
   stopifnot(is.numeric(training_size), training_size > 0, training_size < test_size)
   stopifnot(is.logical(random_training))
   if (!is.matrix(limits)) limits <- matrix(limits, ncol = 2, byrow = TRUE)
@@ -208,9 +228,9 @@ simulate_regression_gp <- function(actual_cov, limits, error = function(x) 0, te
   # Training
   if (random_training) training_set <- sample.int(ncol(testpoints), training_size)
   else training_set <- (1:training_size)*floor(ncol(testpoints)/training_size)
-  X <- testpoints[, training_set]
-  y <- f[training_set] + error(training_size)
-  regression_GP <- GPR$new(X, y, ...)
+  X <- testpoints[, training_set, drop = FALSE]
+  y <- f[training_set] + observation_noise(X)
+  regression_GP <- GPR$new(X, drop(y), ...)
   
   # Testing
   if (D == 1) {
@@ -234,25 +254,65 @@ simulate_regression_gp <- function(actual_cov, limits, error = function(x) 0, te
   return(summary(abs(residual)))
 }
 
-#' Simulation for Classification
-#' 
-#' Simulates data for Classification problems, which can then be analyzed via a Gaussian process
-#' 
-#' @usage \preformatted{simulate_classification(func, training_points, limits, k, training_size = 10)
-#'}
-#' @param func A function for the simulation of data points
-#' @param training_points A vector of training points
-#' @param limits 
-#' 
-#' @examples 
-#' 
-#' @name simulate_classification
-#' @export
-simulate_classification <- function(func, training_points, limits, k, 
-                                    training_size = 10, test_size = 10000) {
+#'Simulation for Classification
+#'
+#'Simulates Classification problems with arbitrary classification function on a
+#'hyperrectangle of arbitrary dimension and analyzes the quality of the Gaussian
+#'process predictions.
+#'
+#'When the classification function \code{func} is defined on a hyperrectangle in
+#'\eqn{R^D}, limits has to be a \eqn{D x 2} matrix where the k-th line contains
+#'the lower and upper bound of the hyperrectangle in the k-th dimension. If the
+#'argument \code{training_points} is used, it should be a \eqn{D x n} matrix
+#'with each column representing a training point. If \code{training_points} is
+#'missing, \code{training_size} training points are drawn randomly from the
+#'uniform distribution on the hyperrectangle determined by limits.
+#'
+#'The predictions of the Gaussian process are compared to the ground truth
+#'(function values of func) on an equispaced grid of \code{test_size} points in
+#'the hyperrectangle. If \eqn{D <= 2}, a plot of the decision regions of the
+#'Gaussian Process along with the true classification of the testpoints is
+#'provided. If \eqn{D = 1}, the predicted posterior probability is also plotted.
+#'
+#'@usage \preformatted{simulate_classification <- function(func, limits,
+#'  training_points, training_size = 10L, test_size = 10000L, ...)}
+#'
+#'@param func A function with values -1 and 1 defined on the hyperrectangle given
+#'  by limits.
+#'
+#'@param limits matrix containing the limits of the hyperrectangle
+#'
+#'@param training_points matrix of points inside the hyperrectangle; optional
+#'
+#'@param training_size number of training points; unnecessary if training_points
+#'  are given
+#'
+#'@param test_size number of test points at which classification function and
+#'  Gaussian process predictions are compared
+#'
+#'@param ... arguments passed on to the constructor of the Gaussian process
+#'
+#'@return \code{summary} of the absolute error of the Gaussian process
+#'  predictions in the test points
+#'
+#' @examples
+#'  f <- function(x) (x < - 2) + (x > 2) - (-2 <= x && x <= 2)
+#'  limits <- matrix(c(-4, 4), nrow = 1, byrow = TRUE)
+#'  k <- function(x, y) sqrexp(x, y, 1)
+#'  simulate_classification(func = f, limits = limits, training_size = 20, k = k)
+#'
+#'  f <- function(x) (sum(abs(x)) > 2.5) - (!(sum(abs(x)) > 2.5))
+#'  limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
+#'  k <- function(x, y) sqrexp(x, y, 1)
+#'  simulate_classification(func = f, limits = limits, training_size = 50, k = k)
+#'  
+#'@name simulate_classification
+#'@export
+simulate_classification <- function(func, limits, training_points,
+                                    training_size = 10L, test_size = 10000L, ...) {
   # Check correctness of inputs
   stopifnot(is.function(func), is.numeric(limits), length(limits) %% 2 == 0)
-  stopifnot(is.function(k), is.numeric(training_size), training_size > 0)
+  stopifnot(is.numeric(training_size), training_size > 0)
   if (!is.matrix(limits)) limits <- matrix(limits, ncol = 2, byrow = TRUE)
   
   # Training
@@ -262,7 +322,7 @@ simulate_classification <- function(func, training_points, limits, k,
                         function(i) runif(training_size, limits[i, 1], limits[i, 2])))
   } else stopifnot(nrow(limits) == nrow(training_points))
   y <- apply(training_points, 2, func)
-  Gaussian <- GPC$new(training_points, y, 1e-5, k)
+  Gaussian <- GPC$new(training_points, y, ...)
   
   # Testing
   test_points <- combine_all(lapply(1:D, 
@@ -288,18 +348,44 @@ combine_all <- function(lst) {
   out
 }
 
-#' @export
-error_function <- function(distribution, ...) {
+#'Independent and identically distributed noise
+#'
+#'Creates suitable noise functions for \code{simulate_regression} and
+#'\code{simulate_regression_gp} with iid noise generated by standard
+#'distributions.
+#'
+#'The first argument of \code{distribution} has to be the number of random
+#'numbers to generate.
+#'
+#'@usage \preformatted{iid_noise(distribution, ...)}
+#'
+#'@param distribution A function generating random numbers
+
+#'@param ... arguments passed on to \code{distribution}
+#'
+#'@return a suitable noise function for \code{simulate_regression} and
+#'\code{simulate_regression_gp}
+#'
+#' @examples
+#'  observation_noise <- iid(rnorm, sd = 0.1)
+#'  observation_noise <- iid(rcauchy)
+#'
+#'@name iid_noise
+#'@export
+iid_noise <- function(distribution, ...) {
   force(distribution)
-  function(k) distribution(k, ...)
-}
-#' @export
-cov_func <- function(func, ...) {
-  force(func)
-  function(x, y) func(x, y, ...)
+  function(X) distribution(ncol(X), ...)
 }
 
+#'Example plots of Gaussian Process simulations
+#'
+#'Runs examples of \code{simulate_regression}, \code{simulate_regression_gp} and
+#'\code{simulate_classification}
+#'
+#'@usage \preformatted{examples()}
 
+#'@return Nothing
+#'@name examples
 #' @export
 examples <- function() {
   # Regression
@@ -307,22 +393,22 @@ examples <- function() {
   f <- function(x) 0.1 * x^3
   limits <- matrix(c(-6, 6), nrow = 1)
   X <- matrix(seq(-5, 5, by = 0.2), nrow = 1)
-  error <- error_function(rnorm, sd = 2)
-  simulate_regression(f, limits, X, noise = 1, error = error)
+  observation_noise <- iid_noise(rnorm, sd = 2)
+  simulate_regression(f, limits, X, noise = 1, observation_noise = observation_noise)
   
-  # example 2: cauchy distributed error
+  # example 2: cauchy distributed noise
   f <- function(x) sin(10 * x)
   limits <- matrix(c(0, 1), nrow = 1)
   X <- matrix(seq(0, 1, by = 0.05), nrow = 1)
-  error <- error_function(rcauchy)
-  simulate_regression(f, limits, X, noise = 1, error = error)
+  observation_noise <- iid_noise(rcauchy)
+  simulate_regression(f, limits, X, noise = 1, observation_noise = observation_noise)
   
   # example 3: two-dimensional
   f <- function(x) 0.1 * sum(x^2)
   limits <- matrix(c(-5.5, 5.5, -5.5, 5.5), nrow = 2, byrow = TRUE)
   X <- combine_all(list(seq(-5, 5, by = 1), seq(-5 ,5, by = 1)))
-  error <- error_function(rnorm, sd = 1)
-  simulate_regression(f, limits, X, noise = 1, error = error)
+  observation_noise <- iid_noise(rnorm, sd = 1)
+  simulate_regression(f, limits, X, noise = 1, observation_noise = observation_noise)
   
   # Regression for Gaussian processes
   simulate_regression_gp(cov_func(sqrexp, l = 1), limits = matrix(c(-5, 5), nrow = 1), 
@@ -341,14 +427,14 @@ examples <- function() {
   # example 1
   f <- function(x) (x < - 2) + (x > 2) - (-2 <= x && x <= 2)
   limits <- matrix(c(-4, 4), nrow = 1, byrow = TRUE)
-  k <- function(x, y) sqrexp(x, y, 1)
-  simulate_classification(func = f, limits = limits, k = k, training_size = 20)
+  k <- cov_func(sqrexp, l = 1)
+  simulate_classification(func = f, limits = limits, training_size = 20, k = k)
   
   # example 2
   f <- function(x) (sum(abs(x)) > 2.5) - (!(sum(abs(x)) > 2.5))
   limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
-  k <- function(x, y) sqrexp(x, y, 1)
-  simulate_classification(func = f, limits = limits, k = k, training_size = 50)
+  k <-  cov_func(sqrexp, l = 1)
+  simulate_classification(func = f, limits = limits, training_size = 50, k = k)
   
   # Haus
   f <- function(x) {
@@ -359,8 +445,8 @@ examples <- function() {
       2*(x[1] > 0.5 && x[1] < 2 && x[2] > -1 && x[2] < 0.5)
   }
   limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
-  k <- function(x, y) sqrexp(x, y, 1)
-  simulate_classification(func = f, limits = limits, k = k, training_size = 600)
+  k <-  cov_func(sqrexp, l = 0.5)
+  simulate_classification(func = f, limits = limits, training_size = 600, k = k)
   
   # Example R
   g <- function(x){
@@ -378,6 +464,6 @@ examples <- function() {
   }
   
   limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
-  k <- function(x, y) sqrexp(x, y, 1)
-  simulate_classification(func = f, limits = limits, k = k, training_size = 600)
+  k <-  cov_func(sqrexp, l = 1)
+  simulate_classification(func = f, limits = limits, training_size = 600, k = k)
 }

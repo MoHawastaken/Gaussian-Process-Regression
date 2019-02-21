@@ -5,7 +5,8 @@
 \title{Simulation for Regression - Deterministic ground truth}
 \usage{
 \preformatted{simulate_regression(func, limits, training_points,
- training_size = 10L, error = function(x) 0, test_size = 10000, ...) }
+ training_size = 10L, observation_noise = function(x) 0, test_size = 10000L,
+ ...) }
 }
 \arguments{
 \item{func}{regression function}
@@ -17,7 +18,7 @@
 \item{training_size}{number of training points; unnecessary if training_points
 are given}
 
-\item{error}{function to generate the error of the training data}
+\item{observation_noise}{function to generate the noise of the training data}
 
 \item{test_size}{number of test points at which regression function and
 Gaussian process are compared}
@@ -37,18 +38,21 @@ hyperrectangle of arbitrary dimension and analyzes the quality of the Gaussian
 process fit.
 }
 \details{
-If the argument \code{training_points} is missing, \code{training_size}
-training points are drawn randomly from the uniform distribution on the
-hyperrectangle determined by limits. When the regression function \code{func}
-is defined on \eqn{\mathbb{R}^D}, limits has to be a \eqn{D\times 2} matrix
-where the k-th line contains the lower and upper bound of the hyperrectangle
-in the k-th dimension.
+When the regression function \code{func} is defined on a hyperrectangle in
+\eqn{R^D}, limits has to be a \eqn{D x 2} matrix where the k-th line contains
+the lower and upper bound of the hyperrectangle in the k-th dimension. If the
+argument \code{training_points} is used, it should be a \eqn{D x n} matrix
+with each column representing a training point. If \code{training_points} is
+missing, \code{training_size} training points are drawn randomly from the
+uniform distribution on the hyperrectangle determined by limits.
 
-The error function given in \code{error} determines the error which is added
-to the values of func at the training points before Gaussian process
-regression is done. When called with an integer n, error is supposed to return
-a random vector of length n. Suitable error functions can be created from
-standard distributions with \code{error_function}.
+The noise function given in \code{observation_noise} determines the noise
+which is added to the values of func at the training points before Gaussian
+process regression is done. When called with the matrix of training points,
+\code{observation_noise} is supposed to return a vector of length n,
+containing the error. Suitable iid. noise functions can be created from
+standard distributions with \code{iid_noise}. See the examples for an example
+of non iid. noise.
 
 The predictions of the Gaussian process are compared to the ground truth
 (function values of func) on an equispaced grid of \code{test_size} points in
@@ -65,12 +69,19 @@ middle of the their corresponding interval.
 f <- function(x) 0.1 * x^3
 limits <- matrix(c(-6, 6), nrow = 1)
 X <- matrix(seq(-5,5,by = 0.2), nrow = 1)
-error <- error_function(rnorm, sd = 2)
-simulate_regression(f, limits, X, error = error)
+observation_noise <- iid_noise(rnorm, sd = 2)
+simulate_regression(f, limits, X, observation_noise = observation_noise)
 
 f <- function(x) sum(x)^2
 limits <- c(-1, 1, -1, 1, -1, 1)
-error <- error_function(rcauchy)
-simulate_regression(f, limits, training_size = 10, error = error)
+observation_noise <- iid_noise(rcauchy)
+simulate_regression(f, limits, training_size = 10, observation_noise = observation_noise)
+
+f <- function(x) 0.1 * sum(x^3)
+limits <- matrix(c(-5, 5, -5, 5, -5, 5), ncol = 2, byrow = TRUE)
+observation_noise <- function(X) {
+ multivariate_normal(1, rep(0, ncol(X)), covariance_matrix(X, X, cov_func(sqrexp, l = 0.1)))
+}
+simulate_regression(f, limits, training_size = 10, observation_noise = observation_noise, noise = 1)
 
 }

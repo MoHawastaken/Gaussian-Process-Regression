@@ -165,10 +165,10 @@ Gaussian$plot()$plot
 
 ## Classification
 
-The class `GPC` solves binary classification problems by using a Gaussian process. It is initialized with training data $X$ ($D\times n$ matrix), target vector $y \in \{-1, 1\}^n$, the assumed noise level $\sigma$ and the vectorized covariance function `cov_func`. 
+The class `GPC` solves binary classification problems by using a Gaussian process. It is initialized with training data $X$ ($D\times n$ matrix), target vector $y \in \{-1, 1\}^n$, the vectorized covariance function `cov_func` and a constant $epsilon$ determining the threshold for the necessary optimization. 
 
 ```{r, eval=FALSE}
-GPC$new(X, y, noise, cov_func)
+GPC$new(X, y, cov_func, epsilon)
 ```
 
 The `$predict` function returns the predicted values for a vector of test points.
@@ -187,7 +187,7 @@ Gaussian_classifier$plot()
 X <- matrix(seq(-1,1,by = 0.1), nrow = 1)
 y <- 2*as.integer(X > 0) - 1
 kappa <- function(x,y) exp(-3*(x - y)^2)
-Gaussian_classifier <- GPC$new(X, y, 1e-5, kappa)
+Gaussian_classifier <- GPC$new(X, y, kappa)
 Gaussian_classifier$plot()$plot
 ```
 
@@ -210,7 +210,7 @@ s <- seq(-1, 1, by = 0.5)
 X <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
 y <- 2*as.integer(X[1, ] > X[2, ]) - 1
 kappa <- function(x,y) sqrexp(x,y,l=1)
-gaussian_classifier <- GPC$new(X, y, 1e-5, kappa)
+gaussian_classifier <- GPC$new(X, y, kappa)
 s <- seq(-1, 1, by = 0.1)
 testpoints <- matrix(c(rep(s, each = length(s)), rep(s, times = length(s))), nrow = 2, byrow = T)
 gaussian_classifier$plot()$plot
@@ -221,7 +221,7 @@ gaussian_classifier$plot()$plot
 n <- 10
 X <- cbind(multivariate_normal(n, c(0.5,0.5), diag(c(0.1,0.1))), multivariate_normal(n, c(-0.5,-0.5), diag(c(0.1,0.1))))
 y <- rep(c(1,-1), each = n)
-gaussian_classifier <- GPC$new(X, y, 1e-5, function(x,y) sqrexp(x,y,l = 1))
+gaussian_classifier <- GPC$new(X, y, function(x,y) sqrexp(x,y,l = 1))
 gaussian_classifier$plot()$plot
 ```
 
@@ -231,12 +231,12 @@ Decision regions are chosen with a threshold of 0.5, as the decison function map
 
 ```{r eval=FALSE}
 simulate_regression(func, limits, training_points, num_data = 10, 
-                                noise = 0, error = function(x) 0, cov_names = names(cov_dict))
+                                observation_noise = function(x) 0, cov_names = names(cov_dict), noise = 0)
 
 ```
 
 ```{r eval=FALSE}
-simulate_classification(func, training_points, limits, k, training_size = 10)
+simulate_classification(func, training_points, limits, training_size = 10, k = k)
 ```
 
 
@@ -250,8 +250,8 @@ simulate_classification(func, training_points, limits, k, training_size = 10)
       2*(x[1] > 0.5 && x[1] < 2 && x[2] > -1 && x[2] < 0.5)
   }
   limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
-  k <- function(x, y) sqrexp(x, y, 1)
-  s <- simulate_classification(func = f, limits = limits, k = k, training_size = 600)
+  k <- function(x, y) sqrexp(x, y, 0.5)
+  s <- simulate_classification(func = f, limits = limits, training_size = 600, k = k)
 ```
 
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=TRUE}
@@ -272,12 +272,11 @@ simulate_classification(func, training_points, limits, k, training_size = 10)
   
   limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
   k <- function(x, y) sqrexp(x, y, 1)
-  s <- simulate_classification(func = f, limits = limits, k = k, training_size = 600)
+  s <- simulate_classification(func = f, limits = limits, training_size = 600, k = k)
 ```
   
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=TRUE}
-s <- simulate_regression_gp(cov_func(sqrexp, l = 1), limits = matrix(c(-5,5), nrow = 1), 
-                         training_size = 10, random_training = TRUE, error = error_function(rnorm, sd = 0.01), show_pred = FALSE, noise = 0.01)
+s <- simulate_regression_gp(cov_func(sqrexp, l = 1), limits = matrix(c(-5,5), nrow = 1), training_size = 10, random_training = TRUE, observation_noise = iid_noise(rnorm, sd = 0.01), show_pred = FALSE, noise = 0.01)
 ``` 
   
   

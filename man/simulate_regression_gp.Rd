@@ -4,16 +4,16 @@
 \alias{simulate_regression_gp}
 \title{Simulation for Regression - Random ground truth}
 \usage{
-\preformatted{simulate_regression_gp(actual_cov, limits, error =
- function(x) 0, test_size = 300, training_size = 10, random_training = TRUE,
- show_pred = FALSE, ...) }
+\preformatted{simulate_regression_gp(actual_cov, limits,
+ observation_noise = function(x) 0, test_size = 300, training_size = 10,
+ random_training = TRUE, show_pred = FALSE, ...) }
 }
 \arguments{
 \item{actual_cov}{covariance function with which ground truth GP is generated}
 
 \item{limits}{matrix containing the limits of the hyperrectangle}
 
-\item{error}{function to generate the error of the training data}
+\item{observation_noise}{function to generate the noise of the training data}
 
 \item{test_size}{integer, number of test points at which ground truth and
 fitted Gaussian process are compared}
@@ -39,7 +39,7 @@ the ground truth drawn from a Gaussian process and analyzes the quality of the
 Gaussian process fit.
 }
 \details{
-\code{limits} should be a \eqn{D\times 2} matrix to model a Gaussian process
+\code{limits} should be a \eqn{D x 2} matrix to model a Gaussian process
 in \eqn{\mathbb{R}^D}, the k-th line containing the lower and upper bound of
 the hyperrectangle in the k-th dimension. The ground truth value at the test
 points (an equispaced grid of \code{test_size} points in the hyperrectangle)
@@ -48,23 +48,32 @@ covariance matrix determined by the covariance function \code{actual_cov}.
 Then \code{training_size} training points are drawn randomly from this grid of
 test points.
 
-The error function given in \code{error} determines the error which is added
-to the values of func at the training points before Gaussian process
-regression is done. When called with an integer n, error is supposed to return
-a random vector of length n. Suitable error functions can be created from
-standard distributions with \code{error_function}.
+The noise function given in \code{observation_noise} determines the noise
+which is added to the ground truth values at the training points before
+Gaussian process regression is done. When called with the matrix of training
+points, \code{observation_noise} is supposed to return a vector of length n,
+containing the error. Suitable iid. noise functions can be created from
+standard distributions with \code{iid_noise}. See the examples for an example
+of non iid. noise.
 
 The predictions of the Gaussian process at the test points are compared to the
 ground truth. Before returning the \code{summary} of the absolute error in
 these test points, \code{simulate_regression_gp} provides up to two plots. If
-\code{show_pred = TRUE}, one plot shows the absolute error over the
-predicted variance and, if \eqn{D = 1} another shows the ground truth GP and the
+\code{show_pred = TRUE}, one plot shows the absolute error over the predicted
+variance and, if \eqn{D = 1} another shows the ground truth GP and the
 predictions of the fitted GP.
 }
 \examples{
 simulate_regression_gp(cov_func(sqrexp, l = 1), limits = c(-5, 5), training_size = 10)
 
-simulate_regression_gp(cov_func(rationalquadratic, alpha = 0.5, l = 1),
-limits = c(-10, 10), error = error_function(rnorm, 0.2), training_size = 50, noise = 0.2)
+simulate_regression_gp(cov_func(rationalquadratic, alpha = 0.5, l = 1), 
+ limits = c(-10, 10), observation_noise = iid_noise(rnorm, 0.2), 
+  training_size = 50, noise = 0.2)
 
+observation_noise <- function(X) {
+ multivariate_normal(1, rep(0, ncol(X)),
+        covariance_matrix(X, X, function(x,y) sqrexp(x, y, 0.1)))
+}
+simulate_regression_gp(cov_func(sqrexp, l = 1), limits = c(-5, 5), training_size = 10,
+ observation_noise = observation_noise)
 }

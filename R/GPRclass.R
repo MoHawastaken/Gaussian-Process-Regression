@@ -1,6 +1,6 @@
 #'  Predictions and Plots for Gaussian Process Regression
 #'
-#'  Implements gaussian processes and gives tools for gaussian process
+#'  Implements Gaussian processes and gives tools for Gaussian process
 #'  regression problems for given testpoints including clear plots of the
 #'  results and optimization of hyperparameters.
 #' 
@@ -274,74 +274,73 @@ GPR <- R6::R6Class("GPR",
 )
 
 #' @export
-GPR.constant <- R6::R6Class("GPR.constant",
-                          inherit = GPR,
-                          public = list(
-                            initialize = function(X, y, noise, c = fit(X, y, noise, "constant")$par){
-                              stopifnot(is.numeric(c), c > 0)
-                              k <- function(x, y) constant(x, y, c)
-                              super$initialize(X, y, noise, k)
-                            }
-                          )
+GPR.constant <- R6::R6Class("GPR.constant", inherit = GPR,
+    public = list(
+      initialize = function(X, y, noise, c = fit(X, y, noise, "constant")$par){
+        stopifnot(is.numeric(c), c > 0)
+        k <- cov_func(constant, c = c)
+        super$initialize(X, y, noise, k)
+      }
+    )
 )
 
 #' @export
 GPR.linear <- R6::R6Class("GPR.linear", inherit = GPR,
-                          public = list(
-                            initialize = function(X, y, noise, sigma = fit(X, y, noise, "linear")$par){
-                              stopifnot(length(sigma) == nrow(X))
-                              k <- function(x, y) linear(x, y, sigma)
-                              super$initialize(X, y, noise, k)
-                            }
-                          )
+    public = list(
+      initialize = function(X, y, noise, sigma = fit(X, y, noise, "linear")$par){
+        stopifnot(length(sigma) == nrow(X))
+        k <- cov_func(linear, sigma = sigma)
+        super$initialize(X, y, noise, k)
+      }
+    )
 )
 
 #' @export
 GPR.polynomial <- R6::R6Class("GPR.polynomial", inherit = GPR,
-                              public = list(
-                                initialize = function(X, y, noise, sigma = fit(X, y, noise, "polynomial")$par[[1]], 
-                                                      p = fit(X, y, noise, "polynomial")$par[[2]]){
-                                  stopifnot(length(sigma) == 1, length(p) == 1)
-                                  k <- function(x, y) polynomial(x, y, sigma, p)
-                                  super$initialize(X, y, noise, k)
-                                }
-                              )
+    public = list(
+      initialize = function(X, y, noise, sigma = fit(X, y, noise, "polynomial")$par[[1]], 
+                            p = fit(X, y, noise, "polynomial")$par[[2]]){
+        stopifnot(length(sigma) == 1, length(p) == 1)
+        k <- cov_func(polynomial, sigma = sigma, p = p)
+        super$initialize(X, y, noise, k)
+      }
+    )
 )
 
 #' @export
 GPR.sqrexp <-  R6::R6Class("GPR.sqrexp", inherit = GPR,
-                           public = list(
-                             initialize = function(X, y, noise, l = fit(X, y, noise, "sqrexp")$par){
-                               stopifnot(length(l) == 1)
-                               k <- function(x, y) sqrexp(x, y, l)
-                               super$initialize(X, y, noise, k)
-                             }
-                             
-                           )
+     public = list(
+       initialize = function(X, y, noise, l = fit(X, y, noise, "sqrexp")$par){
+         stopifnot(length(l) == 1)
+         k <- cov_func(sqrexp, l = l)
+         super$initialize(X, y, noise, k)
+       }
+       
+     )
 )
 
 #' @export
 GPR.gammaexp <- R6::R6Class("GPR.gammaexp", inherit = GPR,
-                          public = list(
-                            initialize = function(X, y, noise, gamma = fit(X, y, noise, "gammaexp")$par[[1]], 
-                                                  l = fit(X, y, noise, "gammaexp")$par[[2]]){
-                              stopifnot(length(gamma) == 1, length(l) == 1)
-                              k <- function(x, y) gammaexp(x, y, l, gamma)
-                              super$initialize(X, y, noise, k)
-                            }
-                          )
+    public = list(
+      initialize = function(X, y, noise, gamma = fit(X, y, noise, "gammaexp")$par[[1]], 
+                            l = fit(X, y, noise, "gammaexp")$par[[2]]){
+        stopifnot(length(gamma) == 1, length(l) == 1)
+        k <-cov_func(gammaexp, l = l, gamma = gamma)
+        super$initialize(X, y, noise, k)
+      }
+    )
 )
 
 #' @export
 GPR.rationalquadratic <- R6::R6Class("GPR.rationalquadratic", inherit = GPR,
-                            public = list(
-                              initialize = function(X, y, noise, alpha = fit(X, y, noise, "rationalquadratic")$par[[1]], 
-                                                    l = fit(X, y, noise, "rationalquadratic")$par[[2]]){
-                                stopifnot(length(alpha) == 1, length(l) == 1)
-                                k <- function(x, y) rationalquadratic(x, y, l, alpha)
-                                super$initialize(X, y, noise, k)
-                              }
-                            )
+    public = list(
+      initialize = function(X, y, noise, alpha = fit(X, y, noise, "rationalquadratic")$par[[1]], 
+                            l = fit(X, y, noise, "rationalquadratic")$par[[2]]){
+        stopifnot(length(alpha) == 1, length(l) == 1)
+        k <- cov_func(rationalquadratic, l = l, alpha = alpha)
+        super$initialize(X, y, noise, k)
+      }
+    )
 )
 
 # Function, to calculate the covariance matrix. For an input of two matrices with the same dimensions the used 
@@ -397,3 +396,26 @@ rationalquadratic <- function(x, y, l, alpha) UseMethod("rationalquadratic")
 rationalquadratic.matrix <- function(x, y, l, alpha) (1 + colSums((x - y)^2) / (2 * alpha * l^2))^(-alpha)
 rationalquadratic.numeric <- function(x, y, l, alpha) (1 + sum((x - y)^2) / (2 * alpha * l^2))^(-alpha)
 
+#'Covariance functions
+#'
+#'Creates suitable covariance functions for the constructor of \code{GPR} and
+#'\code{GPC} or for creating covariance matrices.
+#'
+#'@usage \preformatted{cov_func(func, ...)}
+#'
+#'@param func A covariance function, the parameters of which are to be set
+
+#'@param ... arguments passed on to \code{func}
+#'
+#'@return a covariance function with fixed parameters
+#'
+#' @examples
+#'  cov <- cov_func(sqrexp, l = 0.1)
+#'  cov <- cov_func(rationalquadratic, l = 1, alpha = 0.5)
+#'
+#'@name cov_func
+#' @export
+cov_func <- function(func, ...) {
+  force(func)
+  function(x, y) func(x, y, ...)
+}
