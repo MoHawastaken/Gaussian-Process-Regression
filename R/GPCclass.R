@@ -60,7 +60,7 @@ GPC <- R6::R6Class("GPC",
      .sigmoid = function(x) 1/(1 + exp(-x)) #used sigmoid function
    ),
    public = list(
-     initialize = function(X, y, epsilon, k){
+     initialize = function(X, y, k, epsilon = 1e-5){
        stopifnot(is.numeric(X), is.vector(y), is.numeric(y))
        stopifnot(is.numeric(epsilon), epsilon > 0, is.function(k))
        # If X is a vector it gets converted to a matrix with one row

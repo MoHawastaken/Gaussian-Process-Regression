@@ -4,19 +4,58 @@
 \alias{simulate_classification}
 \title{Simulation for Classification}
 \usage{
-\preformatted{simulate_classification(func, training_points, limits, k, training_size = 10)
-}
+\preformatted{simulate_classification <- function(func, limits,
+ training_points, training_size = 10L, test_size = 10000L, ...)}
 }
 \arguments{
-\item{func}{A function for the simulation of data points}
+\item{func}{A function with values -1 and 1 defined on the hyperrectangle given
+by limits.}
 
-\item{training_points}{A vector of training points}
+\item{limits}{matrix containing the limits of the hyperrectangle}
 
-\item{limits}{}
+\item{training_points}{matrix of points inside the hyperrectangle; optional}
+
+\item{training_size}{number of training points; unnecessary if training_points
+are given}
+
+\item{test_size}{number of test points at which classification function and
+Gaussian process predictions are compared}
+
+\item{...}{arguments passed on to the constructor of the Gaussian process}
+}
+\value{
+\code{summary} of the absolute error of the Gaussian process
+ predictions in the test points
 }
 \description{
-Simulates data for Classification problems, which can then be analyzed via a Gaussian process
+Simulates Classification problems with arbitrary classification function on a
+hyperrectangle of arbitrary dimension and analyzes the quality of the Gaussian
+process predictions.
+}
+\details{
+When the classification function \code{func} is defined on a hyperrectangle in
+\eqn{R^D}, limits has to be a \eqn{D x 2} matrix where the k-th line contains
+the lower and upper bound of the hyperrectangle in the k-th dimension. If the
+argument \code{training_points} is used, it should be a \eqn{D x n} matrix
+with each column representing a training point. If \code{training_points} is
+missing, \code{training_size} training points are drawn randomly from the
+uniform distribution on the hyperrectangle determined by limits.
+
+The predictions of the Gaussian process are compared to the ground truth
+(function values of func) on an equispaced grid of \code{test_size} points in
+the hyperrectangle. If \eqn{D <= 2}, a plot of the decision regions of the
+Gaussian Process along with the true classification of the testpoints is
+provided. If \eqn{D = 1}, the predicted posterior probability is also plotted.
 }
 \examples{
+ f <- function(x) (x < - 2) + (x > 2) - (-2 <= x && x <= 2)
+ limits <- matrix(c(-4, 4), nrow = 1, byrow = TRUE)
+ k <- function(x, y) sqrexp(x, y, 1)
+ simulate_classification(func = f, limits = limits, training_size = 20, k = k)
 
+ f <- function(x) (sum(abs(x)) > 2.5) - (!(sum(abs(x)) > 2.5))
+ limits <- matrix(c(-4, 4, -4, 4), nrow = 2, byrow = TRUE)
+ k <- function(x, y) sqrexp(x, y, 1)
+ simulate_classification(func = f, limits = limits, training_size = 50, k = k)
+ 
 }
