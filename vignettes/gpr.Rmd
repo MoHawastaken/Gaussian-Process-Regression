@@ -275,7 +275,13 @@ simulate_classification(func, training_points, limits, k, training_size = 10)
   s <- simulate_classification(func = f, limits = limits, k = k, training_size = 600)
 ```
   
-Simulating a noisy random function with covariance function squared exponential and its fit with `simulate_regression_gp` may look like this:
+Simulating a random function with little noise, randomly drawn training data and covariance function squared exponential and its fit with `simulate_regression_gp` may look like this:
+
+```{r eval=FALSE}
+simulate_regression_gp(actual_cov, limits, error = function(x) 0, test_size = 300L, 
+                training_size = 10L, random_training = TRUE, show_pred = FALSE, ...)
+```
+
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=TRUE}
 s <- simulate_regression_gp(cov_func(sqrexp, l = 1), limits = matrix(c(-5,5), nrow = 1), 
                          training_size = 10, random_training = TRUE, error = error_function(rnorm, sd = 0.01), show_pred = FALSE, noise = 0.01)
