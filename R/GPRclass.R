@@ -372,7 +372,7 @@ multivariate_normal <- function(n, mean, covariance, tol = 1e-6) {
 expand_range <- function(x) {
   r <- range(x)
   m <- mean(r)
-  c(m - 1.2 * (m - r[1]), m + 1.2 * (m = r[2]))
+  c(m - 1.2 * (m - r[1]), m + 1.2 * (r[2] - m))
 }
 
 # Implementation of matrix versions of the covariance functions to increase efficiency
