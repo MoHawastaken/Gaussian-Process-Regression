@@ -141,7 +141,7 @@ GPR <- R6::R6Class("GPR",
                  for (i in 1:10){
                    L <- tryCatch(t(chol(K + new_noise * diag(n))), error = function(cond){NULL})
                    if(is.matrix(L)){
-                     if(i > 0) warning(sprintf("Noise got changed to %s to avoid errors in cholesky decomposition", new_noise))
+                     if(i > 1) warning(sprintf("Noise got changed to %s to avoid errors in cholesky decomposition", new_noise))
                      break()
                    }
                    new_noise <- (0.01 * i + noise)
