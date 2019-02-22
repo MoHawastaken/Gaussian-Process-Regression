@@ -222,13 +222,13 @@ Decision regions are chosen with a threshold of 0.5, as the decison function map
 The three simulation functions `simulate_regression`, `simulate_regression_gp` and `simulate_classification` are wrappers for central features of our package and return plots and an error summary offering a comfortable overview over strengths and weaknesses of the implemented algorithms. They have lots of parameters to adjust specific circumstances, but allow easy use by just demanding `func, limits` (and `actual_cov` in `simulate_regression_gp`).
 
 ```{r eval=FALSE}
-simulate_regression(func, limits, training_points, num_data = 10, 
-                    observation_noise = function(x) 0, cov_names = names(cov_dict), noise = 0)
+simulate_regression(func, limits, training_points, training_size = 10L, 
+                    observation_noise = function(x) 0, test_size = 10000L, show_pred = TRUE, ...)
 
 ```
 
 ```{r eval=FALSE}
-simulate_classification(func, training_points, limits, training_size = 10, k = k)
+simulate_classification(func, limits, training_points, training_size = 10L, test_size = 10000L, ...)
 ```
 
 
@@ -270,8 +270,8 @@ simulate_classification(func, training_points, limits, training_size = 10, k = k
 Simulating a random ground truth function drawn from a Gaussian process with squared exponential covariance function and randomly drawn training points and its fit with `simulate_regression_gp` may look like this:
 
 ```{r eval=FALSE}
-simulate_regression_gp(actual_cov, limits, error = function(x) 0, test_size = 300L, 
-                training_size = 10L, random_training = TRUE, show_pred = FALSE, ...)
+simulate_regression_gp(actual_cov, limits, observation_noise = function(x) 0, test_size = 300L, 
+                training_size = 10L, random_training = TRUE, show_pred = FALSE, ...) 
 ```
 
 ```{r dpi=1000, out.width="100%", echo=FALSE, fig.width = 5, fig.asp = .62, message=FALSE, eval=TRUE}
